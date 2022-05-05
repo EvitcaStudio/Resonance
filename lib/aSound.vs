@@ -846,21 +846,17 @@
 		}
 		
 		const resumeAudioCtx = () => {
-			const removeEvents = () => {
-				aSound.ready = true;
-				window.removeEventListener('mousedown', resumeAudioCtx);
-				window.removeEventListener('touchstart', resumeAudioCtx);
-			}
 			// this will start playing sounds that were initially blocked by not having a user gesture.
+			// this will also restart sounds when a mobile device backs out of an app, and then rejoins the app
 			if (aSound.audioCtx.state !== 'running') {
 				aSound.audioCtx.resume().then(() => {
-					console.log('aSound: autostart attempt of audio context worked.');
+					// console.log('aSound: autostart attempt of audio context worked.');
 				},
 				() => {
-					console.warn('aSound: autostart attempt of audio context failed.');
+					// console.warn('aSound: autostart attempt of audio context failed.');
 				});
 			}
-			removeEvents();
+			aSound.ready = true;
 		}
 
 		window.addEventListener('mousedown', resumeAudioCtx);
