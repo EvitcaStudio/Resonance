@@ -354,16 +354,17 @@
 				request.responseType = 'arraybuffer';
 				request.onload = function() {
 					const audioData = request.response;
-					self.audioCtx.decodeAudioData(audioData).then((pDecodedData) => {
-							self.loadedBuffers[pSoundName] = pDecodedData;
-							// if the user wants to stop the sound before it loads, don't play it
-							if (source.queuedToStop) return;
-							emitSound();
-						},
-						(pError) => {
-							console.error('Error with decoding audio data: ' + pSoundName + ' path: ' + VS.Resource.getResourcePath('sound', pSoundName));
-						}
-					);
+					const succes = (pDecodedData) => {
+						self.loadedBuffers[pSoundName] = pDecodedData;
+						// if the user wants to stop the sound before it loads, don't play it
+						if (source.queuedToStop) return;
+						emitSound();
+					
+					}
+					const error = (pError) => {
+						console.error('Error with decoding audio data: ' + pSoundName + ' path: ' + VS.Resource.getResourcePath('sound', pSoundName));
+					}
+					self.audioCtx.decodeAudioData(audioData, succes, error);
 				};
 				request.send();
 			}
