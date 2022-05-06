@@ -8,7 +8,7 @@
 (() => {
 	const engineWaitId = setInterval(() => {
 		// if the library needs the client and the world
-		if (VS?.Client && VS?.World?.global) {
+		if (VS.Client && VS.World) {
 			clearInterval(engineWaitId);
 			buildSound();
 		}
@@ -385,7 +385,11 @@
 			for (let i = this.soundsPlaying.length - 1; i >= 0; i--) {
 				const sound = this.soundsPlaying[i];
 				// if the sound is not set to be saved it will be killed
-				if (pException && pException?.constructor === Array && pException.includes(sound)) continue;
+				if (pException) {
+					if (pException.constructor === Array && pException.includes(sound)) {
+						continue;
+					}
+				}
 				sound.stop();
 			}
 		}
@@ -531,13 +535,13 @@
 				this.#state = null;
 				this.#_loop = pLoop ? true : false;
 				this.#_volume = clamp(pVolume, MIN_VOLUME, MAX_VOLUME);
-				if (pCallbackObject && pCallbackObject?.constructor === Object) {
+				if (pCallbackObject && pCallbackObject.constructor === Object) {
 					if (pCallbackObject.onStarted && typeof(pCallbackObject.onStarted) === 'function') this.onStarted = pCallbackObject.onStarted.bind(this);
 					if (pCallbackObject.onStopped && typeof(pCallbackObject.onStopped) === 'function') this.onStopped = pCallbackObject.onStopped.bind(this);
 					if (pCallbackObject.onEnded && typeof(pCallbackObject.onEnded) === 'function') this.onEnded = pCallbackObject.onEnded.bind(this);
 					if (pCallbackObject.onSuspended && typeof(pCallbackObject.onSuspended) === 'function') this.onSuspended = pCallbackObject.onSuspended.bind(this);
 					if (pCallbackObject.onResumed && typeof(pCallbackObject.onResumed) === 'function') this.onResumed = pCallbackObject.onResumed.bind(this);
-				} else if (pCallbackObject && pCallbackObject?.constructor !== Object) {
+				} else if (pCallbackObject && pCallbackObject.constructor !== Object) {
 					console.warn('aSound Library: Invalid variable type passed for pCallbackObject.');
 				}
 				// If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play
@@ -601,7 +605,7 @@
 				if (!aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.push(this);
 				// this will use the this.#suspendedTimeStamp value to resume
 				this.play(true);
-				this.#state = this.#fader?.raf ? 'fading' : 'playing';
+				this.#state = this.#fader.raf ? 'fading' : 'playing';
 				if (this.onResumed && typeof(this.onResumed) === 'function') this.onResumed();
 			}
 
@@ -730,7 +734,7 @@
 				this.onSuspended = null;
 				this.onResumed = null;
 				this.stop('wipe');
-				cancelAnimationFrame(this.#fader?.raf);
+				cancelAnimationFrame(this.#fader.raf);
 				if (this.#source) {
 					this.#source.disconnect();
 					this.#gainNode.disconnect();
