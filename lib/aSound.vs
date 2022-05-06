@@ -354,7 +354,7 @@
 				request.responseType = 'arraybuffer';
 				request.onload = function() {
 					const audioData = request.response;
-					const succes = (pDecodedData) => {
+					const success = (pDecodedData) => {
 						self.loadedBuffers[pSoundName] = pDecodedData;
 						// if the user wants to stop the sound before it loads, don't play it
 						if (source.queuedToStop) return;
@@ -364,7 +364,7 @@
 					const error = (pError) => {
 						console.error('Error with decoding audio data: ' + pSoundName + ' path: ' + VS.Resource.getResourcePath('sound', pSoundName));
 					}
-					self.audioCtx.decodeAudioData(audioData, succes, error);
+					self.audioCtx.decodeAudioData(audioData, success, error);
 				};
 				request.send();
 			}
@@ -583,27 +583,27 @@
 				request.responseType = 'arraybuffer';
 				request.onload = function() {
 					const audioData = request.response;
-					aSound.audioCtx.decodeAudioData(audioData).then((pDecodedData) => {
-							self.loaded = true;
-							aSound.loadedBuffers[self.soundName] = pDecodedData;
-							// the developer attempted to play the sound while it was still loading,
-							// this has been set so that the sound will play once it's finished loading now
-							if (self.playAfterLoad) {
-								// A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play
-								if (self.stopSignal) {
-									self.stopSignal = false;
-									return;
-								} else {
-									self.play();
-								}
+					const success = (pDecodedData) => {
+						self.loaded = true;
+						aSound.loadedBuffers[self.soundName] = pDecodedData;
+						// the developer attempted to play the sound while it was still loading,
+						// this has been set so that the sound will play once it's finished loading now
+						if (self.playAfterLoad) {
+							// A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play
+							if (self.stopSignal) {
+								self.stopSignal = false;
+								return;
+							} else {
+								self.play();
 							}
-						},
-						(pError) => {
-							self.loaded = false;
-							console.error('Error with decoding audio data: ' + self.soundName + ' path: ' + VS.Resource.getResourcePath('sound', self.soundName) + ' This sound has been killed.');
-							self.kill();
 						}
-					);
+					}
+					const error = (pError) => {
+						self.loaded = false;
+						console.error('Error with decoding audio data: ' + self.soundName + ' path: ' + VS.Resource.getResourcePath('sound', self.soundName) + ' This sound has been killed.');
+						self.kill();
+					}
+					aSound.audioCtx.decodeAudioData(audioData, success, error);
 				};
 				request.send();
 			}
