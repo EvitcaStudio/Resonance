@@ -442,6 +442,7 @@
 		}
 
 		class Sound {
+/*			// commented out because older devices *cough* iOS devices that are under 14.5 do not support this and prevent the game from loading
 			#soundName;
 			#startTime;
 			#endTime;
@@ -462,79 +463,100 @@
 			#_playbackRate = 1;
 			#_volume = 100;
 			#_info = { 'soundName': null, 'duration': null };
+*/
 			constructor(pSoundName, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pCallbackObject) {
+				this.soundName = null;
+				this.startTime = null;
+				this.endTime = null;
+				this.save = null;
+				this.duration = null;
+				this.source = null;
+				this.gainNode = null;
+				this.loaded = false;
+				this.playAfterLoad = false;
+				this.muted = false;
+				this.state = null;
+				this.startedTimeStamp = null;
+				this.suspendedTimeStamp = 0;
+				this.playUnfocused = null;
+				this.fader = {};
+				this.stopSignal = false;
+				this._loop = false;
+				this._playbackRate = 1;
+				this._volume = 100;
+				this._info = { 'soundName': null, 'duration': null };
 				this.build(pSoundName, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pCallbackObject);
 			}
 
 			get volume() {
-				return this.#_volume;
+				return this._volume;
 			}
 
 			set volume(pNewVolume) {
-				this.#_volume = clamp(pNewVolume, MIN_VOLUME, MAX_VOLUME);
-				if (this.#loaded) this.#gainNode.gain.value = normalize(this.#_volume);
+				this._volume = clamp(pNewVolume, MIN_VOLUME, MAX_VOLUME);
+				if (this.loaded) this.gainNode.gain.value = normalize(this._volume);
 			}
 
 			toggleMute() {
-				if (!this.#loaded || !this.#source) return;
-				this.#muted = this.#muted ? false : true;
-				if (this.#muted) {
-					this.#gainNode.gain.value = 0;
+				if (!this.loaded || !this.source) return;
+				this.muted = this.muted ? false : true;
+				if (this.muted) {
+					this.gainNode.gain.value = 0;
 				} else {
-					this.#gainNode.gain.value = normalize(this.#_volume);
+					this.gainNode.gain.value = normalize(this._volume);
 				}
 			}
 
 			get loop() {
-				return this.#_loop;
+				return this._loop;
 			}
 
 			set loop(pLoopValue) {
-				this.#_loop = pLoopValue ? true : false;
-				if (this.#source) this.#source.loop = this.#_loop;
+				this._loop = pLoopValue ? true : false;
+				if (this.source) this.source.loop = this._loop;
 			}
 
 			toggleLoop() {
-				this.#_loop = this.#_loop ? false : true;
-				if (this.#source) this.#source.loop = this.#_loop;
+				this._loop = this._loop ? false : true;
+				if (this.source) this.source.loop = this._loop;
 			}
 
 			get playbackRate() {
-				return this.#_playbackRate;
+				return this._playbackRate;
 			}
 
 			set playbackRate(pNewPlaybackRate) {
-				this.#_playbackRate = clamp(pNewPlaybackRate, 1, MAX_PLAYBACK_RATE);
-				if (this.#source) this.#source.playbackRate.value = this.#_playbackRate;
+				this._playbackRate = clamp(pNewPlaybackRate, 1, MAX_PLAYBACK_RATE);
+				if (this.source) this.source.playbackRate.value = this._playbackRate;
 			}
 
 			set info(pNewInfo) {
 				// make this variable read only basically
-				this.#_info = this.#_info;
+				this._info = this._info;
 			}
 
 			get info() {
-				if (this.#loaded) {
-					if (this.#source) {
-						this.#_info.duration = this.#duration;
+				if (this.loaded) {
+					if (this.source) {
+						this._info.duration = this.duration;
 					}
-					this.#_info.soundName = this.#soundName;
+					this._info.soundName = this.soundName;
 				} else {
-					this.#_info.soundName = this.#soundName;
+					this._info.soundName = this.soundName;
 				}
-				return this.#_info;
+				return this._info;
 			}
 
 			build(pSoundName, pVolume=100, pStartTime=0, pEndTime=0, pSave=false, pPlayUnfocused=false, pPlaybackRate=1, pLoop=false, pCallbackObject) {
-				this.#soundName = pSoundName;
-				this.#startTime = Math.max(pStartTime, 0);
-				this.#endTime = Math.max(pEndTime, 0);
-				this.#save = pLoop ? true : pSave;
-				this.#_playbackRate = clamp(pPlaybackRate, 1, MAX_PLAYBACK_RATE);
-				this.#playUnfocused = pPlayUnfocused ? true : false;
-				this.#state = null;
-				this.#_loop = pLoop ? true : false;
-				this.#_volume = clamp(pVolume, MIN_VOLUME, MAX_VOLUME);
+				this.soundName = pSoundName;
+				this.startTime = Math.max(pStartTime, 0);
+				this.endTime = Math.max(pEndTime, 0);
+				this.save = pLoop ? true : pSave;
+				this._playbackRate = clamp(pPlaybackRate, 1, MAX_PLAYBACK_RATE);
+				this.playUnfocused = pPlayUnfocused ? true : false;
+				this.state = null;
+				this._loop = pLoop ? true : false;
+				this._volume = clamp(pVolume, MIN_VOLUME, MAX_VOLUME);
 				if (pCallbackObject && pCallbackObject.constructor === Object) {
 					if (pCallbackObject.onStarted && typeof(pCallbackObject.onStarted) === 'function') this.onStarted = pCallbackObject.onStarted.bind(this);
 					if (pCallbackObject.onStopped && typeof(pCallbackObject.onStopped) === 'function') this.onStopped = pCallbackObject.onStopped.bind(this);
@@ -546,29 +568,29 @@
 				}
 				// If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play
 				// this sound, it will just use the buffer data of the previous sound that had it.
-				if (!aSound.loadedBuffers[this.#soundName]) {
+				if (!aSound.loadedBuffers[this.soundName]) {
 					this.load();
 				} else {
-					this.#loaded = true;
+					this.loaded = true;
 				}
 			}
 
 			load() {
 				const request = new XMLHttpRequest();
 				const self = this;
-				request.open('GET', VS.Resource.getResourcePath('sound', self.#soundName));
+				request.open('GET', VS.Resource.getResourcePath('sound', self.soundName));
 				request.responseType = 'arraybuffer';
 				request.onload = function() {
 					const audioData = request.response;
 					aSound.audioCtx.decodeAudioData(audioData).then((pDecodedData) => {
-							self.#loaded = true;
-							aSound.loadedBuffers[self.#soundName] = pDecodedData;
+							self.loaded = true;
+							aSound.loadedBuffers[self.soundName] = pDecodedData;
 							// the developer attempted to play the sound while it was still loading,
 							// this has been set so that the sound will play once it's finished loading now
-							if (self.#playAfterLoad) {
+							if (self.playAfterLoad) {
 								// A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play
-								if (self.#stopSignal) {
-									self.#stopSignal = false;
+								if (self.stopSignal) {
+									self.stopSignal = false;
 									return;
 								} else {
 									self.play();
@@ -576,8 +598,8 @@
 							}
 						},
 						(pError) => {
-							self.#loaded = false;
-							console.error('Error with decoding audio data: ' + self.#soundName + ' path: ' + VS.Resource.getResourcePath('sound', self.#soundName) + ' This sound has been killed.');
+							self.loaded = false;
+							console.error('Error with decoding audio data: ' + self.soundName + ' path: ' + VS.Resource.getResourcePath('sound', self.soundName) + ' This sound has been killed.');
 							self.kill();
 						}
 					);
@@ -586,10 +608,10 @@
 			}
 
 			suspend() {
-				if (!this.#loaded) return;
+				if (!this.loaded) return;
 				this.stop('suspended');
-				this.#state = 'suspended';
-				this.#suspendedTimeStamp = aSound.audioCtx.currentTime - this.#startedTimeStamp;
+				this.state = 'suspended';
+				this.suspendedTimeStamp = aSound.audioCtx.currentTime - this.startedTimeStamp;
 				// This sound is no longer considered to be playing, so remove it from the array
 				if (aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.splice(aSound.soundsPlaying.indexOf(this), 1);
 				// If this sound is not apart of the suspended sounds array add it
@@ -598,86 +620,86 @@
 			}
 
 			resume() {
-				if (!this.#loaded) return;
+				if (!this.loaded) return;
 				// This sound is no longer considered to be suspended, so remove it from the array
 				if (aSound.suspendedSounds.includes(this)) aSound.suspendedSounds.splice(aSound.suspendedSounds.indexOf(this), 1);
 				// This sound is no longer suspended and is now playing again, add it to the playing array
 				if (!aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.push(this);
-				// this will use the this.#suspendedTimeStamp value to resume
+				// this will use the this.suspendedTimeStamp value to resume
 				this.play(true);
-				this.#state = this.#fader.raf ? 'fading' : 'playing';
+				this.state = this.fader.raf ? 'fading' : 'playing';
 				if (this.onResumed && typeof(this.onResumed) === 'function') this.onResumed();
 			}
 
 			stop(pState) {
 				// The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.
-				if (!this.#source) {
-					this.#stopSignal = true;
+				if (!this.source) {
+					this.stopSignal = true;
 					return;
 				}
-				const wasPlaying = (this.#state === 'playing' || this.#state === 'fading' || this.#state === 'suspended') ? true : false;
+				const wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;
 				// This sound is no longer considered to be playing, so remove it from the array
 				if (aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.splice(aSound.soundsPlaying.indexOf(this), 1);
-				if (this.#source) {
-					if (!this.#source.stop) this.#source.stop = this.#source.noteOff;
-					this.#source.stop();
-					this.#source.disconnect();
-					this.#gainNode.disconnect();
-					this.#source = null;
-					this.#gainNode = null;
+				if (this.source) {
+					if (!this.source.stop) this.source.stop = this.source.noteOff;
+					this.source.stop();
+					this.source.disconnect();
+					this.gainNode.disconnect();
+					this.source = null;
+					this.gainNode = null;
 				}
-				this.#state = pState ? pState : 'stopped';
-				if (this.#state === 'stopped' && wasPlaying && this.onStopped && typeof(this.onStopped) === 'function') this.onStopped();
+				this.state = pState ? pState : 'stopped';
+				if (this.state === 'stopped' && wasPlaying && this.onStopped && typeof(this.onStopped) === 'function') this.onStopped();
 			}
 
 			play(pResume) {
 				// A sound cannot be played if it's sound name is not referencable, 
 				// a sound that is recycled has no sound information to be played
 				// and if the game's API doesn't allow a sound to be played at it's current time, then it can't play.
-				if (!this.#soundName || this.state === 'recycled' || !aSound.canPlaySound()) return;
+				if (!this.soundName || this.state === 'recycled' || !aSound.canPlaySound()) return;
 				// If this sound is not loaded, it cannot be played, however there is a chance that a sound with the same buffer
 				// information has been played before and stored. In this case it does not need to wait to load, it instead checks to see
 				// if that buffer information is avaiable, and if it is, it allows the sound to be played with that data.
-				if (!this.#loaded && !aSound.loadedBuffers[this.#soundName]) {
-					this.#playAfterLoad = true;
+				if (!this.loaded && !aSound.loadedBuffers[this.soundName]) {
+					this.playAfterLoad = true;
 					return;
 				}
 				// The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost
-				if (!aSound.focused && !this.#playUnfocused) {
+				if (!aSound.focused && !this.playUnfocused) {
 					if (!aSound.queuedSoundsToPlay.includes(this)) aSound.queuedSoundsToPlay.push(this);
 					return;
 				}
 				// if you already have a soure and a gainNode, disconnect them and let them be garbage collected
-				if (this.#source) {
-					this.#source.disconnect();
-					this.#gainNode.disconnect();
-					this.#source = null;
-					this.#gainNode = null;
+				if (this.source) {
+					this.source.disconnect();
+					this.gainNode.disconnect();
+					this.source = null;
+					this.gainNode = null;
 				}
 				if (aSound.suspendedSounds.includes(this)) aSound.suspendedSounds.splice(aSound.suspendedSounds.indexOf(this), 1);
 				const source = aSound.audioCtx.createBufferSource();
 				const gainNode = aSound.audioCtx.createGain();
 				const self = this;
-				gainNode.gain.value = normalize(this.#_volume);
+				gainNode.gain.value = normalize(this._volume);
 				gainNode.connect(aSound.gainNode);
 				source.connect(gainNode);
 				// aSound.gainNode.connect(aSound.audioCtx.destination);
-				source.buffer = aSound.loadedBuffers[this.#soundName];
-				source.playbackRate.value = this.#_playbackRate;
+				source.buffer = aSound.loadedBuffers[this.soundName];
+				source.playbackRate.value = this._playbackRate;
 				// sound.stop() calls this as well
 				source.onended = function() {
 					// if this sound was stopped, and it is a sound that will be saved return early
-					if (self.#state === 'stopped' && self.#save) {
+					if (self.state === 'stopped' && self.save) {
 						return;
-					} else if (self.#state === 'restart') {
+					} else if (self.state === 'restart') {
 						// since the sound is restarting we don't want it to fire off the `onEnded` event.
 						self.play();
 						return;
-					} else if (self.#state === 'suspended') {
+					} else if (self.state === 'suspended') {
 						return;
 					}
-					if (self.#state !== 'stopped' && self.onEnded && typeof(self.onEnded) === 'function') self.onEnded();
-					if (self.#_loop) {
+					if (self.state !== 'stopped' && self.onEnded && typeof(self.onEnded) === 'function') self.onEnded();
+					if (self._loop) {
 						self.play();
 						return;
 					}
@@ -687,23 +709,23 @@
 						If you are using a one use sound, it is best to play a sound on its creation without storing it.
 						aSound.createSound('soundName', volume, startTime, endTime, playrate, loop).play()
 					*/
-					if (!self.#save) self.kill();
+					if (!self.save) self.kill();
 				};
-				this.#source = source;
-				this.#gainNode = gainNode;
-				this.#duration = source.buffer.duration;
-				this.#playAfterLoad = null;
+				this.source = source;
+				this.gainNode = gainNode;
+				this.duration = source.buffer.duration;
+				this.playAfterLoad = null;
 				if (!source.start) source.start = source.noteOn;
-				source.start(0, (this.#suspendedTimeStamp ? this.#suspendedTimeStamp * this.#_playbackRate: this.#startTime), this.#endTime ? this.#endTime : this.#duration);
+				source.start(0, (this.suspendedTimeStamp ? this.suspendedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);
 /* 				
 				// This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.
-				source.loop = this.#_loop;
-				source.loopStart = this.#startTime;
-				source.loopEnd = this.#endTime ? this.#endTime : source.buffer.duration; 
+				source.loop = this._loop;
+				source.loopStart = this.startTime;
+				source.loopEnd = this.endTime ? this.endTime : source.buffer.duration; 
 */
-				this.#state = 'playing';
-				this.#startedTimeStamp = aSound.audioCtx.currentTime - (this.#suspendedTimeStamp ? this.#suspendedTimeStamp : this.#startTime);
-				this.#suspendedTimeStamp = 0;
+				this.state = 'playing';
+				this.startedTimeStamp = aSound.audioCtx.currentTime - (this.suspendedTimeStamp ? this.suspendedTimeStamp : this.startTime);
+				this.suspendedTimeStamp = 0;
 				if (!aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.push(this);
 				if (!pResume && this.onStarted && typeof(this.onStarted) === 'function') this.onStarted();
 			}
@@ -713,11 +735,11 @@
 			}
 
 			getFocusStatus() {
-				return this.#playUnfocused ? true : false;
+				return this.playUnfocused ? true : false;
 			}
 
 			kill() {
-				this.#wipe();
+				this.wipe();
 				if (aSound.recycledSounds.length < MAX_RECYCLED_SOUNDS)  {
 					aSound.recycledSounds.push(this);
 				} else {
@@ -727,48 +749,48 @@
 				}
 			}
 
-			#wipe() {
+			wipe() {
 				this.onStarted = null;
 				this.onStopped = null;
 				this.onEnded = null;
 				this.onSuspended = null;
 				this.onResumed = null;
 				this.stop('wipe');
-				cancelAnimationFrame(this.#fader.raf);
-				if (this.#source) {
-					this.#source.disconnect();
-					this.#gainNode.disconnect();
+				cancelAnimationFrame(this.fader.raf);
+				if (this.source) {
+					this.source.disconnect();
+					this.gainNode.disconnect();
 				}
-				this.#soundName = null;
-				this.#startTime = null;
-				this.#endTime = null;
-				this.#save = null;
-				this.#duration = null;
-				this.#_playbackRate = 1;
-				this.#source = null;
-				this.#gainNode = null;
-				this.#loaded = false;
-				this.#playAfterLoad = null;
-				this.#state = 'recycled';
-				this.#startedTimeStamp = null;
-				this.#suspendedTimeStamp = 0;
-				this.#playUnfocused = null;
-				this.#fader.duration = this.#fader.currentIteration = this.#fader.initialValue = this.#fader.changeInValue = this.#fader.totalIterations = this.#fader.startStamp = this.#fader.previousTimeStamp = this.#fader.durationOffScreen = this.#fader.queue = this.#fader.raf = null;
-				this.#stopSignal = false;
-				this.#_loop = false;
-				this.#_volume = 100;
-				this.#_info.soundName = this.#_info.duration = null;
+				this.soundName = null;
+				this.startTime = null;
+				this.endTime = null;
+				this.save = null;
+				this.duration = null;
+				this._playbackRate = 1;
+				this.source = null;
+				this.gainNode = null;
+				this.loaded = false;
+				this.playAfterLoad = null;
+				this.state = 'recycled';
+				this.startedTimeStamp = null;
+				this.suspendedTimeStamp = 0;
+				this.playUnfocused = null;
+				this.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;
+				this.stopSignal = false;
+				this._loop = false;
+				this._volume = 100;
+				this._info.soundName = this._info.duration = null;
 				if (aSound.soundsPlaying.includes(this)) aSound.soundsPlaying.splice(aSound.soundsPlaying.indexOf(this), 1);
 				if (aSound.suspendedSounds.includes(this)) aSound.suspendedSounds.splice(aSound.suspendedSounds.indexOf(this), 1);
 				if (aSound.queuedSoundsToPlay.includes(this)) aSound.queuedSoundsToPlay.splice(aSound.queuedSoundsToPlay.indexOf(this), 1);
 				if (aSound.queuedSoundsToFade.includes(this)) aSound.queuedSoundsToFade.splice(aSound.queuedSoundsToFade.indexOf(this), 1);
 			}
 
-			#getCurrentTime() {
-				if (this.#suspendedTimeStamp) {
-					return this.#suspendedTimeStamp * this.#_playbackRate;
-				} else if (this.#startedTimeStamp) {
-					return aSound.audioCtx.currentTime - this.#startedTimeStamp;
+			getCurrentTime() {
+				if (this.suspendedTimeStamp) {
+					return this.suspendedTimeStamp * this._playbackRate;
+				} else if (this.startedTimeStamp) {
+					return aSound.audioCtx.currentTime - this.startedTimeStamp;
 				} else {
 					return 0;
 				}
@@ -778,12 +800,12 @@
 				if (isNaN(pVolume)) return;
 				if (isNaN(pDuration)) return;
 				// if a sound is not playing, it cannot be faded.
-				if (this.#state !== 'playing' && aSound.focused) return;
+				if (this.state !== 'playing' && aSound.focused) return;
 				// The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus
-				if (!aSound.focused && !this.#playUnfocused) {
+				if (!aSound.focused && !this.playUnfocused) {
 					// if this sound is already queued to fade, then just exit out
 					if (aSound.queuedSoundsToFade.includes(this)) return;
-					this.#fader.queue = {
+					this.fader.queue = {
 						'volume': pVolume,
 						'duration': pDuration,
 						'ease': pEase,
@@ -797,55 +819,55 @@
 					console.warn('aSound: Invalid pEase value. Reverted to default.');
 				}
 				// get rid of the queue information if it exists, it is no longer needed
-				if (this.#fader.queue) this.#fader.queue = null;
+				if (this.fader.queue) this.fader.queue = null;
 				pVolume = clamp(pVolume, MIN_VOLUME, MAX_VOLUME);
-				this.#fader.duration = Math.max(pDuration, 0);
-				this.#fader.currentIteration = 0;
-				this.#fader.initialValue = this.#_volume;
-				this.#fader.changeInValue = pVolume - this.#fader.initialValue;
-				this.#fader.totalIterations = FRAME_RATE * this.#fader.duration;
-				this.#fader.startStamp = null;
-				this.#fader.previousTimeStamp = null;
+				this.fader.duration = Math.max(pDuration, 0);
+				this.fader.currentIteration = 0;
+				this.fader.initialValue = this._volume;
+				this.fader.changeInValue = pVolume - this.fader.initialValue;
+				this.fader.totalIterations = FRAME_RATE * this.fader.duration;
+				this.fader.startStamp = null;
+				this.fader.previousTimeStamp = null;
 				// this is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused
 				// when the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.
 				// the first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.
-				this.#fader.durationOffScreen = [0, 0];
-				this.#state = 'fading';
+				this.fader.durationOffScreen = [0, 0];
+				this.state = 'fading';
 
 				const self = this;
 				const fadeInterval = function(pTimeStamp) {
 					if (!aSound.focused) {
-						self.#fader.raf = requestAnimationFrame(fadeInterval);
-						self.#fader.durationOffScreen[1] = pTimeStamp - self.#fader.previousTimeStamp;
+						self.fader.raf = requestAnimationFrame(fadeInterval);
+						self.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;
 						return;
 					}
-					if (self.#fader.startStamp === null) self.#fader.startStamp = pTimeStamp;
-					self.volume = Ease[pEase](self.#fader.currentIteration, self.#fader.initialValue, self.#fader.changeInValue, self.#fader.totalIterations);
-					if (self.#fader.durationOffScreen[1]) {
-						self.#fader.durationOffScreen[0] += self.#fader.durationOffScreen[1];
-						self.#fader.durationOffScreen[1] = 0;
+					if (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;
+					self.volume = Ease[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations);
+					if (self.fader.durationOffScreen[1]) {
+						self.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];
+						self.fader.durationOffScreen[1] = 0;
 					}
-					const elapsed = (pTimeStamp - self.#fader.durationOffScreen[0]) - self.#fader.startStamp;
-					if (self.#fader.currentIteration < self.#fader.totalIterations) self.#fader.currentIteration++;
-					if (elapsed < self.#fader.duration * 1000) {
-						self.#fader.previousTimeStamp = pTimeStamp;
+					const elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;
+					if (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;
+					if (elapsed < self.fader.duration * 1000) {
+						self.fader.previousTimeStamp = pTimeStamp;
 					} else {
-						cancelAnimationFrame(self.#fader.raf);
-						self.#fader.duration = self.#fader.currentIteration = self.#fader.initialValue = self.#fader.changeInValue = self.#fader.totalIterations = self.#fader.startStamp = self.#fader.previousTimeStamp = self.#fader.durationOffScreen = self.#fader.queue = self.#fader.raf = null;
+						cancelAnimationFrame(self.fader.raf);
+						self.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.queue = self.fader.raf = null;
 						// when a sound is faded down to `0` or any other value. Just because it may be muted, does not mean it is stopped. 
 						// the state of the sound is still considered to be playing after its done fading
-						self.#state = 'playing';						
+						self.state = 'playing';						
 						self.volume = pVolume;
 						if (pCallback) pCallback();
 						return;
 					}
-					self.#fader.raf = requestAnimationFrame(fadeInterval);
+					self.fader.raf = requestAnimationFrame(fadeInterval);
 				}
-				this.#fader.raf = requestAnimationFrame(fadeInterval);
+				this.fader.raf = requestAnimationFrame(fadeInterval);
 			}
 
 			queuedFade() {
-				if (this.#fader.queue) this.fade(this.#fader.queue.volume, this.#fader.queue.duration, this.#fader.queue.ease, this.#fader.queue.callback);
+				if (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);
 			}
 		}
 		
