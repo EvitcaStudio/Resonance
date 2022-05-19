@@ -1,2 +1,6 @@
 # aSound
-A library that will easily allow you to play sounds and control them.
+A plugin that will easily allow you to play sounds and control them.
+
+#INCLUDE SCRIPT aSound.js
+
+**🚧🚧 Docs coming soon 🚧🚧**
