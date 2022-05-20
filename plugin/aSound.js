@@ -16,7 +16,7 @@
 			console.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');
 			return;
 		}
-
+		
 		const MAX_VOLUME = 200;
 		const MIN_VOLUME = -200;
 		const MAX_RECYCLED_SOUNDS = 100;
@@ -885,46 +885,27 @@
 		window.addEventListener('mousedown', resumeAudioCtx);
 		window.addEventListener('touchstart', resumeAudioCtx);
 
-		if (!VS.Client._aSoundOnWindowBlurSet) {
-			VS.Client._aSoundOnWindowBlur = VS.Client.onWindowBlur;
-			VS.Client._aSoundOnWindowBlurSet = true;
-			VS.Client.onWindowBlur = function() {
-				aSound.focused = false;
-				if (aSound.soundsPlaying.length) aSound.suspendAllSounds(true);
-				if (this._aSoundOnWindowBlur) this._aSoundOnWindowBlur.apply(this, arguments);
-			}
-		}
+		VS.global.aListener.addEventListener(VS.Client, 'onWindowBlur', function() {
+			aSound.focused = false;
+			if (aSound.soundsPlaying.length) aSound.suspendAllSounds(true);
+		});
 
-		if (!VS.Client._aSoundOnWindowFocusSet) {
-			VS.Client._aSoundOnWindowFocus = VS.Client.onWindowFocus;
-			VS.Client._aSoundOnWindowFocusSet = true;
-			VS.Client.onWindowFocus = function() {
-				aSound.focused = true;
-				if (aSound.suspendedSounds.length) aSound.resumeAllSounds(true);
-				if (aSound.queuedSoundsToPlay.length || aSound.queuedSoundsToFade.length) aSound.playQueuedSounds();
-				if (this._aSoundOnWindowFocus) this._aSoundOnWindowFocus.apply(this, arguments);
-			}
-		}
+		VS.global.aListener.addEventListener(VS.Client, 'onWindowFocus', function() {
+			aSound.focused = true;
+			if (aSound.suspendedSounds.length) aSound.resumeAllSounds(true);
+			if (aSound.queuedSoundsToPlay.length || aSound.queuedSoundsToFade.length) aSound.playQueuedSounds();
+		});
 
-		if (!VS.Client._aSoundOnDisconnectSet) {
-			VS.Client._aSoundOnDisconnect = VS.Client.onDisconnect;
-			VS.Client._aSoundOnDisconnectSet = true;
-			VS.Client.onDisconnect = function() {
-				aSound.stopAllSounds();
-				if (this._aSoundOnDisconnect) this._aSoundOnDisconnect.apply(this, arguments);
-			}
-		}
-
-		const _onNew = VS.World.onNew;
-		VS.World.onNew = function() {
-			resumeAudioCtx();
-			if (_onNew) _onNew.apply(this, arguments);
-		}
-
-		const _onDel = VS.World.onDel;
-		VS.World.onDel = function() {
+		VS.global.aListener.addEventListener(VS.Client, 'onDisconnect', function() {
 			aSound.stopAllSounds();
-			if (_onDel) _onDel.apply(this, arguments);
-		}
+		});
+
+		VS.global.aListener.addEventListener(VS.Client, 'onNew', function() {
+			resumeAudioCtx();
+		});
+
+		VS.global.aListener.addEventListener(VS.Client, 'onDel', function() {
+			aSound.stopAllSounds();
+		});
 	}
 })();
