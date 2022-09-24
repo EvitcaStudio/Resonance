@@ -5,7 +5,7 @@
 	*/
 		// Client library
 		const engineWaitId = setInterval(() => {
-			if (VS.Client) {
+			if (VYLO.Client) {
 				clearInterval(engineWaitId);
 				buildSound();
 			}
@@ -203,8 +203,7 @@
 	
 			const aSound = {};
 	
-			VS.Client.aSound = aSound;
-			VS.global.aSound = aSound;
+			VYLO.global.aSound = aSound;
 			window.aSound = aSound;
 			// For WebKit- and Blink-based browsers
 			window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -243,9 +242,9 @@
 			// Function to check whether this library can play a sound at a given moment.
 			aSound.canPlaySound = function() {
 				// API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play
-				if (typeof(VS.Client.canPlaySound) === 'function') {
+				if (typeof(VYLO.Client.canPlaySound) === 'function') {
 					// If their defined conditions return false, then the sound cannot be played
-					if (!VS.Client.canPlaySound()) return false;
+					if (!VYLO.Client.canPlaySound()) return false;
 				}
 				return true;
 			}
@@ -352,7 +351,7 @@
 					emitSound();
 				} else {
 					const request = new XMLHttpRequest();
-					request.open('GET', VS.Resource.getResourcePath('sound', pSoundName));
+					request.open('GET', VYLO.Resource.getResourcePath('sound', pSoundName));
 					request.responseType = 'arraybuffer';
 					request.onload = function() {
 						const audioData = request.response;
@@ -363,7 +362,7 @@
 							emitSound();
 						}
 						const error = (pError) => {
-							console.error('Error with decoding audio data: ' + pSoundName + ' path: ' + VS.Resource.getResourcePath('sound', pSoundName));
+							console.error('Error with decoding audio data: ' + pSoundName + ' path: ' + VYLO.Resource.getResourcePath('sound', pSoundName));
 						}
 						self.audioCtx.decodeAudioData(audioData, success, error);
 					};
@@ -580,7 +579,7 @@
 				load() {
 					const request = new XMLHttpRequest();
 					const self = this;
-					request.open('GET', VS.Resource.getResourcePath('sound', self.soundName));
+					request.open('GET', VYLO.Resource.getResourcePath('sound', self.soundName));
 					request.responseType = 'arraybuffer';
 					request.onload = function() {
 						const audioData = request.response;
@@ -601,7 +600,7 @@
 						}
 						const error = (pError) => {
 							self.loaded = false;
-							console.error('Error with decoding audio data: ' + self.soundName + ' path: ' + VS.Resource.getResourcePath('sound', self.soundName) + ' This sound has been killed.');
+							console.error('Error with decoding audio data: ' + self.soundName + ' path: ' + VYLO.Resource.getResourcePath('sound', self.soundName) + ' This sound has been killed.');
 							self.kill();
 						}
 						aSound.audioCtx.decodeAudioData(audioData, success, error);
@@ -890,26 +889,26 @@
 			window.addEventListener('mousedown', resumeAudioCtx);
 			window.addEventListener('touchstart', resumeAudioCtx);
 	
-			VS.global.aListener.addEventListener(VS.Client, 'onWindowBlur', function() {
+			AListener.addEventListener(VYLO.Client, 'onWindowBlur', function() {
 				aSound.focused = false;
 				if (aSound.soundsPlaying.length) aSound.suspendAllSounds(true);
 			});
 	
-			VS.global.aListener.addEventListener(VS.Client, 'onWindowFocus', function() {
+			AListener.addEventListener(VYLO.Client, 'onWindowFocus', function() {
 				aSound.focused = true;
 				if (aSound.suspendedSounds.length) aSound.resumeAllSounds(true);
 				if (aSound.queuedSoundsToPlay.length || aSound.queuedSoundsToFade.length) aSound.playQueuedSounds();
 			});
 	
-			VS.global.aListener.addEventListener(VS.Client, 'onDisconnect', function() {
+			AListener.addEventListener(VYLO.Client, 'onDisconnect', function() {
 				aSound.stopAllSounds();
 			});
 	
-			VS.global.aListener.addEventListener(VS.Client, 'onNew', function() {
+			AListener.addEventListener(VYLO.Client, 'onNew', function() {
 				resumeAudioCtx();
 			});
 	
-			VS.global.aListener.addEventListener(VS.Client, 'onDel', function() {
+			AListener.addEventListener(VYLO.Client, 'onDel', function() {
 				aSound.stopAllSounds();
 			});
 		}
