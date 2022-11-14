@@ -889,26 +889,26 @@
 			window.addEventListener('mousedown', resumeAudioCtx);
 			window.addEventListener('touchstart', resumeAudioCtx);
 	
-			AListener.addEventListener(VYLO.Client, 'onWindowBlur', function() {
+			EListener.on(VYLO.Client, 'onWindowBlur', function() {
 				ESound.focused = false;
 				if (ESound.soundsPlaying.length) ESound.suspendAllSounds(true);
 			});
 	
-			AListener.addEventListener(VYLO.Client, 'onWindowFocus', function() {
+			EListener.on(VYLO.Client, 'onWindowFocus', function() {
 				ESound.focused = true;
 				if (ESound.suspendedSounds.length) ESound.resumeAllSounds(true);
 				if (ESound.queuedSoundsToPlay.length || ESound.queuedSoundsToFade.length) ESound.playQueuedSounds();
 			});
 	
-			AListener.addEventListener(VYLO.Client, 'onDisconnect', function() {
+			EListener.on(VYLO.Client, 'onDisconnect', function() {
 				ESound.stopAllSounds();
 			});
 	
-			AListener.addEventListener(VYLO.Client, 'onNew', function() {
+			EListener.on(VYLO.Client, 'onNew', function() {
 				resumeAudioCtx();
 			});
 	
-			AListener.addEventListener(VYLO.Client, 'onDel', function() {
+			EListener.on(VYLO.Client, 'onDel', function() {
 				ESound.stopAllSounds();
 			});
 		}
