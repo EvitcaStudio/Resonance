@@ -1,0 +1,26 @@
+{
+  "name": "esound",
+  "version": "1.0.0",
+  "description": "Class for managing sounds",
+  "main": "esound.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EvitcaStudio/ESound.git"
+  },
+  "author": "https://github.com/doubleactii",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EvitcaStudio/ESound/issues"
+  },
+  "homepage": "https://github.com/EvitcaStudio/ESound#readme",
+  "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "babel-loader": "^9.1.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  }
+}
