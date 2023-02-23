@@ -346,7 +346,7 @@ class ESoundManagerSingleton {
 			const sound = this.soundsPlaying[i];
 			// if this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
 			if (pFocus && sound.getFocusStatus()) continue;
-			sound.suspend();
+			sound.pause();
 		}
 	}
 	/**
