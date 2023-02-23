@@ -503,6 +503,8 @@ class Sound {
 	}
 	/**
 	 * Toggleable mute feature for this sound. Flips between muted and unmuted
+	 * 
+	 * @returns {Sound} This sound instance
 	 */
 	toggleMute() {
 		if (!this.loaded || !this.source) return;
@@ -512,6 +514,7 @@ class Sound {
 		} else {
 			this.gainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);
 		}
+		return this;
 	}
 	/**
 	 * Get the loop status of this sound
@@ -532,10 +535,13 @@ class Sound {
 	}
 	/**
 	 * Toggleable loop feature for this sound. Flips between loop and unlooped
+	 * 
+	 * @returns {Sound} This sound instance
 	 */
 	toggleLoop() {
 		this._loop = this._loop ? false : true;
 		if (this.source) this.source.loop = this._loop;
+		return this;
 	}
 	/**
 	 * Get the playback status of this sound
@@ -661,6 +667,8 @@ class Sound {
 	}
 	/**
 	 * Pauses this sound
+	 * 
+	 * @returns {Sound} This sound instance
 	 */
 	pause() {
 		if (!this.loaded) return;
@@ -672,9 +680,12 @@ class Sound {
 		// If this sound is not apart of the suspended sounds array add it
 		if (!ESound.suspendedSounds.includes(this)) ESound.suspendedSounds.push(this);
 		if (typeof(this.onSuspended) === 'function') this.onSuspended();
+		return this;
 	}
 	/**
 	 * Resumes playing this sound
+	 * 
+	 * @returns {Sound} This sound instance
 	 */
 	resume() {
 		if (!this.loaded) return;
@@ -686,11 +697,13 @@ class Sound {
 		this.play(true);
 		this.state = this.fader.raf ? 'fading' : 'playing';
 		if (typeof(this.onResumed) === 'function') this.onResumed();
+		return this;
 	}
 	/**
 	 * Stops this sound from playing
 	 * 
 	 * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched
+	 * @returns {Sound} This sound instance
 	 */
 	stop(pState) {
 		// The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.
@@ -711,11 +724,13 @@ class Sound {
 		}
 		this.state = pState ? pState : 'stopped';
 		if (this.state === 'stopped' && wasPlaying && typeof(this.onStopped) === 'function') this.onStopped();
+		return this;
 	}
 	/**
 	 * Plays this sound
 	 * 
 	 * @param {boolean} pResume - If this is being played from a paused state
+	 * @returns {Sound} This sound instance
 	 */
 	play(pResume) {
 		// A sound cannot be played if it's sound name is not referencable, 
@@ -793,12 +808,16 @@ class Sound {
 		this.suspendedTimeStamp = 0;
 		if (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);
 		if (!pResume && typeof(this.onStarted) === 'function') this.onStarted();
+		return this;
 	}
 	/**
 	 * Restarts this sound
+	 * 
+	 * @returns {Sound} This sound instance
 	 */
 	restart() {
 		this.stop('restart');
+		return this;
 	}
 	/**
 	 * Get whether this sound will play when the window is unfocused
@@ -881,6 +900,7 @@ class Sound {
 	 * @param {number} [pDuration=5000] - The duration of the fade in ms
 	 * @param {function} [pEase='easeOutCubic'] - Easing function
 	 * @param {function} pCallback - Callback to be called when the fade is over
+	 * @returns {Sound} This sound instance
 	 */
 	fade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {
 		if (isNaN(pVolume)) return;
@@ -950,6 +970,7 @@ class Sound {
 			self.fader.raf = requestAnimationFrame(fadeInterval);
 		}
 		this.fader.raf = requestAnimationFrame(fadeInterval);
+		return this;
 	}
 	/**
 	 * Start the queued fade
