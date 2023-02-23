@@ -402,6 +402,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/esound.js~esoundmanagersingleton#pausedsounds",
+    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-pausedSounds",
+    "src/esound.js~ESoundManagerSingleton#pausedSounds",
+    "member"
+  ],
+  [
     "src/esound.js~esoundmanagersingleton#playqueuedsounds",
     "class/src/esound.js~ESoundManagerSingleton.html#instance-method-playQueuedSounds",
     "src/esound.js~ESoundManagerSingleton#playQueuedSounds",
@@ -472,12 +478,6 @@ window.esdocSearchIndex = [
     "class/src/esound.js~ESoundManagerSingleton.html#instance-method-stopAllSounds",
     "src/esound.js~ESoundManagerSingleton#stopAllSounds",
     "method"
-  ],
-  [
-    "src/esound.js~esoundmanagersingleton#suspendedsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-suspendedSounds",
-    "src/esound.js~ESoundManagerSingleton#suspendedSounds",
-    "member"
   ],
   [
     "src/esound.js~esoundmanagersingleton#togglemute",
@@ -570,6 +570,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/esound.js~sound#canplayunfocused",
+    "class/src/esound.js~Sound.html#instance-method-canPlayUnfocused",
+    "src/esound.js~Sound#canPlayUnfocused",
+    "method"
+  ],
+  [
     "src/esound.js~sound#constructor",
     "class/src/esound.js~Sound.html#instance-constructor-constructor",
     "src/esound.js~Sound#constructor",
@@ -609,12 +615,6 @@ window.esdocSearchIndex = [
     "src/esound.js~sound#getcurrenttime",
     "class/src/esound.js~Sound.html#instance-method-getCurrentTime",
     "src/esound.js~Sound#getCurrentTime",
-    "method"
-  ],
-  [
-    "src/esound.js~sound#getfocusstatus",
-    "class/src/esound.js~Sound.html#instance-method-getFocusStatus",
-    "src/esound.js~Sound#getFocusStatus",
     "method"
   ],
   [
@@ -700,6 +700,12 @@ window.esdocSearchIndex = [
     "class/src/esound.js~Sound.html#instance-method-pause",
     "src/esound.js~Sound#pause",
     "method"
+  ],
+  [
+    "src/esound.js~sound#pausedtimestamp",
+    "class/src/esound.js~Sound.html#instance-member-pausedTimeStamp",
+    "src/esound.js~Sound#pausedTimeStamp",
+    "member"
   ],
   [
     "src/esound.js~sound#play",
@@ -795,12 +801,6 @@ window.esdocSearchIndex = [
     "src/esound.js~sound#stopsignal",
     "class/src/esound.js~Sound.html#instance-member-stopSignal",
     "src/esound.js~Sound#stopSignal",
-    "member"
-  ],
-  [
-    "src/esound.js~sound#suspendedtimestamp",
-    "class/src/esound.js~Sound.html#instance-member-suspendedTimeStamp",
-    "src/esound.js~Sound#suspendedTimeStamp",
     "member"
   ],
   [
