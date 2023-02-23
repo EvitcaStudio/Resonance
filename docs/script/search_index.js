@@ -594,6 +594,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/esound.js~sound#events",
+    "class/src/esound.js~Sound.html#instance-member-events",
+    "src/esound.js~Sound#events",
+    "member"
+  ],
+  [
     "src/esound.js~sound#fade",
     "class/src/esound.js~Sound.html#instance-method-fade",
     "src/esound.js~Sound#fade",
@@ -664,6 +670,12 @@ window.esdocSearchIndex = [
     "class/src/esound.js~Sound.html#instance-member-muted",
     "src/esound.js~Sound#muted",
     "member"
+  ],
+  [
+    "src/esound.js~sound#on",
+    "class/src/esound.js~Sound.html#instance-method-on",
+    "src/esound.js~Sound#on",
+    "method"
   ],
   [
     "src/esound.js~sound#onended",
@@ -832,5 +844,11 @@ window.esdocSearchIndex = [
     "class/src/esound.js~Sound.html#instance-method-wipe",
     "src/esound.js~Sound#wipe",
     "method"
+  ],
+  [
+    "src/esound.js~sound.event",
+    "typedef/index.html#static-typedef-Event",
+    "src/esound.js~Sound.Event",
+    "typedef"
   ]
 ]

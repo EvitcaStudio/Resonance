@@ -32,6 +32,7 @@
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/esound.js~ESoundManagerSingleton.html">ESoundManagerSingleton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/esound.js~Sound.html">Sound</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ESound">ESound</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-typedef">T</span><span data-ice="name"><span><a href="typedef/index.html#static-typedef-Event">Event</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -43,7 +44,7 @@
   
   
   
-  <span data-ice="source">| <span><a href="file/src/esound.js.html#lineNumber491">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/src/esound.js.html#lineNumber485">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
@@ -96,7 +97,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-constructor-constructor">constructor</a></span></span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pCallbackObject: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span> Sound </span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-constructor-constructor">constructor</a></span></span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span> Sound </span></span>
         </p>
       </div>
       <div>
@@ -160,6 +161,34 @@
           
           
           <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-member-endTime">endTime</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-member-events">events</a></span></span><span class="code" data-ice="signature">: {}</span>
         </p>
       </div>
       <div>
@@ -1077,7 +1106,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-method-build">build</a></span></span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pCallbackObject: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span> Sound </span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-method-build">build</a></span></span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span> Sound </span></span>
         </p>
       </div>
       <div>
@@ -1228,6 +1257,35 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
         
         
         <div data-ice="description"><p>Loads this sound and stores its data so future sounds can use the same buffer</p>
+</div>
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/src/esound.js~Sound.html#instance-method-on">on</a></span></span><span class="code" data-ice="signature">(pEvent: <span>Event[&apos;event&apos;]</span>, pCallback: <span>Event[&apos;callback&apos;]</span>): <span>Tween</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        <div data-ice="description"><p>Attaches a callback to the specified event.</p>
 </div>
       </div>
     </td>
@@ -1515,11 +1573,11 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     
     
     
-    <span class="code" data-ice="name">constructor</span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pCallbackObject: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span> Sound </span></span>
+    <span class="code" data-ice="name">constructor</span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span> Sound </span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber532">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber520">source</a></span></span>
     </span>
   </h3>
 
@@ -1594,48 +1652,6 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
       <td data-ice="description"><p>Whether this sound should loop or not</p>
 </td>
     </tr>
-<tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">pCallbackObject</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Object full of callbacks to call (soon to be deprecated and replaced with on(&apos;event&apos;) handlers)</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onStarted</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has started playing</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onStopped</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has stopped playing</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onEnded</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has ended</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onSuspended</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has been paused</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onResumed</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has been resumed</p>
-</td>
-    </tr>
 </tbody>
   </table>
 </div>
@@ -1686,7 +1702,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber537">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber525">source</a></span></span>
     </span>
   </h3>
 
@@ -1729,7 +1745,50 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber535">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber523">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-events">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">events</span><span class="code" data-ice="signature">: {}</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber536">source</a></span></span>
     </span>
   </h3>
 
@@ -1772,7 +1831,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber547">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber535">source</a></span></span>
     </span>
   </h3>
 
@@ -1815,7 +1874,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber539">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber527">source</a></span></span>
     </span>
   </h3>
 
@@ -1858,7 +1917,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber637">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber655">source</a></span></span>
     </span>
   </h3>
 
@@ -1903,7 +1962,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber646">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber664">source</a></span></span>
     </span>
   </h3>
 
@@ -1960,7 +2019,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber540">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber528">source</a></span></span>
     </span>
   </h3>
 
@@ -2003,7 +2062,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber592">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber610">source</a></span></span>
     </span>
   </h3>
 
@@ -2060,7 +2119,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber600">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber618">source</a></span></span>
     </span>
   </h3>
 
@@ -2104,7 +2163,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber542">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber530">source</a></span></span>
     </span>
   </h3>
 
@@ -2147,7 +2206,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber688">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber920">source</a></span></span>
     </span>
   </h3>
 
@@ -2190,7 +2249,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber690">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber922">source</a></span></span>
     </span>
   </h3>
 
@@ -2233,7 +2292,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber686">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber918">source</a></span></span>
     </span>
   </h3>
 
@@ -2276,7 +2335,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber687">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber919">source</a></span></span>
     </span>
   </h3>
 
@@ -2319,7 +2378,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber689">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber921">source</a></span></span>
     </span>
   </h3>
 
@@ -2362,7 +2421,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber545">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber533">source</a></span></span>
     </span>
   </h3>
 
@@ -2405,7 +2464,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber541">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber529">source</a></span></span>
     </span>
   </h3>
 
@@ -2448,7 +2507,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber546">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber534">source</a></span></span>
     </span>
   </h3>
 
@@ -2491,7 +2550,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber619">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber637">source</a></span></span>
     </span>
   </h3>
 
@@ -2548,7 +2607,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber627">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber645">source</a></span></span>
     </span>
   </h3>
 
@@ -2592,7 +2651,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber536">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber524">source</a></span></span>
     </span>
   </h3>
 
@@ -2635,7 +2694,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber533">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber521">source</a></span></span>
     </span>
   </h3>
 
@@ -2678,7 +2737,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber538">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber526">source</a></span></span>
     </span>
   </h3>
 
@@ -2721,7 +2780,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber534">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber522">source</a></span></span>
     </span>
   </h3>
 
@@ -2764,7 +2823,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber544">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber532">source</a></span></span>
     </span>
   </h3>
 
@@ -2807,7 +2866,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber543">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber531">source</a></span></span>
     </span>
   </h3>
 
@@ -2850,7 +2909,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber548">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber537">source</a></span></span>
     </span>
   </h3>
 
@@ -2893,7 +2952,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber560">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber549">source</a></span></span>
     </span>
   </h3>
 
@@ -2950,7 +3009,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber568">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber557">source</a></span></span>
     </span>
   </h3>
 
@@ -2996,7 +3055,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber552">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber541">source</a></span></span>
     </span>
   </h3>
 
@@ -3039,7 +3098,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber549">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber538">source</a></span></span>
     </span>
   </h3>
 
@@ -3082,7 +3141,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber550">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber539">source</a></span></span>
     </span>
   </h3>
 
@@ -3125,7 +3184,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber551">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber540">source</a></span></span>
     </span>
   </h3>
 
@@ -3167,11 +3226,11 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     
     
     
-    <span class="code" data-ice="name">build</span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pCallbackObject: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span> Sound </span></span>
+    <span class="code" data-ice="name">build</span><span class="code" data-ice="signature">(pSoundPath: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pVolume: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pStartTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pEndTime: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pSave: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlayUnfocused: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>, pPlaybackRate: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, pLoop: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span> Sound </span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber675">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber687">source</a></span></span>
     </span>
   </h3>
 
@@ -3246,48 +3305,6 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
       <td data-ice="description"><p>Whether this sound should loop or not</p>
 </td>
     </tr>
-<tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">pCallbackObject</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Object full of callbacks to call (soon to be deprecated and replaced with on(&apos;event&apos;) handlers)</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onStarted</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has started playing</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onStopped</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has stopped playing</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onEnded</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has ended</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onSuspended</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has been paused</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">pCallbackObject.onResumed</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">function</a></span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback for when the sound has been resumed</p>
-</td>
-    </tr>
 </tbody>
   </table>
 </div>
@@ -3335,7 +3352,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber894">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber897">source</a></span></span>
     </span>
   </h3>
 
@@ -3392,7 +3409,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber973">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber979">source</a></span></span>
     </span>
   </h3>
 
@@ -3490,7 +3507,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber955">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber961">source</a></span></span>
     </span>
   </h3>
 
@@ -3547,7 +3564,7 @@ The new value is not used, as this is a &quot;read-only&quot; variable. So any a
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber901">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber904">source</a></span></span>
     </span>
   </h3>
 
@@ -3592,7 +3609,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber705">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber708">source</a></span></span>
     </span>
   </h3>
 
@@ -3625,6 +3642,87 @@ If the recycle manager is full, this sound will become an empty class instance.<
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-on">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">on</span><span class="code" data-ice="signature">(pEvent: <span>Event[&apos;event&apos;]</span>, pCallback: <span>Event[&apos;callback&apos;]</span>): <span>Tween</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber572">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  <div data-ice="description"><p>Attaches a callback to the specified event.</p>
+</div>
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">pEvent</td>
+      <td data-ice="type" class="code"><span>Event[&apos;event&apos;]</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>The event to attach the callback to</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">pCallback</td>
+      <td data-ice="type" class="code"><span>Event[&apos;callback&apos;]</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>The function to be called when the event is triggered</p>
+</td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>Tween</span></td>
+          <td class="return-desc" data-ice="returnDescription"><p>The Tween instance</p>
+</td>
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="instance-method-pause">
     <span class="access" data-ice="access">public</span>
     
@@ -3636,7 +3734,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber741">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber744">source</a></span></span>
     </span>
   </h3>
 
@@ -3693,7 +3791,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber803">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber806">source</a></span></span>
     </span>
   </h3>
 
@@ -3767,7 +3865,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber1046">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber1052">source</a></span></span>
     </span>
   </h3>
 
@@ -3811,7 +3909,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber886">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber889">source</a></span></span>
     </span>
   </h3>
 
@@ -3868,7 +3966,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber758">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber761">source</a></span></span>
     </span>
   </h3>
 
@@ -3925,7 +4023,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber776">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber779">source</a></span></span>
     </span>
   </h3>
 
@@ -3999,7 +4097,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber609">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber627">source</a></span></span>
     </span>
   </h3>
 
@@ -4056,7 +4154,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber577">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber595">source</a></span></span>
     </span>
   </h3>
 
@@ -4113,7 +4211,7 @@ If the recycle manager is full, this sound will become an empty class instance.<
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber914">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/esound.js.html#lineNumber917">source</a></span></span>
     </span>
   </h3>
 
