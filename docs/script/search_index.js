@@ -312,6 +312,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/esound.js~esoundmanagersingleton#abilitytoplaysound",
+    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-abilityToPlaySound",
+    "src/esound.js~ESoundManagerSingleton#abilityToPlaySound",
+    "member"
+  ],
+  [
     "src/esound.js~esoundmanagersingleton#adjustvolume",
     "class/src/esound.js~ESoundManagerSingleton.html#instance-method-adjustVolume",
     "src/esound.js~ESoundManagerSingleton#adjustVolume",
@@ -345,6 +351,12 @@ window.esdocSearchIndex = [
     "src/esound.js~esoundmanagersingleton#emit",
     "class/src/esound.js~ESoundManagerSingleton.html#instance-method-emit",
     "src/esound.js~ESoundManagerSingleton#emit",
+    "method"
+  ],
+  [
+    "src/esound.js~esoundmanagersingleton#enablechecker",
+    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-enableChecker",
+    "src/esound.js~ESoundManagerSingleton#enableChecker",
     "method"
   ],
   [
