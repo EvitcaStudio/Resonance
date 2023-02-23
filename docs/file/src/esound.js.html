@@ -226,11 +226,13 @@ class ESoundManagerSingleton {
 	 * Function to adjust master volume
 	 * 
 	 * @param {number} pVolume - The number to change the volume to
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	adjustVolume(pVolume) {
 		// maybe show a GUI of the volume changing
 		this.volume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);
 		this.gainNode.gain.value = ESoundManagerSingleton.normalize(this.volume);
+		return this;
 	}
 	/**
 	 * Fades this sound to the specified volume in the specified duration via the specified ease
@@ -239,6 +241,7 @@ class ESoundManagerSingleton {
 	 * @param {number} [pDuration=5000] - The duration of the fade in ms
 	 * @param {function} [pEase=&apos;easeOutCubic&apos;] - Easing function
 	 * @param {function} pCallback - Callback to be called when the fade is over
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	fade(pVolume=100, pDuration=5000, pEase=&apos;easeOutCubic&apos;, pCallback) {
 		if (isNaN(pVolume)) return;
@@ -289,9 +292,12 @@ class ESoundManagerSingleton {
 			self.fader.raf = requestAnimationFrame(fadeInterval);
 		}
 		this.fader.raf = requestAnimationFrame(fadeInterval);
+		return this;
 	}
 	/**
 	 * Master mute
+	 * 
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	toggleMute() {
 		this.muted = this.muted ? false : true;
@@ -301,6 +307,7 @@ class ESoundManagerSingleton {
 		} else {
 			this.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;
 		}
+		return this;
 	}
 	/**
 	 * Checks if the sound manager is currently muted
@@ -403,6 +410,7 @@ class ESoundManagerSingleton {
 	 * This effectively stops all sounds in the game except those specified in the pException array
 	 * 
 	 * @param {Array} pException - an array of sounds that should not stop
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	stopAllSounds(pException) {
 		for (let i = this.soundsPlaying.length - 1; i &gt;= 0; i--) {
@@ -413,9 +421,12 @@ class ESoundManagerSingleton {
 			}
 			sound.stop();
 		}
+		return this;
 	}
 	/**
 	 * This effectively kills all sounds in the game and subjects them to be recycled 
+	 * 
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	killAllSounds() {
 		// this effectively kills all sounds in the game, and subjects them to be recycled
@@ -423,11 +434,13 @@ class ESoundManagerSingleton {
 			const sound = this.soundsPlaying[i];
 			sound.kill();
 		}
+		return this;
 	}
 	/**
 	 * Pauses all sounds in the game
 	 * 
 	 * @param {boolean} pFocus - If this function was called automatically by the game being unfocused
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	pauseAllSounds(pFocus) {
 		for (let i = this.soundsPlaying.length - 1; i &gt;= 0; i--) {
@@ -436,17 +449,20 @@ class ESoundManagerSingleton {
 			if (pFocus &amp;&amp; sound.canPlayUnfocused()) continue;
 			sound.pause();
 		}
+		return this;
 	}
 	/**
 	 * Resumes all sounds in games
 	 * 
 	 * @param {boolean} pFocus - If this function was called automatically by the game being focused
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	resumeAllSounds(pFocus) {
 		for (let i = this.pausedSounds.length - 1; i &gt;= 0; i--) {
 			const sound = this.pausedSounds[i];
 			sound.resume();
 		}
+		return this;
 	}
 	/**
 	 * @private
@@ -469,20 +485,23 @@ class ESoundManagerSingleton {
 	 * Removes the loaded audio buffer data for this sound
 	 * 
 	 * @param {string} pSoundPath - The path of the sound file
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	unloadSound(pSoundPath) {
 		if (this.loadedBuffers[pSoundPath]) delete this.loadedBuffers[pSoundPath];
+		return this;
 	}
 	/**
 	 * Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed
 	 * 
 	 * @private
 	 * @param {Sound} pSound - The sound to recycle 
-	 * @returns 
+	 * @returns {ESoundManagerSingleton} This instance
 	 */
 	recycleSound(pSound) {
-		if (!(pSound instanceof Sound)) return;
+		if (!(pSound instanceof Sound)) return this;
 		pSound.kill();
+		return this;
 	}
 	/**
 	 * This will start playing sounds that were initially blocked by not having a user gesture.
