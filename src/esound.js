@@ -165,7 +165,7 @@ class ESoundManagerSingleton {
 		this.fader.currentIteration = 0;
 		this.fader.initialValue = this.volume;
 		this.fader.changeInValue = pVolume - this.fader.initialValue;
-		this.fader.totalIterations = ESoundManagerSingleton.FRAME_RATE * this.fader.duration;
+		this.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);
 		this.fader.startStamp = null;
 		this.fader.previousTimeStamp = null;
 		// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused
@@ -931,7 +931,7 @@ class Sound {
 		this.fader.currentIteration = 0;
 		this.fader.initialValue = this._volume;
 		this.fader.changeInValue = pVolume - this.fader.initialValue;
-		this.fader.totalIterations = ESoundManagerSingleton.FRAME_RATE * this.fader.duration;
+		this.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);
 		this.fader.startStamp = null;
 		this.fader.previousTimeStamp = null;
 		// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused
