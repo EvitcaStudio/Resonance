@@ -75,7 +75,7 @@ class ESoundManagerSingleton {
 		window.addEventListener('mousedown', this.resumeAudioCtx.bind(this));
 		window.addEventListener('touchstart', this.resumeAudioCtx.bind(this));
 		window.addEventListener('load', this.resumeAudioCtx.bind(this));
-		// When the window is unfocused, all sounds are suspended
+		// When the window is unfocused, all sounds are paused
 		window.addEventListener('blur', () => {
 			this.focused = false;
 			if (this.soundsPlaying.length) this.pauseAllSounds(true);
@@ -83,7 +83,7 @@ class ESoundManagerSingleton {
 		// When the window is focused all sounds are resumed, and queued sounds are played
 		window.addEventListener('focus', () => {
 			this.focused = true;
-			if (this.suspendedSounds.length) this.resumeAllSounds(true);
+			if (this.pausedSounds.length) this.resumeAllSounds(true);
 			if (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();				
 		});
 
@@ -99,8 +99,8 @@ class ESoundManagerSingleton {
 		this.gainNode.connect(this.audioCtx.destination);
 		// Array of sounds that are currently playing
 		this.soundsPlaying = [];
-		// Array of sounds that are currently suspended
-		this.suspendedSounds = [];
+		// Array of sounds that are currently paused
+		this.pausedSounds = [];
 		// Array of sounds that can be resused
 		this.recycledSounds = [];
 		// Array of sounds that are queued for playing
@@ -117,7 +117,7 @@ class ESoundManagerSingleton {
 		this.muted = false;
 		// Current state of the library
 		this.state = null;
-		// Whether or ESound has the window's focus. (Sound are suspended when the focus is lost, and resumed when its gained)
+		// Whether or ESound has the window's focus. (Sound are paused when the focus is lost, and resumed when its gained)
 		this.focused = true;
 	}
 
@@ -290,8 +290,8 @@ class ESoundManagerSingleton {
 	 * @param {number} [pVolume=100] - The volume of the sound
 	 * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)
 	 * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)
-	 * @param {boolean} [pSave=false] - Whether to save this sound, or kill/recycle it when it's completed
-	 * @param {boolean} [pPlayUnfocused=false] - If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
+	 * @param {boolean} [pSave=false] - Whether to save this sound, or recycle it when it's completed
+	 * @param {boolean} [pPlayUnfocused=false] - If this sound is set to true then it will not be paused automatically when the game screen is not focused
 	 * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
 	 * @param {boolean} [pLoop=false] - Whether this sound should loop or not
 	 * @param {Object} pCallbackObject - Object full of callbacks to call (soon to be deprecated and replaced with on('event') handlers)
@@ -344,8 +344,8 @@ class ESoundManagerSingleton {
 	pauseAllSounds(pFocus) {
 		for (let i = this.soundsPlaying.length - 1; i >= 0; i--) {
 			const sound = this.soundsPlaying[i];
-			// if this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
-			if (pFocus && sound.getFocusStatus()) continue;
+			// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
+			if (pFocus && sound.canPlayUnfocused()) continue;
 			sound.pause();
 		}
 	}
@@ -355,8 +355,8 @@ class ESoundManagerSingleton {
 	 * @param {boolean} pFocus - If this function was called automatically by the game being focused
 	 */
 	resumeAllSounds(pFocus) {
-		for (let i = this.suspendedSounds.length - 1; i >= 0; i--) {
-			const sound = this.suspendedSounds[i];
+		for (let i = this.pausedSounds.length - 1; i >= 0; i--) {
+			const sound = this.pausedSounds[i];
 			sound.resume();
 		}
 	}
@@ -434,7 +434,7 @@ class Sound {
 	#muted = false;
 	#state;
 	#startedTimeStamp;
-	#suspendedTimeStamp = 0;
+	#pausedTimeStamp = 0;
 	#playUnfocused;
 	#fader = {};
 	#stopSignal = false;
@@ -449,8 +449,8 @@ class Sound {
 	 * @param {number} pVolume - The volume of the sound
 	 * @param {number} pStartTime - The start time of this sound (to play a clipped version)
 	 * @param {number} pEndTime - The end time of this sound (to play a clipped version)
-	 * @param {boolean} pSave - Whether to save this sound, or delete it when it's completed
-	 * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
+	 * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed
+	 * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be played automatically when the game screen is not focused
 	 * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
 	 * @param {boolean} pLoop - Whether this sound should loop or not
 	 * @param {Object} pCallbackObject - Object full of callbacks to call (soon to be deprecated and replaced with on('event') handlers)
@@ -474,7 +474,7 @@ class Sound {
 		this.muted = false;
 		this.state = null;
 		this.startedTimeStamp = null;
-		this.suspendedTimeStamp = 0;
+		this.pausedTimeStamp = 0;
 		this.playUnfocused = null;
 		this.fader = {};
 		this.stopSignal = false;
@@ -592,8 +592,8 @@ class Sound {
 	 * @param {number} pVolume - The volume of the sound
 	 * @param {number} pStartTime - The start time of this sound (to play a clipped version)
 	 * @param {number} pEndTime - The end time of this sound (to play a clipped version)
-	 * @param {boolean} pSave - Whether to save this sound, or delete it when it's completed
-	 * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be suspended automatically when the game screen is not focused
+	 * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed
+	 * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused
 	 * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
 	 * @param {boolean} pLoop - Whether this sound should loop or not
 	 * @param {Object} pCallbackObject - Object full of callbacks to call (soon to be deprecated and replaced with on('event') handlers)
@@ -674,11 +674,11 @@ class Sound {
 		if (!this.loaded) return;
 		this.stop('suspended');
 		this.state = 'suspended';
-		this.suspendedTimeStamp = ESound.audioCtx.currentTime - this.startedTimeStamp;
+		this.pausedTimeStamp = ESound.audioCtx.currentTime - this.startedTimeStamp;
 		// This sound is no longer considered to be playing, so remove it from the array
 		if (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);
 		// If this sound is not apart of the suspended sounds array add it
-		if (!ESound.suspendedSounds.includes(this)) ESound.suspendedSounds.push(this);
+		if (!ESound.pausedSounds.includes(this)) ESound.pausedSounds.push(this);
 		if (typeof(this.onSuspended) === 'function') this.onSuspended();
 		return this;
 	}
@@ -690,10 +690,10 @@ class Sound {
 	resume() {
 		if (!this.loaded) return;
 		// This sound is no longer considered to be suspended, so remove it from the array
-		if (ESound.suspendedSounds.includes(this)) ESound.suspendedSounds.splice(ESound.suspendedSounds.indexOf(this), 1);
+		if (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);
 		// This sound is no longer suspended and is now playing again, add it to the playing array
 		if (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);
-		// this will use the this.suspendedTimeStamp value to resume
+		// this will use the this.pausedTimeStamp value to resume
 		this.play(true);
 		this.state = this.fader.raf ? 'fading' : 'playing';
 		if (typeof(this.onResumed) === 'function') this.onResumed();
@@ -745,7 +745,7 @@ class Sound {
 			return;
 		}
 		// The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost
-		if (!ESound.focused && !this.playUnfocused) {
+		if (!ESound.focused && !this.canPlayUnfocused()) {
 			if (!ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.push(this);
 			return;
 		}
@@ -756,7 +756,7 @@ class Sound {
 			this.source = null;
 			this.gainNode = null;
 		}
-		if (ESound.suspendedSounds.includes(this)) ESound.suspendedSounds.splice(ESound.suspendedSounds.indexOf(this), 1);
+		if (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);
 		const source = ESound.audioCtx.createBufferSource();
 		const gainNode = ESound.audioCtx.createGain();
 		const self = this;
@@ -796,7 +796,7 @@ class Sound {
 		this.duration = source.buffer.duration;
 		this.playAfterLoad = null;
 		if (!source.start) source.start = source.noteOn;
-		source.start(0, (this.suspendedTimeStamp ? this.suspendedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);
+		source.start(0, (this.pausedTimeStamp ? this.pausedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);
 /* 				
 		// This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.
 		source.loop = this._loop;
@@ -804,8 +804,8 @@ class Sound {
 		source.loopEnd = this.endTime ? this.endTime : source.buffer.duration; 
 */
 		this.state = 'playing';
-		this.startedTimeStamp = ESound.audioCtx.currentTime - (this.suspendedTimeStamp ? this.suspendedTimeStamp : this.startTime);
-		this.suspendedTimeStamp = 0;
+		this.startedTimeStamp = ESound.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);
+		this.pausedTimeStamp = 0;
 		if (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);
 		if (!pResume && typeof(this.onStarted) === 'function') this.onStarted();
 		return this;
@@ -823,7 +823,7 @@ class Sound {
 	 * Get whether this sound will play when the window is unfocused
 	 * @returns {boolean} Whether or not this sound will play when the window is unfocused
 	 */
-	getFocusStatus() {
+	canPlayUnfocused() {
 		return this.playUnfocused ? true : false;
 	}
 	/**
@@ -867,7 +867,7 @@ class Sound {
 		this.playAfterLoad = null;
 		this.state = 'recycled';
 		this.startedTimeStamp = null;
-		this.suspendedTimeStamp = 0;
+		this.pausedTimeStamp = 0;
 		this.playUnfocused = null;
 		this.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;
 		this.stopSignal = false;
@@ -875,7 +875,7 @@ class Sound {
 		this._volume = 100;
 		this._info.soundPath = this._info.duration = null;
 		if (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);
-		if (ESound.suspendedSounds.includes(this)) ESound.suspendedSounds.splice(ESound.suspendedSounds.indexOf(this), 1);
+		if (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);
 		if (ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.splice(ESound.queuedSoundsToPlay.indexOf(this), 1);
 		if (ESound.queuedSoundsToFade.includes(this)) ESound.queuedSoundsToFade.splice(ESound.queuedSoundsToFade.indexOf(this), 1);
 	}
@@ -885,8 +885,8 @@ class Sound {
 	 * @returns {number} The current timestamp into the sound
 	 */
 	getCurrentTime() {
-		if (this.suspendedTimeStamp) {
-			return this.suspendedTimeStamp * this._playbackRate;
+		if (this.pausedTimeStamp) {
+			return this.pausedTimeStamp * this._playbackRate;
 		} else if (this.startedTimeStamp) {
 			return ESound.audioCtx.currentTime - this.startedTimeStamp;
 		} else {
@@ -908,7 +908,7 @@ class Sound {
 		// If a sound is not playing, it cannot be faded.
 		if (this.state !== 'playing' && ESound.focused) return;
 		// The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus
-		if (!ESound.focused && !this.playUnfocused) {
+		if (!ESound.focused && !this.canPlayUnfocused()) {
 			// If this sound is already queued to fade, then just exit out
 			if (ESound.queuedSoundsToFade.includes(this)) return;
 			this.fader.queue = {
