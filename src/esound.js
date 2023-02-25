@@ -1,4 +1,4 @@
-import { Tween } from "./tween.min.js";
+import { Tween } from "./tween.js";
 
 /**
 * Class for managing sounds
