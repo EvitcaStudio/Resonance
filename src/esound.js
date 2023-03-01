@@ -3,9 +3,7 @@ import { Tween } from "./tween.js";
 /**
 * Class for managing sounds
 * @class ESoundManagerSingleton  
-* @license
-* ESound does not have a license at this time.
-* For licensing contact the author
+* @license ESound does not have a license at this time. For licensing contact the author
 * @author https://github.com/doubleactii
 * Copyright (c) 2023 Evitca Studio
 

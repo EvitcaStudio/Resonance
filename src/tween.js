@@ -1,9 +1,7 @@
 /**
 * Class for creating a tweening animation
 * @class Tween  
-* @license
-* Tween does not have a license at this time.
-* For licensing contact the author
+* @license Tween does not have a license at this time. For licensing contact the author
 * @author https://github.com/doubleactii
 * Copyright (c) 2023 Evitca Studio
 */
@@ -251,6 +249,7 @@ export class Tween {
         this.duration = pDuration;
         this.easing = typeof(pEasing) === 'function' ? pEasing : Tween.linear;
         this.events = {};
+        this.exportedValues = {};
         this.tweening = false;
         this.update = null;
         this.paused = false;
@@ -301,7 +300,7 @@ export class Tween {
      */
     animationFrame = () => {
         if (!this.tweening || this.paused) return;
-		const now = performance.now();
+		const now = Date.now();
 		if (!this.lastTime) this.lastTime = now;
         this.elapsed += now - this.lastTime;
         let progress = this.elapsed / this.duration;
@@ -314,7 +313,6 @@ export class Tween {
             progress = 1;
         }
 
-        let currentValues = {};
 		for (let key in this.end) {
 			let startValue = this.start[key];
 			let endValue = this.end[key];
@@ -326,13 +324,13 @@ export class Tween {
 					this.easing(progress, startValue[1], endValue[1] - startValue[1], 1),
 					this.easing(progress, startValue[2], endValue[2] - startValue[2], 1)
 				];
-				currentValues[key] = Tween._rgbToHex(currentRGB);
+				this.exportedValues[key] = Tween._rgbToHex(currentRGB);
 			} else {
-				currentValues[key] = this.easing(progress, startValue, endValue - startValue, 1);
+				this.exportedValues[key] = this.easing(progress, startValue, endValue - startValue, 1);
 			}
 		}
 
-        this.update(currentValues);
+        this.update(this.exportedValues);
 
         if (progress === 1 && !this.oscillating) {
             this.stop();
@@ -386,7 +384,7 @@ export class Tween {
      */
     resume() {
         if (this.paused) {
-            this.lastTime = performance.now();
+            this.lastTime = Date.now();
             this.paused = false;
             if (this.events.resume) {
                 this.events.resume();
@@ -418,5 +416,10 @@ export class Tween {
         this.elapsed = 0;
 		this.lastTime = 0;
         this.paused = false;
+        for (const prop in this.exportedValues) {
+            if (this.exportedValues.hasOwnProperty(prop)) {
+                delete this.exportedValues[prop];
+            }
+        }
     }
 }
