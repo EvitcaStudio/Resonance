@@ -1,7 +1,7 @@
 const path = require('path');
 module.exports = {
     entry: {
-        esound: './src/esound.js',
+        esound: './src/esound.mjs',
     },
     output: {
       filename: '[name].min.mjs',
@@ -43,6 +43,6 @@ module.exports = {
      * When you run webpack in watch mode, it will watch for changes in your source code and automatically trigger a new build whenever a change is detected. 
      * This means that you can simply make changes to your code and refresh your browser to see the changes in real time.
      */
-    watch: true
+    watch: false
   };
   
