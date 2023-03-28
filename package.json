@@ -4,7 +4,8 @@
   "description": "Class for managing sounds",
   "main": "esound.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-dist": "npx webpack && uglifyjs dist/esound.min.mjs -m -c --comments -o dist/esound.min.mjs && esdoc -c esdoc.json"
   },
   "repository": {
     "type": "git",
