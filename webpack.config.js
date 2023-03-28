@@ -4,7 +4,7 @@ module.exports = {
         esound: './src/esound.js',
     },
     output: {
-      filename: '[name].min.js',
+      filename: '[name].min.mjs',
       path: path.resolve(__dirname, 'dist'),
       /**
        * Clean the directory before each build.
