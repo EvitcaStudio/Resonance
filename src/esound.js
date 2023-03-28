@@ -1,4 +1,4 @@
-import { Tween } from "./tween.js";
+import { Tween } from "./vendor/tween.js";
 
 /**
 * Class for managing sounds
