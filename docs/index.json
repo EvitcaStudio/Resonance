@@ -566,10 +566,10 @@
   {
     "__docId__": 48,
     "kind": "file",
-    "name": "src/esound.js",
-    "content": "import { Tween } from \"./tween.js\";\r\n\r\n/**\r\n* Class for managing sounds\r\n* @class ESoundManagerSingleton  \r\n* @license ESound does not have a license at this time. For licensing contact the author\r\n* @author https://github.com/doubleactii\r\n* Copyright (c) 2023 Evitca Studio\r\n\r\nSafari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.\r\nOtherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.\r\n*/\r\nclass ESoundManagerSingleton {\r\n\t/**\r\n\t * The max volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_VOLUME = 200;\r\n\t/**\r\n\t * The min volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MIN_VOLUME = -200;\r\n\t/**\r\n\t * The max number of sounds that can be recycled\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_RECYCLED_SOUNDS = 500;\r\n\t/**\r\n\t * The max speed this sound can be played at\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_PLAYBACK_RATE = 10;\r\n\t/**\r\n\t * The frame rate at which to fade the sounds\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic FRAME_RATE = 60;\r\n\t/**\r\n\t * \r\n\t * @param {number} pVal - Value to clamp\r\n\t * @param {number} pMin - Minimum value\r\n\t * @param {number} pMax - Maximum value\r\n\t * @returns The clamped number\r\n\t */\r\n\tstatic clamp = (pVal, pMin, pMax) => {\r\n\t\treturn Math.max(pMin, Math.min(pVal, pMax));\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pValue - The number to normalize within a range\r\n\t * @param {number} pMin - The min number\r\n\t * @param {number} pMax - The max number\r\n\t * @param {number} pRange - The range to normalize within\r\n\t * @returns The normalized number\r\n\t */\r\n\tstatic normalize = (pValue, pMin=0, pMax=100, pRange=1) => {\r\n\t\treturn (pValue - pMin) / (pMax - pMin) * pRange;\r\n\t}\r\n\tconstructor() {\r\n\t\tif (!window.AudioContext && !window.webkitAudioContext) {\r\n\t\t\tconsole.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// For WebKit- and Blink-based browsers\r\n\t\twindow.AudioContext = window.AudioContext || window.webkitAudioContext;\r\n\t\t// Attach events to start audio through gestures\r\n\t\twindow.addEventListener('mousedown', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('touchstart', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('load', this.resumeAudioCtx.bind(this));\r\n\t\t// When the window is unfocused, all sounds are paused\r\n\t\twindow.addEventListener('blur', () => {\r\n\t\t\tthis.focused = false;\r\n\t\t\tif (this.soundsPlaying.length) this.pauseAllSounds(true);\r\n\t\t});\r\n\t\t// When the window is focused all sounds are resumed, and queued sounds are played\r\n\t\twindow.addEventListener('focus', () => {\r\n\t\t\tthis.focused = true;\r\n\t\t\tif (this.pausedSounds.length) this.resumeAllSounds(true);\r\n\t\t\tif (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();\t\t\t\t\r\n\t\t});\r\n\t\t/**\r\n\t\t * The audio context all audio will dervie from\r\n\t\t * \r\n\t\t * @type {AudioContext}\r\n\t\t */\r\n\t\tthis.audioCtx = new AudioContext();\r\n\t\t// For older browser support that has this old API.\r\n\t\tif (!this.audioCtx.createGain && this.audioCtx.createGainNode) this.audioCtx.createGain = this.audioCtx.createGainNode;\r\n\t\t/**\r\n\t\t * Gain node\r\n\t\t * @type {GainNode}\r\n\t\t */\r\n\t\tthis.gainNode = this.audioCtx.createGain();\r\n\t\t// Assign volume to gainNode\r\n\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(ESoundManagerSingleton.MAX_VOLUME);\r\n\t\t// Connect gain node to speakers\r\n\t\tthis.gainNode.connect(this.audioCtx.destination);\r\n\t\t/**\r\n\t\t * Array of sounds that are currently playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.soundsPlaying = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are currently paused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.pausedSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that can be resused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.recycledSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToPlay = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for fading\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToFade = [];\r\n\t\t/**\r\n\t\t * An object that stores the buffer data of a sound so it does not have to be loaded each time\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.loadedBuffers = {};\r\n\t\t/**\r\n\t\t * An object that stores fade information\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.fader = {};\r\n\t\t/**\r\n\t\t * The master volume \r\n\t\t * \r\n\t\t * @type {number}\r\n\t\t */\r\n\t\tthis.volume = 100;\r\n\t\t/**\r\n\t\t * Mute status\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.muted = false;\r\n\t\t/**\r\n\t\t * Current state of the library\r\n\t\t * \r\n\t\t * @type {string}\r\n\t\t */\r\n\t\tthis.state = null;\r\n\t\t/**\r\n\t\t * Whether or ESound has the window's focus. (Sound are paused when the focus is lost, and resumed when its gained)\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.focused = true;\r\n\t\t/**\r\n\t\t * The checker function to resolve to true or false denoting if a sound can be played\r\n\t\t * Master control over which sounds can play\r\n\t\t * \r\n\t\t * @type {Function}\r\n\t\t */\r\n\t\tthis.abilityToPlaySound = null;\r\n\t}\r\n\t/**\r\n\t * Function to check whether this library can play a sound at a given moment.\r\n\t * \r\n\t * @returns {boolean} Whether a sound can be played or not.\r\n\t */\r\n\tcanPlaySound() {\r\n\t\tif (this.abilityToPlaySound) {\r\n\t\t\tif (!this.abilityToPlaySound()) return false;\r\n\t\t}\r\n\t\treturn true;\r\n\t}\r\n\t/**\r\n\t * API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\r\n\t * Enables a checker to become the master checker over whether a sound can play\r\n\t * If their defined conditions return false, then the sound cannot be played\r\n\t * \r\n\t * @param {Function} pCheckerFunction - The function that will resolve to true or false denoting if a sound can be played\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tenableChecker(pCheckerFunction) {\r\n\t\tif (typeof(pCheckerFunction) === 'function') {\r\n\t\t\tthis.abilityToPlaySound = pCheckerFunction;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Function to adjust master volume\r\n\t * \r\n\t * @param {number} pVolume - The number to change the volume to\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tadjustVolume(pVolume) {\r\n\t\t// maybe show a GUI of the volume changing\r\n\t\tthis.volume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(this.volume);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\tif (this.state === 'fading') return;\r\n\t\tpVolume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tconsole.error('Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\tthis.state = 'fading';\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this.volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!self.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.adjustVolume(Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations));\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\t\t\t\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.raf = null;\r\n\t\t\t\tself.state = null;\r\n\t\t\t\tself.adjustVolume(pVolume);\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Master mute\r\n\t * \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis._previousGainNodeValue = this.gainNode.gain.value;\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Checks if the sound manager is currently muted\r\n\t * \r\n\t * @returns {boolean} Whether the sound manager is muted\r\n\t */\r\n\tisMuted() {\r\n\t\treturn this.muted;\r\n\t}\r\n\t/**\r\n\t * Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc\r\n\t * \r\n\t * @param {string} pSoundPath - The path to the file\r\n\t * @param {number} [pVolume=100] - The volume to play the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @returns {SoundSource } The source to this emitted sound. Call source.kill() to stop this sound while its playing. This is the only API this sound has\r\n\t */\r\n\temit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1) {\r\n\t\tif (!this.canPlaySound()) return\r\n\t\t// a very cheap sound that can be used if certain conditions are met. \r\n\t\t// This sound cannot be referenced and cannot be stopped or configured after creation.\r\n\t\t// If the buffer is loaded, this sound is eligable to play in the background\r\n\t\t// This sound is not going to be saved, this sound is not going to be lopped,\r\n\t\t// and this sound will not use any callbacks. This sound will be very lightweight and will not exist in memory\r\n\t\tconst self = this;\r\n\t\tconst source = self.audioCtx.createBufferSource();\r\n\t\t// Create a function to kill this sound\r\n\t\tsource.kill = function() {\r\n\t\t\tif (!this.buffer) {\r\n\t\t\t\tthis.queuedToStop = true;\r\n\t\t\t} else {\r\n\t\t\t\tthis.stop();\r\n\t\t\t}\r\n\t\t}\r\n\t\tconst emitSound = function() {\r\n\t\t\tconst gainNode = self.audioCtx.createGain();\r\n\t\t\tgainNode.gain.value = ESoundManagerSingleton.normalize(ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME));\r\n\t\t\tgainNode.connect(self.gainNode);\r\n\t\t\tsource.connect(gainNode);\r\n\t\t\tsource.buffer = self.loadedBuffers[pSoundPath];\r\n\t\t\tsource.playbackRate.value = pPlaybackRate;\r\n\t\t\tif (!source.start) source.start = source.noteOn;\r\n\t\t\tsource.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));\t\t\r\n\t\t}\r\n\t\t// Check if the loaded buffers already contain the loaded sound data for this sound\r\n\t\tif (this.loadedBuffers[pSoundPath]) {\r\n\t\t\temitSound();\r\n\t\t// Otherwise load it\r\n\t\t} else {\r\n\t\t\tconst request = new XMLHttpRequest();\r\n\t\t\trequest.open('GET', pSoundPath);\r\n\t\t\trequest.responseType = 'arraybuffer';\r\n\t\t\trequest.onload = function() {\r\n\t\t\t\tconst audioData = request.response;\r\n\t\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\t\tself.loadedBuffers[pSoundPath] = pDecodedData;\r\n\t\t\t\t\t// if the user wants to stop the sound before it loads, don't play it\r\n\t\t\t\t\tif (source.queuedToStop) return;\r\n\t\t\t\t\temitSound();\r\n\t\t\t\t}\r\n\t\t\t\tconst error = (pError) => {\r\n\t\t\t\t\tconsole.error(`Error with decoding audio data \"${pSoundPath}\"`);\r\n\t\t\t\t}\r\n\t\t\t\tself.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t\t};\r\n\t\t\trequest.send();\r\n\t\t}\r\n\t\treturn source;\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} [pVolume=100] - The volume of the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} [pSave=false] - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} [pPlayUnfocused=false] - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} [pLoop=false] - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tcreateSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\t// If there is a reusable sound, use that sound rather than create a new one\r\n\t\tif (this.recycledSounds.length) {\r\n\t\t\tconst sound = this.recycledSounds.pop();\r\n\t\t\tsound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t\t\treturn sound;\r\n\t\t}\r\n\t\treturn new Sound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * This effectively stops all sounds in the game except those specified in the pException array\r\n\t * \r\n\t * @param {Array} pException - an array of sounds that should not stop\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tstopAllSounds(pException) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If the sound is not set to be saved it will be killed\r\n\t\t\tif (Array.isArray(pException) && pException.includes(sound)) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}\r\n\t\t\tsound.stop();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This effectively kills all sounds in the game and subjects them to be recycled \r\n\t * \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tkillAllSounds() {\r\n\t\t// this effectively kills all sounds in the game, and subjects them to be recycled\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\tsound.kill();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Pauses all sounds in the game\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being unfocused\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tpauseAllSounds(pFocus) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused\r\n\t\t\tif (pFocus && sound.canPlayUnfocused()) continue;\r\n\t\t\tsound.pause();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes all sounds in games\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being focused\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tresumeAllSounds(pFocus) {\r\n\t\tfor (let i = this.pausedSounds.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.pausedSounds[i];\r\n\t\t\tsound.resume();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * @private\r\n\t * Finds all queued sounds (sounds that were played when the game was minimized or out of focus and plays them)\r\n\t */\r\n\tplayQueuedSounds() {\r\n\t\tfor (let i = this.queuedSoundsToPlay.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToPlay[i];\r\n\t\t\tthis.queuedSoundsToPlay.splice(i, 1);\r\n\t\t\tsound.play();\r\n\t\t}\r\n\r\n\t\tfor (let i = this.queuedSoundsToFade.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToFade[i];\r\n\t\t\tthis.queuedSoundsToFade.splice(i, 1);\r\n\t\t\tsound.queuedFade();\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Removes the loaded audio buffer data for this sound\r\n\t * \r\n\t * @param {string} pSoundPath - The path of the sound file\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tunloadSound(pSoundPath) {\r\n\t\tif (this.loadedBuffers[pSoundPath]) delete this.loadedBuffers[pSoundPath];\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed\r\n\t * \r\n\t * @private\r\n\t * @param {Sound} pSound - The sound to recycle \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\trecycleSound(pSound) {\r\n\t\tif (!(pSound instanceof Sound)) return this;\r\n\t\tpSound.kill();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This will start playing sounds that were initially blocked by not having a user gesture.\r\n\t * This will also restart sounds when a mobile device backs out of an app, and then rejoins the app\r\n\t */\r\n\tresumeAudioCtx() {\r\n\t\tif (this.audioCtx.state !== 'running') {\r\n\t\t\tthis.audioCtx.resume().then(() => {\r\n\t\t\t\t// console.log('ESound: autostart attempt of audio context worked.');\r\n\t\t\t},\r\n\t\t\t() => {\r\n\t\t\t\t// console.warn('ESound: autostart attempt of audio context failed.');\r\n\t\t\t});\r\n\t\t}\r\n\t\tthis.ready = true;\r\n\t}\r\n};\r\n\r\nexport const ESound = new ESoundManagerSingleton();\r\n\r\n/**\r\n * A small class to represent a sound. Has useful API to handle the sound\r\n * \r\n * @class Sound\r\n */\r\nclass Sound {\r\n/*\tcommented out because older devices *cough* iOS devices that are under 14.5 do not support this and prevent the game from loading\r\n\t#soundPath;\r\n\t#startTime;\r\n\t#endTime;\r\n\t#save;\r\n\t#duration;\r\n\t#source;\r\n\t#gainNode;\r\n\t#loaded = false;\r\n\t#playAfterLoad = false;\r\n\t#muted = false;\r\n\t#state;\r\n\t#startedTimeStamp;\r\n\t#pausedTimeStamp = 0;\r\n\t#playUnfocused;\r\n\t#fader = {};\r\n\t#stopSignal = false;\r\n\t#_loop = false;\r\n\t#_playbackRate = 1;\r\n\t#_volume = 100;\r\n\t#_info = { 'soundPath': null, 'duration': null };\r\n*/\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} pVolume - The volume of the sound\r\n\t * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n\t * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be played automatically when the game screen is not focused\r\n\t * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} pLoop - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tconstructor(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\tthis.soundPath = null;\r\n\t\tthis.startTime = null;\r\n\t\tthis.endTime = null;\r\n\t\tthis.save = null;\r\n\t\tthis.duration = null;\r\n\t\tthis.source = null;\r\n\t\tthis.gainNode = null;\r\n\t\tthis.loaded = false;\r\n\t\tthis.playAfterLoad = false;\r\n\t\tthis.muted = false;\r\n\t\tthis.state = null;\r\n\t\tthis.startedTimeStamp = null;\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tthis.playUnfocused = null;\r\n\t\tthis.fader = {};\r\n\t\tthis.events = {};\r\n\t\tthis.stopSignal = false;\r\n\t\tthis._loop = false;\r\n\t\tthis._playbackRate = 1;\r\n\t\tthis._volume = 100;\r\n\t\tthis._info = { 'soundPath': null, 'duration': null };\r\n\t\tthis.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * Gets the current volume of this sound\r\n\t * \r\n\t * @returns {number} The current volume of this sound\r\n\t */\r\n\tget volume() {\r\n\t\treturn this._volume;\r\n\t}\r\n\t/**\r\n\t * Sets the volume of this sound\r\n\t * \r\n\t * @param {number} pNewVolume - The volume to set\r\n\t */\r\n\tset volume(pNewVolume) {\r\n\t\tthis._volume = ESoundManagerSingleton.clamp(pNewVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tif (this.loaded) this.gainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t}\r\n    /**\r\n     * @typedef {Object} Event\r\n     * @property {string} event - The event name\r\n     * @property {function} callback - The function to be called when the event is triggered\r\n     */\r\n    /**\r\n     * Attaches a callback to the specified event.\r\n     * @param {Event['event']} pEvent - The event to attach the callback to\r\n     * @param {Event['callback']} pCallback - The function to be called when the event is triggered\r\n     * @return {Tween} The Tween instance\r\n     */\r\n    on(pEvent, pCallback) {\r\n        if (typeof(pCallback) === \"function\") {\r\n            switch (pEvent) {\r\n                case \"start\":\r\n\t\t\t\tcase \"stop\":\r\n                case \"end\":\r\n                case \"pause\":\r\n                case \"resume\":\r\n                    this.events[pEvent] = pCallback;\r\n                    break;\r\n                default:\r\n                    console.error(`The event \"${pEvent}\" is not supported.`);\r\n            }\r\n        } else {\r\n            console.error(`The callback for event \"${pEvent}\" is not a function.`);\r\n        }\r\n        return this;\r\n    }\r\n\t/**\r\n\t * Toggleable mute feature for this sound. Flips between muted and unmuted\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tif (!this.loaded || !this.source) return;\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get the loop status of this sound\r\n\t * \r\n\t * @returns {boolean} Whether this sound is set to loop or not\r\n\t */\r\n\tget loop() {\r\n\t\treturn this._loop;\r\n\t}\r\n\t/**\r\n\t * Set the loop status of this sound\r\n\t * \r\n\t * @param {boolean} pLoopValue - The value which to set the loop status to. Truthy values resolve to true, and falsely values resovle to false\r\n\t */\r\n\tset loop(pLoopValue) {\r\n\t\tthis._loop = pLoopValue ? true : false;\r\n\t\tif (this.source) this.source.loop = this._loop;\r\n\t}\r\n\t/**\r\n\t * Toggleable loop feature for this sound. Flips between loop and unlooped\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\ttoggleLoop() {\r\n\t\tthis._loop = this._loop ? false : true;\r\n\t\tif (this.source) this.source.loop = this._loop;\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get the playback status of this sound\r\n\t * \r\n\t * @returns {number} The playback rate of this sound\r\n\t */\r\n\tget playbackRate() {\r\n\t\treturn this._playbackRate;\r\n\t}\r\n\t/**\r\n\t * Set the playback status of this sound\r\n\t * \r\n\t * @param {number} pNewPlaybackRate - The value which to set the playback status to. Clamped to 10\r\n\t */\t\r\n\tset playbackRate(pNewPlaybackRate) {\r\n\t\tthis._playbackRate = ESoundManagerSingleton.clamp(pNewPlaybackRate, 1, ESoundManagerSingleton.MAX_PLAYBACK_RATE);\r\n\t\tif (this.source) this.source.playbackRate.value = this._playbackRate;\r\n\t}\r\n\t/**\r\n\t * Set the info of this sound\r\n\t * The new value is not used, as this is a \"read-only\" variable. So any attempts to set it will not work\r\n\t * \r\n\t * @param {*} pNewInfo - The new value\r\n\t */\t\r\n\tset info(pNewInfo) {\r\n\t\t// makes this variable read only basically\r\n\t\tthis._info = this._info;\r\n\t}\r\n\t/**\r\n\t * Get the info object of this sound\r\n\t * \r\n\t * @returns {Objecct} The info object of this sound\r\n\t */\r\n\tget info() {\r\n\t\tif (this.loaded) {\r\n\t\t\tif (this.source) {\r\n\t\t\t\tthis._info.duration = this.duration;\r\n\t\t\t}\r\n\t\t\tthis._info.soundPath = this.soundPath;\r\n\t\t} else {\r\n\t\t\tthis._info.soundPath = this.soundPath;\r\n\t\t}\r\n\t\treturn { ...this._info };\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} pVolume - The volume of the sound\r\n\t * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n\t * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} pLoop - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tbuild(pSoundPath, pVolume=100, pStartTime=0, pEndTime=0, pSave=false, pPlayUnfocused=false, pPlaybackRate=1, pLoop=false) {\r\n\t\tthis.soundPath = pSoundPath;\r\n\t\tthis.startTime = Math.max(pStartTime, 0);\r\n\t\tthis.endTime = Math.max(pEndTime, 0);\r\n\t\tthis.save = pLoop ? true : pSave;\r\n\t\tthis._playbackRate = ESoundManagerSingleton.clamp(pPlaybackRate, 1, ESoundManagerSingleton.MAX_PLAYBACK_RATE);\r\n\t\tthis.playUnfocused = pPlayUnfocused ? true : false;\r\n\t\tthis.state = null;\r\n\t\tthis._loop = pLoop ? true : false;\r\n\t\tthis._volume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\t// If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play\r\n\t\t// this sound, it will just use the buffer data of the previous sound that had it.\r\n\t\tif (!ESound.loadedBuffers[this.soundPath]) {\r\n\t\t\tthis.load();\r\n\t\t} else {\r\n\t\t\tthis.loaded = true;\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Loads this sound and stores its data so future sounds can use the same buffer\r\n\t */\r\n\tload() {\r\n\t\tconst request = new XMLHttpRequest();\r\n\t\tconst self = this;\r\n\t\trequest.open('GET', self.soundPath);\r\n\t\trequest.responseType = 'arraybuffer';\r\n\t\trequest.onload = function() {\r\n\t\t\tconst audioData = request.response;\r\n\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\tself.loaded = true;\r\n\t\t\t\tESound.loadedBuffers[self.soundPath] = pDecodedData;\r\n\t\t\t\t// The developer attempted to play the sound while it was still loading,\r\n\t\t\t\t// This has been set so that the sound will play once it's finished loading now\r\n\t\t\t\tif (self.playAfterLoad) {\r\n\t\t\t\t\t// A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play\r\n\t\t\t\t\tif (self.stopSignal) {\r\n\t\t\t\t\t\tself.stopSignal = false;\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t} else {\r\n\t\t\t\t\t\tself.play();\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t\tconst error = (pError) => {\r\n\t\t\t\tself.loaded = false;\r\n\t\t\t\tconsole.error(`Error with decoding audio data \"${self.soundPath}\" This sound has been killed.`);\r\n\t\t\t\tself.kill();\r\n\t\t\t}\r\n\t\t\tESound.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t};\r\n\t\trequest.send();\r\n\t}\r\n\t/**\r\n\t * Pauses this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tpause() {\r\n\t\tif (!this.loaded) return;\r\n\t\tthis.stop('suspended');\r\n\t\tthis.state = 'suspended';\r\n\t\tthis.pausedTimeStamp = ESound.audioCtx.currentTime - this.startedTimeStamp;\r\n\t\t// This sound is no longer considered to be playing, so remove it from the array\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\t// If this sound is not apart of the suspended sounds array add it\r\n\t\tif (!ESound.pausedSounds.includes(this)) ESound.pausedSounds.push(this);\r\n\t\tif (typeof(this.events.pause) === 'function') this.events.pause();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes playing this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tresume() {\r\n\t\tif (!this.loaded) return;\r\n\t\t// This sound is no longer considered to be suspended, so remove it from the array\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\t// This sound is no longer suspended and is now playing again, add it to the playing array\r\n\t\tif (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);\r\n\t\t// this will use the this.pausedTimeStamp value to resume\r\n\t\tthis.play(true);\r\n\t\tthis.state = this.fader.raf ? 'fading' : 'playing';\r\n\t\tif (typeof(this.events.resume) === 'function') this.events.resume();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Stops this sound from playing\r\n\t * \r\n\t * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tstop(pState) {\r\n\t\t// The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.\r\n\t\tif (!this.source) {\r\n\t\t\tthis.stopSignal = true;\r\n\t\t\treturn;\r\n\t\t}\r\n\t\tconst wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;\r\n\t\t// This sound is no longer considered to be playing, so remove it from the array\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\tif (this.source) {\r\n\t\t\tif (!this.source.stop) this.source.stop = this.source.noteOff;\r\n\t\t\tthis.source.stop();\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t\tthis.source = null;\r\n\t\t\tthis.gainNode = null;\r\n\t\t}\r\n\t\tthis.state = pState ? pState : 'stopped';\r\n\t\tif (this.state === 'stopped' && wasPlaying && typeof(this.events.stop) === 'function') this.events.stop();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Plays this sound\r\n\t * \r\n\t * @param {boolean} pResume - If this is being played from a paused state\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tplay(pResume) {\r\n\t\t// A sound cannot be played if it's sound name is not referencable, \r\n\t\t// a sound that is recycled has no sound information to be played\r\n\t\t// and if the game's API doesn't allow a sound to be played at it's current time, then it can't play.\r\n\t\tif (!this.soundPath || this.state === 'recycled' || !ESound.canPlaySound()) return;\r\n\t\t// If this sound is not loaded, it cannot be played, however there is a chance that a sound with the same buffer\r\n\t\t// information has been played before and stored. In this case it does not need to wait to load, it instead checks to see\r\n\t\t// if that buffer information is avaiable, and if it is, it allows the sound to be played with that data.\r\n\t\tif (!this.loaded && !ESound.loadedBuffers[this.soundPath]) {\r\n\t\t\tthis.playAfterLoad = true;\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost\r\n\t\tif (!ESound.focused && !this.canPlayUnfocused()) {\r\n\t\t\tif (!ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.push(this);\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// if you already have a soure and a gainNode, disconnect them and let them be garbage collected\r\n\t\tif (this.source) {\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t\tthis.source = null;\r\n\t\t\tthis.gainNode = null;\r\n\t\t}\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\tconst source = ESound.audioCtx.createBufferSource();\r\n\t\tconst gainNode = ESound.audioCtx.createGain();\r\n\t\tconst self = this;\r\n\t\tgainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t\tgainNode.connect(ESound.gainNode);\r\n\t\tsource.connect(gainNode);\r\n\t\t// ESound.gainNode.connect(ESound.audioCtx.destination);\r\n\t\tsource.buffer = ESound.loadedBuffers[this.soundPath];\r\n\t\tsource.playbackRate.value = this._playbackRate;\r\n\t\t// sound.stop() calls this as well\r\n\t\tsource.onended = function() {\r\n\t\t\t// if this sound was stopped, and it is a sound that will be saved return early\r\n\t\t\tif (self.state === 'stopped' && self.save) {\r\n\t\t\t\treturn;\r\n\t\t\t} else if (self.state === 'restart') {\r\n\t\t\t\t// since the sound is restarting we don't want it to fire off the `onEnded` event.\r\n\t\t\t\tself.play();\r\n\t\t\t\treturn;\r\n\t\t\t} else if (self.state === 'suspended') {\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.state !== 'stopped' && typeof(self.events.end) === 'function') self.events.end();\r\n\t\t\tif (self._loop) {\r\n\t\t\t\tself.play();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\t/*\r\n\t\t\t\tIf this is a one use sound, it will be recycled or killed.\r\n\t\t\t\tA developer may still hold a reference to this sound but will not be able to do anything to it.\r\n\t\t\t\tIf you are using a one use sound, it is best to play a sound on its creation without storing it.\r\n\t\t\t\tESound.createSound('soundPath', volume, startTime, endTime, playrate, loop).play()\r\n\t\t\t*/\r\n\t\t\tif (!self.save) self.kill();\r\n\t\t};\r\n\t\tthis.source = source;\r\n\t\tthis.gainNode = gainNode;\r\n\t\tthis.duration = source.buffer.duration;\r\n\t\tthis.playAfterLoad = null;\r\n\t\tif (!source.start) source.start = source.noteOn;\r\n\t\tsource.start(0, (this.pausedTimeStamp ? this.pausedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);\r\n/* \t\t\t\t\r\n\t\t// This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.\r\n\t\tsource.loop = this._loop;\r\n\t\tsource.loopStart = this.startTime;\r\n\t\tsource.loopEnd = this.endTime ? this.endTime : source.buffer.duration; \r\n*/\r\n\t\tthis.state = 'playing';\r\n\t\tthis.startedTimeStamp = ESound.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tif (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);\r\n\t\tif (!pResume && typeof(this.events.start) === 'function') this.events.start();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Restarts this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\trestart() {\r\n\t\tthis.stop('restart');\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get whether this sound will play when the window is unfocused\r\n\t * @returns {boolean} Whether or not this sound will play when the window is unfocused\r\n\t */\r\n\tcanPlayUnfocused() {\r\n\t\treturn this.playUnfocused ? true : false;\r\n\t}\r\n\t/**\r\n\t * Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.\r\n\t * If the recycle manager is full, this sound will become an empty class instance.\r\n\t */\r\n\tkill() {\r\n\t\tthis.wipe();\r\n\t\tif (ESound.recycledSounds.length < ESoundManagerSingleton.MAX_RECYCLED_SOUNDS)  {\r\n\t\t\tESound.recycledSounds.push(this);\r\n\t\t} else {\r\n\t\t\t// remove all properties from this sound object, since it no longer will be used.\r\n\t\t\t// any references to this should be removed so that it can be garbage collected\r\n\t\t\tfor (const variable in this) delete this[variable];\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Resets this sound to default state\r\n\t */\r\n\twipe() {\r\n\t\tthis.onStarted = null;\r\n\t\tthis.onStopped = null;\r\n\t\tthis.onEnded = null;\r\n\t\tthis.onSuspended = null;\r\n\t\tthis.onResumed = null;\r\n\t\tthis.stop('wipe');\r\n\t\tcancelAnimationFrame(this.fader.raf);\r\n\t\tif (this.source) {\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t}\r\n\t\tthis.soundPath = null;\r\n\t\tthis.startTime = null;\r\n\t\tthis.endTime = null;\r\n\t\tthis.save = null;\r\n\t\tthis.duration = null;\r\n\t\tthis._playbackRate = 1;\r\n\t\tthis.source = null;\r\n\t\tthis.gainNode = null;\r\n\t\tthis.loaded = false;\r\n\t\tthis.playAfterLoad = null;\r\n\t\tthis.state = 'recycled';\r\n\t\tthis.startedTimeStamp = null;\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tthis.playUnfocused = null;\r\n\t\tthis.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;\r\n\t\tthis.stopSignal = false;\r\n\t\tthis._loop = false;\r\n\t\tthis._volume = 100;\r\n\t\tthis._info.soundPath = this._info.duration = null;\r\n\t\tfor (const prop in this.events) {\r\n\t\t\tdelete this.events[prop];\r\n\t\t}\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\tif (ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.splice(ESound.queuedSoundsToPlay.indexOf(this), 1);\r\n\t\tif (ESound.queuedSoundsToFade.includes(this)) ESound.queuedSoundsToFade.splice(ESound.queuedSoundsToFade.indexOf(this), 1);\r\n\t}\r\n\t/**\r\n\t * Get the current timestamp of the sound playing\r\n\t * \r\n\t * @returns {number} The current timestamp into the sound\r\n\t */\r\n\tgetCurrentTime() {\r\n\t\tif (this.pausedTimeStamp) {\r\n\t\t\treturn this.pausedTimeStamp * this._playbackRate;\r\n\t\t} else if (this.startedTimeStamp) {\r\n\t\t\treturn ESound.audioCtx.currentTime - this.startedTimeStamp;\r\n\t\t} else {\r\n\t\t\treturn 0;\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\t// If a sound is not playing, it cannot be faded.\r\n\t\tif (this.state !== 'playing' && ESound.focused) return;\r\n\t\t// The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus\r\n\t\tif (!ESound.focused && !this.canPlayUnfocused()) {\r\n\t\t\t// If this sound is already queued to fade, then just exit out\r\n\t\t\tif (ESound.queuedSoundsToFade.includes(this)) return;\r\n\t\t\tthis.fader.queue = {\r\n\t\t\t\t'volume': pVolume,\r\n\t\t\t\t'duration': pDuration,\r\n\t\t\t\t'ease': pEase,\r\n\t\t\t\t'callback': pCallback\r\n\t\t\t}\r\n\t\t\tESound.queuedSoundsToFade.push(this);\r\n\t\t\treturn;\r\n\t\t}\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tpEase = 'easeOutCubic';\r\n\t\t\tconsole.warn('ESound: Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\t// Get rid of the queue information if it exists, it is no longer needed\r\n\t\tif (this.fader.queue) this.fader.queue = null;\r\n\t\tpVolume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this._volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\t\tthis.state = 'fading';\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!ESound.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.volume = Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations);\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.queue = self.fader.raf = null;\r\n\t\t\t\t// When a sound is faded down to `0` or any other value. Just because it may be muted, does not mean it is stopped. \r\n\t\t\t\t// The state of the sound is still considered to be playing after its done fading\r\n\t\t\t\tself.state = 'playing';\t\t\t\t\t\t\r\n\t\t\t\tself.volume = pVolume;\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Start the queued fade\r\n\t */\r\n\tqueuedFade() {\r\n\t\tif (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);\r\n\t}\r\n}\r\n",
+    "name": "src/esound.mjs",
+    "content": "import { Tween } from \"./vendor/tween.mjs\";\r\n\r\n/**\r\n* Class for managing sounds\r\n* @class ESoundManagerSingleton  \r\n* @license ESound does not have a license at this time. For licensing contact the author\r\n* @author https://github.com/doubleactii\r\n* Copyright (c) 2023 Evitca Studio\r\n\r\nSafari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.\r\nOtherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.\r\n*/\r\nclass ESoundManagerSingleton {\r\n\t/**\r\n\t * The max volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_VOLUME = 200;\r\n\t/**\r\n\t * The min volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MIN_VOLUME = -200;\r\n\t/**\r\n\t * The max number of sounds that can be recycled\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_RECYCLED_SOUNDS = 500;\r\n\t/**\r\n\t * The max speed this sound can be played at\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_PLAYBACK_RATE = 10;\r\n\t/**\r\n\t * The frame rate at which to fade the sounds\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic FRAME_RATE = 60;\r\n\t/**\r\n\t * \r\n\t * @param {number} pVal - Value to clamp\r\n\t * @param {number} pMin - Minimum value\r\n\t * @param {number} pMax - Maximum value\r\n\t * @returns The clamped number\r\n\t */\r\n\tstatic clamp = (pVal, pMin, pMax) => {\r\n\t\treturn Math.max(pMin, Math.min(pVal, pMax));\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pValue - The number to normalize within a range\r\n\t * @param {number} pMin - The min number\r\n\t * @param {number} pMax - The max number\r\n\t * @param {number} pRange - The range to normalize within\r\n\t * @returns The normalized number\r\n\t */\r\n\tstatic normalize = (pValue, pMin=0, pMax=100, pRange=1) => {\r\n\t\treturn (pValue - pMin) / (pMax - pMin) * pRange;\r\n\t}\r\n\tconstructor() {\r\n\t\tif (!window.AudioContext && !window.webkitAudioContext) {\r\n\t\t\tconsole.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// For WebKit- and Blink-based browsers\r\n\t\twindow.AudioContext = window.AudioContext || window.webkitAudioContext;\r\n\t\t// Attach events to start audio through gestures\r\n\t\twindow.addEventListener('mousedown', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('touchstart', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('load', this.resumeAudioCtx.bind(this));\r\n\t\t// When the window is unfocused, all sounds are paused\r\n\t\twindow.addEventListener('blur', () => {\r\n\t\t\tthis.focused = false;\r\n\t\t\tif (this.soundsPlaying.length) this.pauseAllSounds(true);\r\n\t\t});\r\n\t\t// When the window is focused all sounds are resumed, and queued sounds are played\r\n\t\twindow.addEventListener('focus', () => {\r\n\t\t\tthis.focused = true;\r\n\t\t\tif (this.pausedSounds.length) this.resumeAllSounds(true);\r\n\t\t\tif (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();\t\t\t\t\r\n\t\t});\r\n\t\t/**\r\n\t\t * The audio context all audio will dervie from\r\n\t\t * \r\n\t\t * @type {AudioContext}\r\n\t\t */\r\n\t\tthis.audioCtx = new AudioContext();\r\n\t\t// For older browser support that has this old API.\r\n\t\tif (!this.audioCtx.createGain && this.audioCtx.createGainNode) this.audioCtx.createGain = this.audioCtx.createGainNode;\r\n\t\t/**\r\n\t\t * Gain node\r\n\t\t * @type {GainNode}\r\n\t\t */\r\n\t\tthis.gainNode = this.audioCtx.createGain();\r\n\t\t// Assign volume to gainNode\r\n\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(ESoundManagerSingleton.MAX_VOLUME);\r\n\t\t// Connect gain node to speakers\r\n\t\tthis.gainNode.connect(this.audioCtx.destination);\r\n\t\t/**\r\n\t\t * Array of sounds that are currently playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.soundsPlaying = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are currently paused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.pausedSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that can be resused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.recycledSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToPlay = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for fading\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToFade = [];\r\n\t\t/**\r\n\t\t * An object that stores the buffer data of a sound so it does not have to be loaded each time\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.loadedBuffers = {};\r\n\t\t/**\r\n\t\t * An object that stores fade information\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.fader = {};\r\n\t\t/**\r\n\t\t * The master volume \r\n\t\t * \r\n\t\t * @type {number}\r\n\t\t */\r\n\t\tthis.volume = 100;\r\n\t\t/**\r\n\t\t * Mute status\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.muted = false;\r\n\t\t/**\r\n\t\t * Current state of the library\r\n\t\t * \r\n\t\t * @type {string}\r\n\t\t */\r\n\t\tthis.state = null;\r\n\t\t/**\r\n\t\t * Whether or ESound has the window's focus. (Sound are paused when the focus is lost, and resumed when its gained)\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.focused = true;\r\n\t\t/**\r\n\t\t * The checker function to resolve to true or false denoting if a sound can be played\r\n\t\t * Master control over which sounds can play\r\n\t\t * \r\n\t\t * @type {Function}\r\n\t\t */\r\n\t\tthis.abilityToPlaySound = null;\r\n\t}\r\n\t/**\r\n\t * Function to check whether this library can play a sound at a given moment.\r\n\t * \r\n\t * @returns {boolean} Whether a sound can be played or not.\r\n\t */\r\n\tcanPlaySound() {\r\n\t\tif (this.abilityToPlaySound) {\r\n\t\t\tif (!this.abilityToPlaySound()) return false;\r\n\t\t}\r\n\t\treturn true;\r\n\t}\r\n\t/**\r\n\t * API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\r\n\t * Enables a checker to become the master checker over whether a sound can play\r\n\t * If their defined conditions return false, then the sound cannot be played\r\n\t * \r\n\t * @param {Function} pCheckerFunction - The function that will resolve to true or false denoting if a sound can be played\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tenableChecker(pCheckerFunction) {\r\n\t\tif (typeof(pCheckerFunction) === 'function') {\r\n\t\t\tthis.abilityToPlaySound = pCheckerFunction;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Function to adjust master volume\r\n\t * \r\n\t * @param {number} pVolume - The number to change the volume to\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tadjustVolume(pVolume) {\r\n\t\t// maybe show a GUI of the volume changing\r\n\t\tthis.volume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(this.volume);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\tif (this.state === 'fading') return;\r\n\t\tpVolume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tconsole.error('Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\tthis.state = 'fading';\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this.volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!self.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.adjustVolume(Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations));\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\t\t\t\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.raf = null;\r\n\t\t\t\tself.state = null;\r\n\t\t\t\tself.adjustVolume(pVolume);\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Master mute\r\n\t * \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis._previousGainNodeValue = this.gainNode.gain.value;\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Checks if the sound manager is currently muted\r\n\t * \r\n\t * @returns {boolean} Whether the sound manager is muted\r\n\t */\r\n\tisMuted() {\r\n\t\treturn this.muted;\r\n\t}\r\n\t/**\r\n\t * Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc\r\n\t * \r\n\t * @param {string} pSoundPath - The path to the file\r\n\t * @param {number} [pVolume=100] - The volume to play the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @returns {SoundSource } The source to this emitted sound. Call source.kill() to stop this sound while its playing. This is the only API this sound has\r\n\t */\r\n\temit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1) {\r\n\t\tif (!this.canPlaySound()) return\r\n\t\t// a very cheap sound that can be used if certain conditions are met. \r\n\t\t// This sound cannot be referenced and cannot be stopped or configured after creation.\r\n\t\t// If the buffer is loaded, this sound is eligable to play in the background\r\n\t\t// This sound is not going to be saved, this sound is not going to be lopped,\r\n\t\t// and this sound will not use any callbacks. This sound will be very lightweight and will not exist in memory\r\n\t\tconst self = this;\r\n\t\tconst source = self.audioCtx.createBufferSource();\r\n\t\t// Create a function to kill this sound\r\n\t\tsource.kill = function() {\r\n\t\t\tif (!this.buffer) {\r\n\t\t\t\tthis.queuedToStop = true;\r\n\t\t\t} else {\r\n\t\t\t\tthis.stop();\r\n\t\t\t}\r\n\t\t}\r\n\t\tconst emitSound = function() {\r\n\t\t\tconst gainNode = self.audioCtx.createGain();\r\n\t\t\tgainNode.gain.value = ESoundManagerSingleton.normalize(ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME));\r\n\t\t\tgainNode.connect(self.gainNode);\r\n\t\t\tsource.connect(gainNode);\r\n\t\t\tsource.buffer = self.loadedBuffers[pSoundPath];\r\n\t\t\tsource.playbackRate.value = pPlaybackRate;\r\n\t\t\tif (!source.start) source.start = source.noteOn;\r\n\t\t\tsource.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));\t\t\r\n\t\t}\r\n\t\t// Check if the loaded buffers already contain the loaded sound data for this sound\r\n\t\tif (this.loadedBuffers[pSoundPath]) {\r\n\t\t\temitSound();\r\n\t\t// Otherwise load it\r\n\t\t} else {\r\n\t\t\tconst request = new XMLHttpRequest();\r\n\t\t\trequest.open('GET', pSoundPath);\r\n\t\t\trequest.responseType = 'arraybuffer';\r\n\t\t\trequest.onload = function() {\r\n\t\t\t\tconst audioData = request.response;\r\n\t\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\t\tself.loadedBuffers[pSoundPath] = pDecodedData;\r\n\t\t\t\t\t// if the user wants to stop the sound before it loads, don't play it\r\n\t\t\t\t\tif (source.queuedToStop) return;\r\n\t\t\t\t\temitSound();\r\n\t\t\t\t}\r\n\t\t\t\tconst error = (pError) => {\r\n\t\t\t\t\tconsole.error(`Error with decoding audio data \"${pSoundPath}\"`);\r\n\t\t\t\t}\r\n\t\t\t\tself.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t\t};\r\n\t\t\trequest.send();\r\n\t\t}\r\n\t\treturn source;\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} [pVolume=100] - The volume of the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} [pSave=false] - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} [pPlayUnfocused=false] - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} [pLoop=false] - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tcreateSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\t// If there is a reusable sound, use that sound rather than create a new one\r\n\t\tif (this.recycledSounds.length) {\r\n\t\t\tconst sound = this.recycledSounds.pop();\r\n\t\t\tsound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t\t\treturn sound;\r\n\t\t}\r\n\t\treturn new Sound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * This effectively stops all sounds in the game except those specified in the pException array\r\n\t * \r\n\t * @param {Array} pException - an array of sounds that should not stop\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tstopAllSounds(pException) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If the sound is not set to be saved it will be killed\r\n\t\t\tif (Array.isArray(pException) && pException.includes(sound)) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}\r\n\t\t\tsound.stop();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This effectively kills all sounds in the game and subjects them to be recycled \r\n\t * \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tkillAllSounds() {\r\n\t\t// this effectively kills all sounds in the game, and subjects them to be recycled\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\tsound.kill();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Pauses all sounds in the game\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being unfocused\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tpauseAllSounds(pFocus) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused\r\n\t\t\tif (pFocus && sound.canPlayUnfocused()) continue;\r\n\t\t\tsound.pause();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes all sounds in games\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being focused\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tresumeAllSounds(pFocus) {\r\n\t\tfor (let i = this.pausedSounds.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.pausedSounds[i];\r\n\t\t\tsound.resume();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * @private\r\n\t * Finds all queued sounds (sounds that were played when the game was minimized or out of focus and plays them)\r\n\t */\r\n\tplayQueuedSounds() {\r\n\t\tfor (let i = this.queuedSoundsToPlay.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToPlay[i];\r\n\t\t\tthis.queuedSoundsToPlay.splice(i, 1);\r\n\t\t\tsound.play();\r\n\t\t}\r\n\r\n\t\tfor (let i = this.queuedSoundsToFade.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToFade[i];\r\n\t\t\tthis.queuedSoundsToFade.splice(i, 1);\r\n\t\t\tsound.queuedFade();\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Removes the loaded audio buffer data for this sound\r\n\t * \r\n\t * @param {string} pSoundPath - The path of the sound file\r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\tunloadSound(pSoundPath) {\r\n\t\tif (this.loadedBuffers[pSoundPath]) delete this.loadedBuffers[pSoundPath];\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed\r\n\t * \r\n\t * @private\r\n\t * @param {Sound} pSound - The sound to recycle \r\n\t * @returns {ESoundManagerSingleton} This instance\r\n\t */\r\n\trecycleSound(pSound) {\r\n\t\tif (!(pSound instanceof Sound)) return this;\r\n\t\tpSound.kill();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This will start playing sounds that were initially blocked by not having a user gesture.\r\n\t * This will also restart sounds when a mobile device backs out of an app, and then rejoins the app\r\n\t */\r\n\tresumeAudioCtx() {\r\n\t\tif (this.audioCtx.state !== 'running') {\r\n\t\t\tthis.audioCtx.resume().then(() => {\r\n\t\t\t\t// console.log('ESound: autostart attempt of audio context worked.');\r\n\t\t\t},\r\n\t\t\t() => {\r\n\t\t\t\t// console.warn('ESound: autostart attempt of audio context failed.');\r\n\t\t\t});\r\n\t\t}\r\n\t\tthis.ready = true;\r\n\t}\r\n};\r\n\r\nexport const ESound = new ESoundManagerSingleton();\r\n\r\n/**\r\n * A small class to represent a sound. Has useful API to handle the sound\r\n * \r\n * @class Sound\r\n */\r\nclass Sound {\r\n/*\tcommented out because older devices *cough* iOS devices that are under 14.5 do not support this and prevent the game from loading\r\n\t#soundPath;\r\n\t#startTime;\r\n\t#endTime;\r\n\t#save;\r\n\t#duration;\r\n\t#source;\r\n\t#gainNode;\r\n\t#loaded = false;\r\n\t#playAfterLoad = false;\r\n\t#muted = false;\r\n\t#state;\r\n\t#startedTimeStamp;\r\n\t#pausedTimeStamp = 0;\r\n\t#playUnfocused;\r\n\t#fader = {};\r\n\t#stopSignal = false;\r\n\t#_loop = false;\r\n\t#_playbackRate = 1;\r\n\t#_volume = 100;\r\n\t#_info = { 'soundPath': null, 'duration': null };\r\n*/\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} pVolume - The volume of the sound\r\n\t * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n\t * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be played automatically when the game screen is not focused\r\n\t * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} pLoop - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tconstructor(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\tthis.soundPath = null;\r\n\t\tthis.startTime = null;\r\n\t\tthis.endTime = null;\r\n\t\tthis.save = null;\r\n\t\tthis.duration = null;\r\n\t\tthis.source = null;\r\n\t\tthis.gainNode = null;\r\n\t\tthis.loaded = false;\r\n\t\tthis.playAfterLoad = false;\r\n\t\tthis.muted = false;\r\n\t\tthis.state = null;\r\n\t\tthis.startedTimeStamp = null;\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tthis.playUnfocused = null;\r\n\t\tthis.fader = {};\r\n\t\tthis.events = {};\r\n\t\tthis.stopSignal = false;\r\n\t\tthis._loop = false;\r\n\t\tthis._playbackRate = 1;\r\n\t\tthis._volume = 100;\r\n\t\tthis._info = { 'soundPath': null, 'duration': null };\r\n\t\tthis.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * Gets the current volume of this sound\r\n\t * \r\n\t * @returns {number} The current volume of this sound\r\n\t */\r\n\tget volume() {\r\n\t\treturn this._volume;\r\n\t}\r\n\t/**\r\n\t * Sets the volume of this sound\r\n\t * \r\n\t * @param {number} pNewVolume - The volume to set\r\n\t */\r\n\tset volume(pNewVolume) {\r\n\t\tthis._volume = ESoundManagerSingleton.clamp(pNewVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tif (this.loaded) this.gainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t}\r\n    /**\r\n     * @typedef {Object} Event\r\n     * @property {string} event - The event name\r\n     * @property {function} callback - The function to be called when the event is triggered\r\n     */\r\n    /**\r\n     * Attaches a callback to the specified event.\r\n     * @param {Event['event']} pEvent - The event to attach the callback to\r\n     * @param {Event['callback']} pCallback - The function to be called when the event is triggered\r\n     * @return {Tween} The Tween instance\r\n     */\r\n    on(pEvent, pCallback) {\r\n        if (typeof(pCallback) === \"function\") {\r\n            switch (pEvent) {\r\n                case \"start\":\r\n\t\t\t\tcase \"stop\":\r\n                case \"end\":\r\n                case \"pause\":\r\n                case \"resume\":\r\n                    this.events[pEvent] = pCallback;\r\n                    break;\r\n                default:\r\n                    console.error(`The event \"${pEvent}\" is not supported.`);\r\n            }\r\n        } else {\r\n            console.error(`The callback for event \"${pEvent}\" is not a function.`);\r\n        }\r\n        return this;\r\n    }\r\n\t/**\r\n\t * Toggleable mute feature for this sound. Flips between muted and unmuted\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tif (!this.loaded || !this.source) return;\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get the loop status of this sound\r\n\t * \r\n\t * @returns {boolean} Whether this sound is set to loop or not\r\n\t */\r\n\tget loop() {\r\n\t\treturn this._loop;\r\n\t}\r\n\t/**\r\n\t * Set the loop status of this sound\r\n\t * \r\n\t * @param {boolean} pLoopValue - The value which to set the loop status to. Truthy values resolve to true, and falsely values resovle to false\r\n\t */\r\n\tset loop(pLoopValue) {\r\n\t\tthis._loop = pLoopValue ? true : false;\r\n\t\tif (this.source) this.source.loop = this._loop;\r\n\t}\r\n\t/**\r\n\t * Toggleable loop feature for this sound. Flips between loop and unlooped\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\ttoggleLoop() {\r\n\t\tthis._loop = this._loop ? false : true;\r\n\t\tif (this.source) this.source.loop = this._loop;\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get the playback status of this sound\r\n\t * \r\n\t * @returns {number} The playback rate of this sound\r\n\t */\r\n\tget playbackRate() {\r\n\t\treturn this._playbackRate;\r\n\t}\r\n\t/**\r\n\t * Set the playback status of this sound\r\n\t * \r\n\t * @param {number} pNewPlaybackRate - The value which to set the playback status to. Clamped to 10\r\n\t */\t\r\n\tset playbackRate(pNewPlaybackRate) {\r\n\t\tthis._playbackRate = ESoundManagerSingleton.clamp(pNewPlaybackRate, 1, ESoundManagerSingleton.MAX_PLAYBACK_RATE);\r\n\t\tif (this.source) this.source.playbackRate.value = this._playbackRate;\r\n\t}\r\n\t/**\r\n\t * Set the info of this sound\r\n\t * The new value is not used, as this is a \"read-only\" variable. So any attempts to set it will not work\r\n\t * \r\n\t * @param {*} pNewInfo - The new value\r\n\t */\t\r\n\tset info(pNewInfo) {\r\n\t\t// makes this variable read only basically\r\n\t\tthis._info = this._info;\r\n\t}\r\n\t/**\r\n\t * Get the info object of this sound\r\n\t * \r\n\t * @returns {Objecct} The info object of this sound\r\n\t */\r\n\tget info() {\r\n\t\tif (this.loaded) {\r\n\t\t\tif (this.source) {\r\n\t\t\t\tthis._info.duration = this.duration;\r\n\t\t\t}\r\n\t\t\tthis._info.soundPath = this.soundPath;\r\n\t\t} else {\r\n\t\t\tthis._info.soundPath = this.soundPath;\r\n\t\t}\r\n\t\treturn { ...this._info };\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} pVolume - The volume of the sound\r\n\t * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n\t * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} pLoop - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tbuild(pSoundPath, pVolume=100, pStartTime=0, pEndTime=0, pSave=false, pPlayUnfocused=false, pPlaybackRate=1, pLoop=false) {\r\n\t\tthis.soundPath = pSoundPath;\r\n\t\tthis.startTime = Math.max(pStartTime, 0);\r\n\t\tthis.endTime = Math.max(pEndTime, 0);\r\n\t\tthis.save = pLoop ? true : pSave;\r\n\t\tthis._playbackRate = ESoundManagerSingleton.clamp(pPlaybackRate, 1, ESoundManagerSingleton.MAX_PLAYBACK_RATE);\r\n\t\tthis.playUnfocused = pPlayUnfocused ? true : false;\r\n\t\tthis.state = null;\r\n\t\tthis._loop = pLoop ? true : false;\r\n\t\tthis._volume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\t// If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play\r\n\t\t// this sound, it will just use the buffer data of the previous sound that had it.\r\n\t\tif (!ESound.loadedBuffers[this.soundPath]) {\r\n\t\t\tthis.load();\r\n\t\t} else {\r\n\t\t\tthis.loaded = true;\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Loads this sound and stores its data so future sounds can use the same buffer\r\n\t */\r\n\tload() {\r\n\t\tconst request = new XMLHttpRequest();\r\n\t\tconst self = this;\r\n\t\trequest.open('GET', self.soundPath);\r\n\t\trequest.responseType = 'arraybuffer';\r\n\t\trequest.onload = function() {\r\n\t\t\tconst audioData = request.response;\r\n\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\tself.loaded = true;\r\n\t\t\t\tESound.loadedBuffers[self.soundPath] = pDecodedData;\r\n\t\t\t\t// The developer attempted to play the sound while it was still loading,\r\n\t\t\t\t// This has been set so that the sound will play once it's finished loading now\r\n\t\t\t\tif (self.playAfterLoad) {\r\n\t\t\t\t\t// A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play\r\n\t\t\t\t\tif (self.stopSignal) {\r\n\t\t\t\t\t\tself.stopSignal = false;\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t} else {\r\n\t\t\t\t\t\tself.play();\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t\tconst error = (pError) => {\r\n\t\t\t\tself.loaded = false;\r\n\t\t\t\tconsole.error(`Error with decoding audio data \"${self.soundPath}\" This sound has been killed.`);\r\n\t\t\t\tself.kill();\r\n\t\t\t}\r\n\t\t\tESound.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t};\r\n\t\trequest.send();\r\n\t}\r\n\t/**\r\n\t * Pauses this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tpause() {\r\n\t\tif (!this.loaded) return;\r\n\t\tthis.stop('suspended');\r\n\t\tthis.state = 'suspended';\r\n\t\tthis.pausedTimeStamp = ESound.audioCtx.currentTime - this.startedTimeStamp;\r\n\t\t// This sound is no longer considered to be playing, so remove it from the array\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\t// If this sound is not apart of the suspended sounds array add it\r\n\t\tif (!ESound.pausedSounds.includes(this)) ESound.pausedSounds.push(this);\r\n\t\tif (typeof(this.events.pause) === 'function') this.events.pause();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes playing this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tresume() {\r\n\t\tif (!this.loaded) return;\r\n\t\t// This sound is no longer considered to be suspended, so remove it from the array\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\t// This sound is no longer suspended and is now playing again, add it to the playing array\r\n\t\tif (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);\r\n\t\t// this will use the this.pausedTimeStamp value to resume\r\n\t\tthis.play(true);\r\n\t\tthis.state = this.fader.raf ? 'fading' : 'playing';\r\n\t\tif (typeof(this.events.resume) === 'function') this.events.resume();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Stops this sound from playing\r\n\t * \r\n\t * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tstop(pState) {\r\n\t\t// The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.\r\n\t\tif (!this.source) {\r\n\t\t\tthis.stopSignal = true;\r\n\t\t\treturn;\r\n\t\t}\r\n\t\tconst wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;\r\n\t\t// This sound is no longer considered to be playing, so remove it from the array\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\tif (this.source) {\r\n\t\t\tif (!this.source.stop) this.source.stop = this.source.noteOff;\r\n\t\t\tthis.source.stop();\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t\tthis.source = null;\r\n\t\t\tthis.gainNode = null;\r\n\t\t}\r\n\t\tthis.state = pState ? pState : 'stopped';\r\n\t\tif (this.state === 'stopped' && wasPlaying && typeof(this.events.stop) === 'function') this.events.stop();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Plays this sound\r\n\t * \r\n\t * @param {boolean} pResume - If this is being played from a paused state\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tplay(pResume) {\r\n\t\t// A sound cannot be played if it's sound name is not referencable, \r\n\t\t// a sound that is recycled has no sound information to be played\r\n\t\t// and if the game's API doesn't allow a sound to be played at it's current time, then it can't play.\r\n\t\tif (!this.soundPath || this.state === 'recycled' || !ESound.canPlaySound()) return;\r\n\t\t// If this sound is not loaded, it cannot be played, however there is a chance that a sound with the same buffer\r\n\t\t// information has been played before and stored. In this case it does not need to wait to load, it instead checks to see\r\n\t\t// if that buffer information is avaiable, and if it is, it allows the sound to be played with that data.\r\n\t\tif (!this.loaded && !ESound.loadedBuffers[this.soundPath]) {\r\n\t\t\tthis.playAfterLoad = true;\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost\r\n\t\tif (!ESound.focused && !this.canPlayUnfocused()) {\r\n\t\t\tif (!ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.push(this);\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// if you already have a soure and a gainNode, disconnect them and let them be garbage collected\r\n\t\tif (this.source) {\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t\tthis.source = null;\r\n\t\t\tthis.gainNode = null;\r\n\t\t}\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\tconst source = ESound.audioCtx.createBufferSource();\r\n\t\tconst gainNode = ESound.audioCtx.createGain();\r\n\t\tconst self = this;\r\n\t\tgainNode.gain.value = ESoundManagerSingleton.normalize(this._volume);\r\n\t\tgainNode.connect(ESound.gainNode);\r\n\t\tsource.connect(gainNode);\r\n\t\t// ESound.gainNode.connect(ESound.audioCtx.destination);\r\n\t\tsource.buffer = ESound.loadedBuffers[this.soundPath];\r\n\t\tsource.playbackRate.value = this._playbackRate;\r\n\t\t// sound.stop() calls this as well\r\n\t\tsource.onended = function() {\r\n\t\t\t// if this sound was stopped, and it is a sound that will be saved return early\r\n\t\t\tif (self.state === 'stopped' && self.save) {\r\n\t\t\t\treturn;\r\n\t\t\t} else if (self.state === 'restart') {\r\n\t\t\t\t// since the sound is restarting we don't want it to fire off the `onEnded` event.\r\n\t\t\t\tself.play();\r\n\t\t\t\treturn;\r\n\t\t\t} else if (self.state === 'suspended') {\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.state !== 'stopped' && typeof(self.events.end) === 'function') self.events.end();\r\n\t\t\tif (self._loop) {\r\n\t\t\t\tself.play();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\t/*\r\n\t\t\t\tIf this is a one use sound, it will be recycled or killed.\r\n\t\t\t\tA developer may still hold a reference to this sound but will not be able to do anything to it.\r\n\t\t\t\tIf you are using a one use sound, it is best to play a sound on its creation without storing it.\r\n\t\t\t\tESound.createSound('soundPath', volume, startTime, endTime, playrate, loop).play()\r\n\t\t\t*/\r\n\t\t\tif (!self.save) self.kill();\r\n\t\t};\r\n\t\tthis.source = source;\r\n\t\tthis.gainNode = gainNode;\r\n\t\tthis.duration = source.buffer.duration;\r\n\t\tthis.playAfterLoad = null;\r\n\t\tif (!source.start) source.start = source.noteOn;\r\n\t\tsource.start(0, (this.pausedTimeStamp ? this.pausedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);\r\n/* \t\t\t\t\r\n\t\t// This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.\r\n\t\tsource.loop = this._loop;\r\n\t\tsource.loopStart = this.startTime;\r\n\t\tsource.loopEnd = this.endTime ? this.endTime : source.buffer.duration; \r\n*/\r\n\t\tthis.state = 'playing';\r\n\t\tthis.startedTimeStamp = ESound.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tif (!ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.push(this);\r\n\t\tif (!pResume && typeof(this.events.start) === 'function') this.events.start();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Restarts this sound\r\n\t * \r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\trestart() {\r\n\t\tthis.stop('restart');\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Get whether this sound will play when the window is unfocused\r\n\t * @returns {boolean} Whether or not this sound will play when the window is unfocused\r\n\t */\r\n\tcanPlayUnfocused() {\r\n\t\treturn this.playUnfocused ? true : false;\r\n\t}\r\n\t/**\r\n\t * Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.\r\n\t * If the recycle manager is full, this sound will become an empty class instance.\r\n\t */\r\n\tkill() {\r\n\t\tthis.wipe();\r\n\t\tif (ESound.recycledSounds.length < ESoundManagerSingleton.MAX_RECYCLED_SOUNDS)  {\r\n\t\t\tESound.recycledSounds.push(this);\r\n\t\t} else {\r\n\t\t\t// remove all properties from this sound object, since it no longer will be used.\r\n\t\t\t// any references to this should be removed so that it can be garbage collected\r\n\t\t\tfor (const variable in this) delete this[variable];\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Resets this sound to default state\r\n\t */\r\n\twipe() {\r\n\t\tthis.onStarted = null;\r\n\t\tthis.onStopped = null;\r\n\t\tthis.onEnded = null;\r\n\t\tthis.onSuspended = null;\r\n\t\tthis.onResumed = null;\r\n\t\tthis.stop('wipe');\r\n\t\tcancelAnimationFrame(this.fader.raf);\r\n\t\tif (this.source) {\r\n\t\t\tthis.source.disconnect();\r\n\t\t\tthis.gainNode.disconnect();\r\n\t\t}\r\n\t\tthis.soundPath = null;\r\n\t\tthis.startTime = null;\r\n\t\tthis.endTime = null;\r\n\t\tthis.save = null;\r\n\t\tthis.duration = null;\r\n\t\tthis._playbackRate = 1;\r\n\t\tthis.source = null;\r\n\t\tthis.gainNode = null;\r\n\t\tthis.loaded = false;\r\n\t\tthis.playAfterLoad = null;\r\n\t\tthis.state = 'recycled';\r\n\t\tthis.startedTimeStamp = null;\r\n\t\tthis.pausedTimeStamp = 0;\r\n\t\tthis.playUnfocused = null;\r\n\t\tthis.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;\r\n\t\tthis.stopSignal = false;\r\n\t\tthis._loop = false;\r\n\t\tthis._volume = 100;\r\n\t\tthis._info.soundPath = this._info.duration = null;\r\n\t\tfor (const prop in this.events) {\r\n\t\t\tdelete this.events[prop];\r\n\t\t}\r\n\t\tif (ESound.soundsPlaying.includes(this)) ESound.soundsPlaying.splice(ESound.soundsPlaying.indexOf(this), 1);\r\n\t\tif (ESound.pausedSounds.includes(this)) ESound.pausedSounds.splice(ESound.pausedSounds.indexOf(this), 1);\r\n\t\tif (ESound.queuedSoundsToPlay.includes(this)) ESound.queuedSoundsToPlay.splice(ESound.queuedSoundsToPlay.indexOf(this), 1);\r\n\t\tif (ESound.queuedSoundsToFade.includes(this)) ESound.queuedSoundsToFade.splice(ESound.queuedSoundsToFade.indexOf(this), 1);\r\n\t}\r\n\t/**\r\n\t * Get the current timestamp of the sound playing\r\n\t * \r\n\t * @returns {number} The current timestamp into the sound\r\n\t */\r\n\tgetCurrentTime() {\r\n\t\tif (this.pausedTimeStamp) {\r\n\t\t\treturn this.pausedTimeStamp * this._playbackRate;\r\n\t\t} else if (this.startedTimeStamp) {\r\n\t\t\treturn ESound.audioCtx.currentTime - this.startedTimeStamp;\r\n\t\t} else {\r\n\t\t\treturn 0;\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {Sound} This sound instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\t// If a sound is not playing, it cannot be faded.\r\n\t\tif (this.state !== 'playing' && ESound.focused) return;\r\n\t\t// The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus\r\n\t\tif (!ESound.focused && !this.canPlayUnfocused()) {\r\n\t\t\t// If this sound is already queued to fade, then just exit out\r\n\t\t\tif (ESound.queuedSoundsToFade.includes(this)) return;\r\n\t\t\tthis.fader.queue = {\r\n\t\t\t\t'volume': pVolume,\r\n\t\t\t\t'duration': pDuration,\r\n\t\t\t\t'ease': pEase,\r\n\t\t\t\t'callback': pCallback\r\n\t\t\t}\r\n\t\t\tESound.queuedSoundsToFade.push(this);\r\n\t\t\treturn;\r\n\t\t}\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tpEase = 'easeOutCubic';\r\n\t\t\tconsole.warn('ESound: Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\t// Get rid of the queue information if it exists, it is no longer needed\r\n\t\tif (this.fader.queue) this.fader.queue = null;\r\n\t\tpVolume = ESoundManagerSingleton.clamp(pVolume, ESoundManagerSingleton.MIN_VOLUME, ESoundManagerSingleton.MAX_VOLUME);\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this._volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ESoundManagerSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\t\tthis.state = 'fading';\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!ESound.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.volume = Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations);\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.queue = self.fader.raf = null;\r\n\t\t\t\t// When a sound is faded down to `0` or any other value. Just because it may be muted, does not mean it is stopped. \r\n\t\t\t\t// The state of the sound is still considered to be playing after its done fading\r\n\t\t\t\tself.state = 'playing';\t\t\t\t\t\t\r\n\t\t\t\tself.volume = pVolume;\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Start the queued fade\r\n\t */\r\n\tqueuedFade() {\r\n\t\tif (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);\r\n\t}\r\n}\r\n",
     "static": true,
-    "longname": "Z:/Business/Evitca Studio/github/ESound/src/esound.js",
+    "longname": "Z:/Business/Evitca Studio/Github/ESound/src/esound.mjs",
     "access": "public",
     "description": null,
     "lineNumber": 1
@@ -578,19 +578,19 @@
     "__docId__": 49,
     "kind": "variable",
     "name": "ESound",
-    "memberof": "src/esound.js",
+    "memberof": "src/esound.mjs",
     "static": true,
-    "longname": "src/esound.js~ESound",
+    "longname": "src/esound.mjs~ESound",
     "access": "public",
     "export": true,
-    "importPath": "esound/src/esound.js",
+    "importPath": "esound/src/esound.mjs",
     "importStyle": "{ESound}",
     "description": null,
     "lineNumber": 495,
     "undocument": true,
     "type": {
       "types": [
-        "src/esound.js~ESoundManagerSingleton"
+        "src/esound.mjs~ESoundManagerSingleton"
       ]
     }
   },
@@ -598,12 +598,12 @@
     "__docId__": 50,
     "kind": "class",
     "name": "Sound",
-    "memberof": "src/esound.js",
+    "memberof": "src/esound.mjs",
     "static": true,
-    "longname": "src/esound.js~Sound",
+    "longname": "src/esound.mjs~Sound",
     "access": "public",
     "export": false,
-    "importPath": "esound/src/esound.js",
+    "importPath": "esound/src/esound.mjs",
     "importStyle": null,
     "description": "A small class to represent a sound. Has useful API to handle the sound",
     "lineNumber": 502,
@@ -619,11 +619,11 @@
     "__docId__": 51,
     "kind": "constructor",
     "name": "constructor",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#constructor",
+    "longname": "src/esound.mjs~Sound#constructor",
     "access": "public",
     "description": "",
     "lineNumber": 537,
@@ -728,9 +728,9 @@
     "__docId__": 52,
     "kind": "member",
     "name": "soundPath",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#soundPath",
+    "longname": "src/esound.mjs~Sound#soundPath",
     "access": "public",
     "description": null,
     "lineNumber": 538,
@@ -745,9 +745,9 @@
     "__docId__": 53,
     "kind": "member",
     "name": "startTime",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#startTime",
+    "longname": "src/esound.mjs~Sound#startTime",
     "access": "public",
     "description": null,
     "lineNumber": 539,
@@ -762,9 +762,9 @@
     "__docId__": 54,
     "kind": "member",
     "name": "endTime",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#endTime",
+    "longname": "src/esound.mjs~Sound#endTime",
     "access": "public",
     "description": null,
     "lineNumber": 540,
@@ -779,9 +779,9 @@
     "__docId__": 55,
     "kind": "member",
     "name": "save",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#save",
+    "longname": "src/esound.mjs~Sound#save",
     "access": "public",
     "description": null,
     "lineNumber": 541,
@@ -796,9 +796,9 @@
     "__docId__": 56,
     "kind": "member",
     "name": "duration",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#duration",
+    "longname": "src/esound.mjs~Sound#duration",
     "access": "public",
     "description": null,
     "lineNumber": 542,
@@ -813,9 +813,9 @@
     "__docId__": 57,
     "kind": "member",
     "name": "source",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#source",
+    "longname": "src/esound.mjs~Sound#source",
     "access": "public",
     "description": null,
     "lineNumber": 543,
@@ -830,9 +830,9 @@
     "__docId__": 58,
     "kind": "member",
     "name": "gainNode",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#gainNode",
+    "longname": "src/esound.mjs~Sound#gainNode",
     "access": "public",
     "description": null,
     "lineNumber": 544,
@@ -847,9 +847,9 @@
     "__docId__": 59,
     "kind": "member",
     "name": "loaded",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#loaded",
+    "longname": "src/esound.mjs~Sound#loaded",
     "access": "public",
     "description": null,
     "lineNumber": 545,
@@ -864,9 +864,9 @@
     "__docId__": 60,
     "kind": "member",
     "name": "playAfterLoad",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#playAfterLoad",
+    "longname": "src/esound.mjs~Sound#playAfterLoad",
     "access": "public",
     "description": null,
     "lineNumber": 546,
@@ -881,9 +881,9 @@
     "__docId__": 61,
     "kind": "member",
     "name": "muted",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#muted",
+    "longname": "src/esound.mjs~Sound#muted",
     "access": "public",
     "description": null,
     "lineNumber": 547,
@@ -898,9 +898,9 @@
     "__docId__": 62,
     "kind": "member",
     "name": "state",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#state",
+    "longname": "src/esound.mjs~Sound#state",
     "access": "public",
     "description": null,
     "lineNumber": 548,
@@ -915,9 +915,9 @@
     "__docId__": 63,
     "kind": "member",
     "name": "startedTimeStamp",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#startedTimeStamp",
+    "longname": "src/esound.mjs~Sound#startedTimeStamp",
     "access": "public",
     "description": null,
     "lineNumber": 549,
@@ -932,9 +932,9 @@
     "__docId__": 64,
     "kind": "member",
     "name": "pausedTimeStamp",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#pausedTimeStamp",
+    "longname": "src/esound.mjs~Sound#pausedTimeStamp",
     "access": "public",
     "description": null,
     "lineNumber": 550,
@@ -949,9 +949,9 @@
     "__docId__": 65,
     "kind": "member",
     "name": "playUnfocused",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#playUnfocused",
+    "longname": "src/esound.mjs~Sound#playUnfocused",
     "access": "public",
     "description": null,
     "lineNumber": 551,
@@ -966,9 +966,9 @@
     "__docId__": 66,
     "kind": "member",
     "name": "fader",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#fader",
+    "longname": "src/esound.mjs~Sound#fader",
     "access": "public",
     "description": null,
     "lineNumber": 552,
@@ -983,9 +983,9 @@
     "__docId__": 67,
     "kind": "member",
     "name": "events",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#events",
+    "longname": "src/esound.mjs~Sound#events",
     "access": "public",
     "description": null,
     "lineNumber": 553,
@@ -1000,9 +1000,9 @@
     "__docId__": 68,
     "kind": "member",
     "name": "stopSignal",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#stopSignal",
+    "longname": "src/esound.mjs~Sound#stopSignal",
     "access": "public",
     "description": null,
     "lineNumber": 554,
@@ -1017,9 +1017,9 @@
     "__docId__": 69,
     "kind": "member",
     "name": "_loop",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#_loop",
+    "longname": "src/esound.mjs~Sound#_loop",
     "access": "private",
     "description": null,
     "lineNumber": 555,
@@ -1034,9 +1034,9 @@
     "__docId__": 70,
     "kind": "member",
     "name": "_playbackRate",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#_playbackRate",
+    "longname": "src/esound.mjs~Sound#_playbackRate",
     "access": "private",
     "description": null,
     "lineNumber": 556,
@@ -1051,9 +1051,9 @@
     "__docId__": 71,
     "kind": "member",
     "name": "_volume",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#_volume",
+    "longname": "src/esound.mjs~Sound#_volume",
     "access": "private",
     "description": null,
     "lineNumber": 557,
@@ -1068,9 +1068,9 @@
     "__docId__": 72,
     "kind": "member",
     "name": "_info",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#_info",
+    "longname": "src/esound.mjs~Sound#_info",
     "access": "private",
     "description": null,
     "lineNumber": 558,
@@ -1085,11 +1085,11 @@
     "__docId__": 73,
     "kind": "get",
     "name": "volume",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#volume",
+    "longname": "src/esound.mjs~Sound#volume",
     "access": "public",
     "description": "Gets the current volume of this sound",
     "lineNumber": 566,
@@ -1117,11 +1117,11 @@
     "__docId__": 74,
     "kind": "set",
     "name": "volume",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#volume",
+    "longname": "src/esound.mjs~Sound#volume",
     "access": "public",
     "description": "Sets the volume of this sound",
     "lineNumber": 574,
@@ -1142,9 +1142,9 @@
     "__docId__": 76,
     "kind": "typedef",
     "name": "Event",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": true,
-    "longname": "src/esound.js~Sound.Event",
+    "longname": "src/esound.mjs~Sound.Event",
     "access": "public",
     "description": "",
     "properties": [
@@ -1181,11 +1181,11 @@
     "__docId__": 77,
     "kind": "method",
     "name": "on",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#on",
+    "longname": "src/esound.mjs~Sound#on",
     "access": "public",
     "description": "Attaches a callback to the specified event.",
     "lineNumber": 589,
@@ -1224,11 +1224,11 @@
     "__docId__": 78,
     "kind": "method",
     "name": "toggleMute",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#toggleMute",
+    "longname": "src/esound.mjs~Sound#toggleMute",
     "access": "public",
     "description": "Toggleable mute feature for this sound. Flips between muted and unmuted",
     "lineNumber": 612,
@@ -1252,11 +1252,11 @@
     "__docId__": 80,
     "kind": "get",
     "name": "loop",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#loop",
+    "longname": "src/esound.mjs~Sound#loop",
     "access": "public",
     "description": "Get the loop status of this sound",
     "lineNumber": 627,
@@ -1284,11 +1284,11 @@
     "__docId__": 81,
     "kind": "set",
     "name": "loop",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#loop",
+    "longname": "src/esound.mjs~Sound#loop",
     "access": "public",
     "description": "Set the loop status of this sound",
     "lineNumber": 635,
@@ -1309,11 +1309,11 @@
     "__docId__": 83,
     "kind": "method",
     "name": "toggleLoop",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#toggleLoop",
+    "longname": "src/esound.mjs~Sound#toggleLoop",
     "access": "public",
     "description": "Toggleable loop feature for this sound. Flips between loop and unlooped",
     "lineNumber": 644,
@@ -1337,11 +1337,11 @@
     "__docId__": 85,
     "kind": "get",
     "name": "playbackRate",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#playbackRate",
+    "longname": "src/esound.mjs~Sound#playbackRate",
     "access": "public",
     "description": "Get the playback status of this sound",
     "lineNumber": 654,
@@ -1369,11 +1369,11 @@
     "__docId__": 86,
     "kind": "set",
     "name": "playbackRate",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#playbackRate",
+    "longname": "src/esound.mjs~Sound#playbackRate",
     "access": "public",
     "description": "Set the playback status of this sound",
     "lineNumber": 662,
@@ -1394,11 +1394,11 @@
     "__docId__": 88,
     "kind": "set",
     "name": "info",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#info",
+    "longname": "src/esound.mjs~Sound#info",
     "access": "public",
     "description": "Set the info of this sound\nThe new value is not used, as this is a \"read-only\" variable. So any attempts to set it will not work",
     "lineNumber": 672,
@@ -1419,11 +1419,11 @@
     "__docId__": 90,
     "kind": "get",
     "name": "info",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#info",
+    "longname": "src/esound.mjs~Sound#info",
     "access": "public",
     "description": "Get the info object of this sound",
     "lineNumber": 681,
@@ -1451,11 +1451,11 @@
     "__docId__": 91,
     "kind": "method",
     "name": "build",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#build",
+    "longname": "src/esound.mjs~Sound#build",
     "access": "public",
     "description": "",
     "lineNumber": 704,
@@ -1560,11 +1560,11 @@
     "__docId__": 102,
     "kind": "method",
     "name": "load",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#load",
+    "longname": "src/esound.mjs~Sound#load",
     "access": "public",
     "description": "Loads this sound and stores its data so future sounds can use the same buffer",
     "lineNumber": 725,
@@ -1575,11 +1575,11 @@
     "__docId__": 103,
     "kind": "method",
     "name": "pause",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#pause",
+    "longname": "src/esound.mjs~Sound#pause",
     "access": "public",
     "description": "Pauses this sound",
     "lineNumber": 761,
@@ -1603,11 +1603,11 @@
     "__docId__": 106,
     "kind": "method",
     "name": "resume",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#resume",
+    "longname": "src/esound.mjs~Sound#resume",
     "access": "public",
     "description": "Resumes playing this sound",
     "lineNumber": 778,
@@ -1631,11 +1631,11 @@
     "__docId__": 108,
     "kind": "method",
     "name": "stop",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#stop",
+    "longname": "src/esound.mjs~Sound#stop",
     "access": "public",
     "description": "Stops this sound from playing",
     "lineNumber": 796,
@@ -1670,11 +1670,11 @@
     "__docId__": 113,
     "kind": "method",
     "name": "play",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#play",
+    "longname": "src/esound.mjs~Sound#play",
     "access": "public",
     "description": "Plays this sound",
     "lineNumber": 823,
@@ -1709,11 +1709,11 @@
     "__docId__": 124,
     "kind": "method",
     "name": "restart",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#restart",
+    "longname": "src/esound.mjs~Sound#restart",
     "access": "public",
     "description": "Restarts this sound",
     "lineNumber": 906,
@@ -1737,11 +1737,11 @@
     "__docId__": 125,
     "kind": "method",
     "name": "canPlayUnfocused",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#canPlayUnfocused",
+    "longname": "src/esound.mjs~Sound#canPlayUnfocused",
     "access": "public",
     "description": "Get whether this sound will play when the window is unfocused",
     "lineNumber": 914,
@@ -1765,11 +1765,11 @@
     "__docId__": 126,
     "kind": "method",
     "name": "kill",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#kill",
+    "longname": "src/esound.mjs~Sound#kill",
     "access": "public",
     "description": "Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.\nIf the recycle manager is full, this sound will become an empty class instance.",
     "lineNumber": 921,
@@ -1780,11 +1780,11 @@
     "__docId__": 127,
     "kind": "method",
     "name": "wipe",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#wipe",
+    "longname": "src/esound.mjs~Sound#wipe",
     "access": "public",
     "description": "Resets this sound to default state",
     "lineNumber": 934,
@@ -1795,9 +1795,9 @@
     "__docId__": 128,
     "kind": "member",
     "name": "onStarted",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#onStarted",
+    "longname": "src/esound.mjs~Sound#onStarted",
     "access": "public",
     "description": null,
     "lineNumber": 935,
@@ -1812,9 +1812,9 @@
     "__docId__": 129,
     "kind": "member",
     "name": "onStopped",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#onStopped",
+    "longname": "src/esound.mjs~Sound#onStopped",
     "access": "public",
     "description": null,
     "lineNumber": 936,
@@ -1829,9 +1829,9 @@
     "__docId__": 130,
     "kind": "member",
     "name": "onEnded",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#onEnded",
+    "longname": "src/esound.mjs~Sound#onEnded",
     "access": "public",
     "description": null,
     "lineNumber": 937,
@@ -1846,9 +1846,9 @@
     "__docId__": 131,
     "kind": "member",
     "name": "onSuspended",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#onSuspended",
+    "longname": "src/esound.mjs~Sound#onSuspended",
     "access": "public",
     "description": null,
     "lineNumber": 938,
@@ -1863,9 +1863,9 @@
     "__docId__": 132,
     "kind": "member",
     "name": "onResumed",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "static": false,
-    "longname": "src/esound.js~Sound#onResumed",
+    "longname": "src/esound.mjs~Sound#onResumed",
     "access": "public",
     "description": null,
     "lineNumber": 939,
@@ -1880,11 +1880,11 @@
     "__docId__": 150,
     "kind": "method",
     "name": "getCurrentTime",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#getCurrentTime",
+    "longname": "src/esound.mjs~Sound#getCurrentTime",
     "access": "public",
     "description": "Get the current timestamp of the sound playing",
     "lineNumber": 978,
@@ -1908,11 +1908,11 @@
     "__docId__": 151,
     "kind": "method",
     "name": "fade",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#fade",
+    "longname": "src/esound.mjs~Sound#fade",
     "access": "public",
     "description": "Fades this sound to the specified volume in the specified duration via the specified ease",
     "lineNumber": 996,
@@ -1983,11 +1983,11 @@
     "__docId__": 153,
     "kind": "method",
     "name": "queuedFade",
-    "memberof": "src/esound.js~Sound",
+    "memberof": "src/esound.mjs~Sound",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~Sound#queuedFade",
+    "longname": "src/esound.mjs~Sound#queuedFade",
     "access": "public",
     "description": "Start the queued fade",
     "lineNumber": 1069,
@@ -1998,12 +1998,12 @@
     "__docId__": 154,
     "kind": "class",
     "name": "ESoundManagerSingleton",
-    "memberof": "src/esound.js",
+    "memberof": "src/esound.mjs",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton",
+    "longname": "src/esound.mjs~ESoundManagerSingleton",
     "access": "public",
     "export": true,
-    "importPath": "esound/src/esound.js",
+    "importPath": "esound/src/esound.mjs",
     "importStyle": null,
     "description": "Class for managing sounds",
     "lineNumber": 13,
@@ -2028,9 +2028,9 @@
     "__docId__": 155,
     "kind": "member",
     "name": "MAX_VOLUME",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.MAX_VOLUME",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.MAX_VOLUME",
     "access": "public",
     "description": "The max volume to be used",
     "lineNumber": 19,
@@ -2047,9 +2047,9 @@
     "__docId__": 156,
     "kind": "member",
     "name": "MIN_VOLUME",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.MIN_VOLUME",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.MIN_VOLUME",
     "access": "public",
     "description": "The min volume to be used",
     "lineNumber": 25,
@@ -2066,9 +2066,9 @@
     "__docId__": 157,
     "kind": "member",
     "name": "MAX_RECYCLED_SOUNDS",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.MAX_RECYCLED_SOUNDS",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.MAX_RECYCLED_SOUNDS",
     "access": "public",
     "description": "The max number of sounds that can be recycled",
     "lineNumber": 31,
@@ -2085,9 +2085,9 @@
     "__docId__": 158,
     "kind": "member",
     "name": "MAX_PLAYBACK_RATE",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.MAX_PLAYBACK_RATE",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.MAX_PLAYBACK_RATE",
     "access": "public",
     "description": "The max speed this sound can be played at",
     "lineNumber": 37,
@@ -2104,9 +2104,9 @@
     "__docId__": 159,
     "kind": "member",
     "name": "FRAME_RATE",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.FRAME_RATE",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.FRAME_RATE",
     "access": "public",
     "description": "The frame rate at which to fade the sounds",
     "lineNumber": 43,
@@ -2123,9 +2123,9 @@
     "__docId__": 160,
     "kind": "member",
     "name": "clamp",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.clamp",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.clamp",
     "access": "public",
     "description": "",
     "lineNumber": 51,
@@ -2185,9 +2185,9 @@
     "__docId__": 161,
     "kind": "member",
     "name": "normalize",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": true,
-    "longname": "src/esound.js~ESoundManagerSingleton.normalize",
+    "longname": "src/esound.mjs~ESoundManagerSingleton.normalize",
     "access": "public",
     "description": "",
     "lineNumber": 62,
@@ -2257,11 +2257,11 @@
     "__docId__": 162,
     "kind": "constructor",
     "name": "constructor",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#constructor",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#constructor",
     "access": "public",
     "description": null,
     "lineNumber": 65,
@@ -2271,9 +2271,9 @@
     "__docId__": 163,
     "kind": "member",
     "name": "focused",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#focused",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#focused",
     "access": "public",
     "description": null,
     "lineNumber": 78,
@@ -2288,9 +2288,9 @@
     "__docId__": 165,
     "kind": "member",
     "name": "audioCtx",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#audioCtx",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#audioCtx",
     "access": "public",
     "description": "The audio context all audio will dervie from",
     "lineNumber": 92,
@@ -2307,9 +2307,9 @@
     "__docId__": 166,
     "kind": "member",
     "name": "gainNode",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#gainNode",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#gainNode",
     "access": "public",
     "description": "Gain node",
     "lineNumber": 99,
@@ -2326,9 +2326,9 @@
     "__docId__": 167,
     "kind": "member",
     "name": "soundsPlaying",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#soundsPlaying",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#soundsPlaying",
     "access": "public",
     "description": "Array of sounds that are currently playing",
     "lineNumber": 109,
@@ -2345,9 +2345,9 @@
     "__docId__": 168,
     "kind": "member",
     "name": "pausedSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#pausedSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#pausedSounds",
     "access": "public",
     "description": "Array of sounds that are currently paused",
     "lineNumber": 115,
@@ -2364,9 +2364,9 @@
     "__docId__": 169,
     "kind": "member",
     "name": "recycledSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#recycledSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#recycledSounds",
     "access": "public",
     "description": "Array of sounds that can be resused",
     "lineNumber": 121,
@@ -2383,9 +2383,9 @@
     "__docId__": 170,
     "kind": "member",
     "name": "queuedSoundsToPlay",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#queuedSoundsToPlay",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#queuedSoundsToPlay",
     "access": "public",
     "description": "Array of sounds that are queued for playing",
     "lineNumber": 127,
@@ -2402,9 +2402,9 @@
     "__docId__": 171,
     "kind": "member",
     "name": "queuedSoundsToFade",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#queuedSoundsToFade",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#queuedSoundsToFade",
     "access": "public",
     "description": "Array of sounds that are queued for fading",
     "lineNumber": 133,
@@ -2421,9 +2421,9 @@
     "__docId__": 172,
     "kind": "member",
     "name": "loadedBuffers",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#loadedBuffers",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#loadedBuffers",
     "access": "public",
     "description": "An object that stores the buffer data of a sound so it does not have to be loaded each time",
     "lineNumber": 139,
@@ -2440,9 +2440,9 @@
     "__docId__": 173,
     "kind": "member",
     "name": "fader",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#fader",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#fader",
     "access": "public",
     "description": "An object that stores fade information",
     "lineNumber": 145,
@@ -2459,9 +2459,9 @@
     "__docId__": 174,
     "kind": "member",
     "name": "volume",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#volume",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#volume",
     "access": "public",
     "description": "The master volume ",
     "lineNumber": 151,
@@ -2478,9 +2478,9 @@
     "__docId__": 175,
     "kind": "member",
     "name": "muted",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#muted",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#muted",
     "access": "public",
     "description": "Mute status",
     "lineNumber": 157,
@@ -2497,9 +2497,9 @@
     "__docId__": 176,
     "kind": "member",
     "name": "state",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#state",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#state",
     "access": "public",
     "description": "Current state of the library",
     "lineNumber": 163,
@@ -2516,9 +2516,9 @@
     "__docId__": 178,
     "kind": "member",
     "name": "abilityToPlaySound",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#abilityToPlaySound",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#abilityToPlaySound",
     "access": "public",
     "description": "The checker function to resolve to true or false denoting if a sound can be played\nMaster control over which sounds can play",
     "lineNumber": 176,
@@ -2535,11 +2535,11 @@
     "__docId__": 179,
     "kind": "method",
     "name": "canPlaySound",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#canPlaySound",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#canPlaySound",
     "access": "public",
     "description": "Function to check whether this library can play a sound at a given moment.",
     "lineNumber": 183,
@@ -2563,11 +2563,11 @@
     "__docId__": 180,
     "kind": "method",
     "name": "enableChecker",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#enableChecker",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#enableChecker",
     "access": "public",
     "description": "API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\nEnables a checker to become the master checker over whether a sound can play\nIf their defined conditions return false, then the sound cannot be played",
     "lineNumber": 197,
@@ -2602,11 +2602,11 @@
     "__docId__": 182,
     "kind": "method",
     "name": "adjustVolume",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#adjustVolume",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#adjustVolume",
     "access": "public",
     "description": "Function to adjust master volume",
     "lineNumber": 209,
@@ -2641,11 +2641,11 @@
     "__docId__": 184,
     "kind": "method",
     "name": "fade",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#fade",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#fade",
     "access": "public",
     "description": "Fades this sound to the specified volume in the specified duration via the specified ease",
     "lineNumber": 224,
@@ -2716,11 +2716,11 @@
     "__docId__": 186,
     "kind": "method",
     "name": "toggleMute",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#toggleMute",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#toggleMute",
     "access": "public",
     "description": "Master mute",
     "lineNumber": 280,
@@ -2744,9 +2744,9 @@
     "__docId__": 188,
     "kind": "member",
     "name": "_previousGainNodeValue",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#_previousGainNodeValue",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#_previousGainNodeValue",
     "access": "private",
     "description": null,
     "lineNumber": 283,
@@ -2761,11 +2761,11 @@
     "__docId__": 189,
     "kind": "method",
     "name": "isMuted",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#isMuted",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#isMuted",
     "access": "public",
     "description": "Checks if the sound manager is currently muted",
     "lineNumber": 295,
@@ -2789,11 +2789,11 @@
     "__docId__": 190,
     "kind": "method",
     "name": "emit",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#emit",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#emit",
     "access": "public",
     "description": "Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc",
     "lineNumber": 308,
@@ -2876,9 +2876,9 @@
     "__docId__": 191,
     "kind": "member",
     "name": "queuedToStop",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#queuedToStop",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#queuedToStop",
     "access": "public",
     "description": null,
     "lineNumber": 320,
@@ -2893,11 +2893,11 @@
     "__docId__": 192,
     "kind": "method",
     "name": "createSound",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#createSound",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#createSound",
     "access": "public",
     "description": "",
     "lineNumber": 372,
@@ -3016,11 +3016,11 @@
     "__docId__": 193,
     "kind": "method",
     "name": "stopAllSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#stopAllSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#stopAllSounds",
     "access": "public",
     "description": "This effectively stops all sounds in the game except those specified in the pException array",
     "lineNumber": 387,
@@ -3055,11 +3055,11 @@
     "__docId__": 194,
     "kind": "method",
     "name": "killAllSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#killAllSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#killAllSounds",
     "access": "public",
     "description": "This effectively kills all sounds in the game and subjects them to be recycled ",
     "lineNumber": 403,
@@ -3083,11 +3083,11 @@
     "__docId__": 195,
     "kind": "method",
     "name": "pauseAllSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#pauseAllSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#pauseAllSounds",
     "access": "public",
     "description": "Pauses all sounds in the game",
     "lineNumber": 417,
@@ -3122,11 +3122,11 @@
     "__docId__": 196,
     "kind": "method",
     "name": "resumeAllSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#resumeAllSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#resumeAllSounds",
     "access": "public",
     "description": "Resumes all sounds in games",
     "lineNumber": 432,
@@ -3161,11 +3161,11 @@
     "__docId__": 197,
     "kind": "method",
     "name": "playQueuedSounds",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#playQueuedSounds",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#playQueuedSounds",
     "access": "private",
     "description": "",
     "lineNumber": 443,
@@ -3176,11 +3176,11 @@
     "__docId__": 198,
     "kind": "method",
     "name": "unloadSound",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#unloadSound",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#unloadSound",
     "access": "public",
     "description": "Removes the loaded audio buffer data for this sound",
     "lineNumber": 462,
@@ -3215,11 +3215,11 @@
     "__docId__": 199,
     "kind": "method",
     "name": "recycleSound",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#recycleSound",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#recycleSound",
     "access": "private",
     "description": "Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed",
     "lineNumber": 473,
@@ -3254,11 +3254,11 @@
     "__docId__": 200,
     "kind": "method",
     "name": "resumeAudioCtx",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#resumeAudioCtx",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#resumeAudioCtx",
     "access": "public",
     "description": "This will start playing sounds that were initially blocked by not having a user gesture.\nThis will also restart sounds when a mobile device backs out of an app, and then rejoins the app",
     "lineNumber": 482,
@@ -3269,9 +3269,9 @@
     "__docId__": 201,
     "kind": "member",
     "name": "ready",
-    "memberof": "src/esound.js~ESoundManagerSingleton",
+    "memberof": "src/esound.mjs~ESoundManagerSingleton",
     "static": false,
-    "longname": "src/esound.js~ESoundManagerSingleton#ready",
+    "longname": "src/esound.mjs~ESoundManagerSingleton#ready",
     "access": "public",
     "description": null,
     "lineNumber": 491,
@@ -3283,17 +3283,2203 @@
     }
   },
   {
+    "__docId__": 202,
+    "kind": "file",
+    "name": "src/vendor/tween.mjs",
+    "content": "/**\r\n* Class for creating a tweening animation\r\n* @class Tween  \r\n* @license Tween does not have a license at this time. For licensing contact the author\r\n* @author https://github.com/doubleactii\r\n* Copyright (c) 2023 Evitca Studio\r\n*/\r\nexport class Tween {\r\n    /**\r\n     * @param {Object} [pOtions={}] - The options for the tween animation\r\n     * @param {Object} [pOtions.start={}] - The starting properties of the animation\r\n     * @param {Object} [pOtions.end={}] - The end properties of the animation\r\n     * @param {number} [pOtions.duration=1000] - The duration of the animation in milliseconds\r\n     * @param {string} [pOtions.easing=\"linear\"] - The easing function to use for the animation\r\n     */\r\n    constructor({ start = {}, end = {}, duration = 1000, easing = Tween.linear } = {}) {\r\n        this._build(start, end, duration, easing);\r\n    }\r\n\r\n    // Robert Penner's easing functions\r\n    static linear(t, b, c, d) {\r\n        return c * t / d + b;\r\n    }\r\n    static easeInQuad(t, b, c, d) {\r\n        return c * (t /= d) * t + b;\r\n    }\r\n    static easeOutQuad(t, b, c, d) {\r\n        return -c * (t /= d) * (t - 2) + b;\r\n    }\r\n    static easeInOutQuad(t, b, c, d) {\r\n        if ((t /= d / 2) < 1) return c / 2 * t * t + b;\r\n        return -c / 2 * ((--t) * (t - 2) - 1) + b;\r\n    }\r\n    static easeInSine(t, b, c, d) {\r\n        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;\r\n    }\r\n    static easeOutSine(t, b, c, d) {\r\n        return c * Math.sin(t / d * (Math.PI / 2)) + b;\r\n    }\r\n    static easeInOutSine(t, b, c, d) {\r\n        return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;\r\n    }\r\n    static easeInExpo(t, b, c, d) {\r\n        return (t == 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;\r\n    }\r\n    static easeOutExpo(t, b, c, d) {\r\n        return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;\r\n    }\r\n    static easeInOutExpo(t, b, c, d) {\r\n        if (t == 0) return b;\r\n        if (t == d) return b + c;\r\n        if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b;\r\n        return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;\r\n    }\r\n    static easeInCirc(t, b, c, d) {\r\n        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;\r\n    }\r\n    static easeOutCirc(t, b, c, d) {\r\n        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;\r\n    }\r\n    static easeInOutCirc(t, b, c, d) {\r\n        if ((t /= d / 2) < 1) return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;\r\n        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;\r\n    }\r\n    static easeInCubic(t, b, c, d) {\r\n        return c * (t /= d) * t * t + b;\r\n    }\r\n    static easeOutCubic(t, b, c, d) {\r\n        return c * ((t = t / d - 1) * t * t + 1) + b;\r\n    }\r\n    static easeInOutCubic(t, b, c, d) {\r\n        if ((t /= d / 2) < 1) return c / 2 * t * t * t + b;\r\n        return c / 2 * ((t -= 2) * t * t + 2) + b;\r\n    }\r\n    static easeInQuart(t, b, c, d) {\r\n        return c * (t /= d) * t * t * t + b;\r\n    }\r\n    static easeOutQuart(t, b, c, d) {\r\n        return -c * ((t = t / d - 1) * t * t * t - 1) + b;\r\n    }\r\n    static easeInOutQuart(t, b, c, d) {\r\n        if ((t /= d / 2) < 1) return c / 2 * t * t * t * t + b;\r\n        return -c / 2 * ((t -= 2) * t * t * t - 2) + b;\r\n    }\r\n    static easeInQuint(t, b, c, d) {\r\n        return c * (t /= d) * t * t * t * t + b;\r\n    }\r\n    static easeOutQuint(t, b, c, d) {\r\n        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;\r\n    }\r\n    static easeInOutQuint(t, b, c, d) {\r\n        if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;\r\n        return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;\r\n    }\r\n    static easeInElastic(t, b, c, d) {\r\n        var s = 1.70158;\r\n        var p = 0;\r\n        var a = c;\r\n        if (t == 0) return b;\r\n        if ((t /= d) == 1) return b + c;\r\n        if (!p) p = d * .3;\r\n        if (a < Math.abs(c)) {\r\n            a = c;\r\n            var s = p / 4;\r\n        } else {\r\n\t\t\t// Handle the Math.asin(0 / 0) case\r\n\t\t\tif (c === 0 && a === 0) {\r\n\t\t\t\ts = p / (2 * Math.PI) * Math.asin(1);\r\n\t\t\t} else {\r\n\t\t\t\tvar s = p / (2 * Math.PI) * Math.asin(c / a);\r\n\t\t\t}\r\n\t\t}\r\n        return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;\r\n    }\r\n    static easeOutElastic(t, b, c, d) {\r\n        var s = 1.70158;\r\n        var p = 0;\r\n        var a = c;\r\n        if (t == 0) return b;\r\n        if ((t /= d) == 1) return b + c;\r\n        if (!p) p = d * .3;\r\n        if (a < Math.abs(c)) {\r\n            a = c;\r\n            var s = p / 4;\r\n        } else {\r\n\t\t\t// Handle the Math.asin(0 / 0) case\r\n\t\t\tif (c === 0 && a === 0) {\r\n\t\t\t\ts = p / (2 * Math.PI) * Math.asin(1);\r\n\t\t\t} else {\r\n\t\t\t\tvar s = p / (2 * Math.PI) * Math.asin(c / a);\r\n\t\t\t}\r\n\t\t}\r\n        return a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;\r\n    }\r\n    static easeInOutElastic(t, b, c, d) {\r\n        var s = 1.70158;\r\n        var p = 0;\r\n        var a = c;\r\n        if (t == 0) return b;\r\n        if ((t /= d / 2) == 2) return b + c;\r\n        if (!p) p = d * (.3 * 1.5);\r\n        if (a < Math.abs(c)) {\r\n            a = c;\r\n            var s = p / 4;\r\n        } else {\r\n\t\t\t// Handle the Math.asin(0 / 0) case\r\n\t\t\tif (c === 0 && a === 0) {\r\n\t\t\t\ts = p / (2 * Math.PI) * Math.asin(1);\r\n\t\t\t} else {\r\n\t\t\t\tvar s = p / (2 * Math.PI) * Math.asin(c / a);\r\n\t\t\t}\r\n\t\t}\r\n        if (t < 1) return -.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;\r\n        return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * .5 + c + b;\r\n    }\r\n    static easeInBack(t, b, c, d) {\r\n        var s = 1.70158;\r\n        return c * (t /= d) * t * ((s + 1) * t - s) + b;\r\n    }\r\n    static easeOutBack(t, b, c, d) {\r\n        var s = 1.70158;\r\n        return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;\r\n    }\r\n    static easeInOutBack(t, b, c, d) {\r\n        var s = 1.70158;\r\n        if ((t /= d / 2) < 1) return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;\r\n        return c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;\r\n    }\r\n\r\n    static easeInBounce(t, b, c, d) {\r\n        return c - this.easeOutBounce(d - t, 0, c, d) + b;\r\n    }\r\n\r\n    static easeOutBounce(t, b, c, d) {\r\n        t /= d;\r\n        if (t < 1/2.75) {\r\n            return c * 7.5625 * t * t + b;\r\n        }\r\n        \r\n        if (t < 2/2.75) {\r\n            t -= 1.5/2.75;\r\n            return c * (7.5625 * t * t + 0.75) + b;\r\n        }\r\n        \r\n        if (t < 2.5/2.75) {\r\n            t -= 2.25/2.75;\r\n            return c * (7.5625 * t * t + 0.9375) + b;\r\n        } else {\r\n            t -= 2.625/2.75;\r\n            return c * (7.5625 * t * t + 0.984375) + b;\r\n        }\r\n    }\r\n\r\n    static easeInOutBounce(t, b, c, d) {\r\n        if (t < d*0.5) {\r\n            return (this.easeInBounce(t*2, 0, c, d)*0.5 + b);\r\n        }\r\n        return (this.easeOutBounce(t*2 - d, 0, c, d)*0.5 + c*0.5 + b);\r\n    }\r\n\t/**\r\n\t * @param {number} pNumber - The number to clamp\r\n\t * @param {number} pMin - The minimum number \r\n\t * @param {number} pMax - The maximum number\r\n\t * @returns {number} The number clamped between the minimum and maximum values\r\n\t */\r\n\tstatic _clamp(pNumber, pMin = 0, pMax = 1) {\r\n\t\treturn Math.max(pMin, Math.min(pNumber, pMax));\r\n\t}\r\n\t/**\r\n\t * Converts an Hex color value to an array of [r, g, b].\r\n\t *\r\n\t * @private\r\n\t * @param {string} pHex - The Hex color in the form \"#fff\" or \"#ffffff\" or tagless.\r\n\t * @return {Array} The array [r, g, b].\r\n\t */\r\n\tstatic _hexToRgb(pHex) {\r\n\t\tpHex = pHex.replace('#', '');\r\n\t\tif (pHex.length === 3) {\r\n\t\t\tpHex = pHex.replace(new RegExp('(.)', 'g'), '$1$1');\r\n\t\t}\r\n\t\tpHex = pHex.match(new RegExp('..', 'g'));\r\n\t\tconst r = Tween._clamp(parseInt(pHex[0], 16), 0, 255);\r\n\t\tconst g = Tween._clamp(parseInt(pHex[1], 16), 0, 255);\r\n\t\tconst b = Tween._clamp(parseInt(pHex[2], 16), 0, 255);\r\n\t\treturn [r, g, b];\r\n\t}\r\n\t/**\r\n\t * Converts an array of [r, g, b] to an Hex color code.\r\n\t * \r\n\t * @private\r\n\t * @param {Array} pColorArray - The rgb color array to convert into a hex\r\n\t * return {string} The hex color\r\n\t */\r\n\tstatic _rgbToHex(pColorArray) {\r\n\t\tif (Array.isArray(pColorArray)) {\r\n\t\t\treturn '#' + pColorArray.map((pColor) => Math.abs(Math.round(pColor)).toString(16).padStart(2, '0')).join('');\r\n\t\t}\r\n\t}\r\n    /**\r\n     * Builds/Rebuilds the tween object with new info\r\n     * @param {Object} pStart - The start object containing the start values\r\n     * @param {Object} pEnd - The end object containing the end values\r\n     * @param {number} pDuration -  The duration of the effect\r\n     * @param {function} pEasing - The easing function to use\r\n     */\r\n    _build(pStart, pEnd, pDuration, pEasing) {\r\n        this.start = pStart;\r\n        this.end = pEnd;\r\n        this.duration = pDuration;\r\n        this.easing = typeof(pEasing) === 'function' ? pEasing : Tween.linear;\r\n        this.events = {};\r\n        this.exportedValues = {};\r\n        this.tweening = false;\r\n        this.update = null;\r\n        this.paused = false;\r\n\t\tthis.lastTime = 0;\r\n        this.elapsed = 0;\r\n    }\r\n    /**\r\n     * @param {Object} [pOtions={}] - The options for the tween animation\r\n     * @param {Object} [pOtions.start={}] - The starting properties of the animation\r\n     * @param {Object} [pOtions.end={}] - The end properties of the animation\r\n     * @param {number} [pOtions.duration=1000] - The duration of the animation in milliseconds\r\n     * @param {string} [pOtions.easing=\"linear\"] - The easing function to use for the animation\r\n     */\r\n    build({ start = {}, end = {}, duration = 1000, easing = Tween.linear } = {}) {\r\n        this._build(start, end, duration, easing);\r\n        return this;\r\n    }\r\n    /**\r\n     * @typedef {Object} Event\r\n     * @property {string} event - The event name\r\n     * @property {function} callback - The function to be called when the event is triggered\r\n     */\r\n    /**\r\n     * Attaches a callback to the specified event.\r\n     * @param {Event['event']} pEvent - The event to attach the callback to\r\n     * @param {Event['callback']} pCallback - The function to be called when the event is triggered\r\n     * @return {Tween} The Tween instance\r\n     */\r\n    on(pEvent, pCallback) {\r\n        if (typeof(pCallback) === \"function\") {\r\n            switch (pEvent) {\r\n                case \"start\":\r\n                case \"end\":\r\n                case \"pause\":\r\n                case \"resume\":\r\n                    this.events[pEvent] = pCallback;\r\n                    break;\r\n                default:\r\n                    console.error(`The event \"${pEvent}\" is not supported.`);\r\n            }\r\n        } else {\r\n            console.error(`The callback for event \"${pEvent}\" is not a function.`);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Update each frame.\r\n     */\r\n    animationFrame = () => {\r\n        if (!this.tweening || this.paused) return;\r\n\t\tconst now = Date.now();\r\n\t\tif (!this.lastTime) this.lastTime = now;\r\n        this.elapsed += now - this.lastTime;\r\n        let progress = this.elapsed / this.duration;\r\n        \r\n        if (this.oscillating) {\r\n            progress = (1 - Math.cos(progress * Math.PI)) / 2;\r\n        }\r\n        \r\n        if (progress > 1) {\r\n            progress = 1;\r\n        }\r\n\r\n\t\tfor (let key in this.end) {\r\n\t\t\tlet startValue = this.start[key];\r\n\t\t\tlet endValue = this.end[key];\r\n\t\t\tif (typeof(startValue) === \"string\" && (startValue.length === 3 || startValue.length === 6) || startValue.length === 4 || startValue.length === 7) {\r\n\t\t\t\tstartValue = Tween._hexToRgb(startValue);\r\n\t\t\t\tendValue = Tween._hexToRgb(endValue);\r\n\t\t\t\tconst currentRGB = [\r\n\t\t\t\t\tthis.easing(progress, startValue[0], endValue[0] - startValue[0], 1),\r\n\t\t\t\t\tthis.easing(progress, startValue[1], endValue[1] - startValue[1], 1),\r\n\t\t\t\t\tthis.easing(progress, startValue[2], endValue[2] - startValue[2], 1)\r\n\t\t\t\t];\r\n\t\t\t\tthis.exportedValues[key] = Tween._rgbToHex(currentRGB);\r\n\t\t\t} else {\r\n\t\t\t\tthis.exportedValues[key] = this.easing(progress, startValue, endValue - startValue, 1);\r\n\t\t\t}\r\n\t\t}\r\n\r\n        this.update(this.exportedValues);\r\n\r\n        if (progress === 1 && !this.oscillating) {\r\n            this.stop();\r\n            if (this.events.end) {\r\n                this.events.end();\r\n            }\r\n        } else {\r\n            requestAnimationFrame(this.animationFrame);\r\n        }\r\n\t\tthis.lastTime = now;\r\n    }\r\n    /**\r\n     * Animates the tween by oscillating between the start and end properties.\r\n     * @param {function} pUpdate - A callback function to update the values during the oscillation.\r\n     * @param {boolean} [pOscillate=false] - A flag to indicate if the tween should oscillate.\r\n     * @return {Tween} - Returns the Tween instance for method chaining.\r\n     */\r\n    animate(pUpdate, pOscillate = false) {\r\n        if (typeof(pUpdate) !== \"function\") {\r\n            console.error(\"The pUpdate parameter passed to animate is not a function.\");\r\n            return;\r\n        }\r\n        if (this.tweening) return;\r\n        let startProperties = Object.keys(this.start);\r\n        let endProperties = Object.keys(this.end);\r\n\r\n        if (!startProperties.length || !endProperties.length) {\r\n            console.error(\"The start object or the end object has no properties.\");\r\n            return;\r\n        }\r\n\r\n        if (!startProperties.every(prop => endProperties.includes(prop))) {\r\n            console.error(\"The end object is missing properties that the start object has.\");\r\n            return;\r\n        }\r\n\r\n        this.update = pUpdate;\r\n        this.tweening = true;\r\n\t\tthis.elapsed = 0;\r\n        this.oscillating = pOscillate;\r\n\r\n        if (this.events.start) {\r\n            this.events.start();\r\n        }\r\n        requestAnimationFrame(this.animationFrame);\r\n        return this;\r\n    }\r\n    /**\r\n     * Resumes the tween animation\r\n     * @returns {Tween} The instance of the Tween object\r\n     */\r\n    resume() {\r\n        if (this.paused) {\r\n            this.lastTime = Date.now();\r\n            this.paused = false;\r\n            if (this.events.resume) {\r\n                this.events.resume();\r\n            }\r\n            requestAnimationFrame(this.animationFrame);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Pauses the tween animation\r\n     * @returns {Tween} The instance of the Tween object\r\n     */\r\n    pause() {\r\n        if (!this.paused) {\r\n            this.paused = true;\r\n            if (this.events.pause) {\r\n                this.events.pause();\r\n            }\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Stops the tween and clears all data.\r\n     */\r\n    stop() {\r\n        this.tweening = false;\r\n        this.oscillating = false;\r\n        this.update = null;\r\n        this.elapsed = 0;\r\n\t\tthis.lastTime = 0;\r\n        this.paused = false;\r\n        for (const prop in this.exportedValues) {\r\n            if (this.exportedValues.hasOwnProperty(prop)) {\r\n                delete this.exportedValues[prop];\r\n            }\r\n        }\r\n    }\r\n}",
+    "static": true,
+    "longname": "Z:/Business/Evitca Studio/Github/ESound/src/vendor/tween.mjs",
+    "access": "public",
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 203,
+    "kind": "class",
+    "name": "Tween",
+    "memberof": "src/vendor/tween.mjs",
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween",
+    "access": "public",
+    "export": true,
+    "importPath": "esound/src/vendor/tween.mjs",
+    "importStyle": "{Tween}",
+    "description": "Class for creating a tweening animation",
+    "lineNumber": 8,
+    "unknown": [
+      {
+        "tagName": "@class",
+        "tagValue": "Tween  "
+      },
+      {
+        "tagName": "@license",
+        "tagValue": "Tween does not have a license at this time. For licensing contact the author"
+      },
+      {
+        "tagName": "@author",
+        "tagValue": "https://github.com/doubleactii\nCopyright (c) 2023 Evitca Studio"
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 204,
+    "kind": "constructor",
+    "name": "constructor",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#constructor",
+    "access": "public",
+    "description": "",
+    "lineNumber": 16,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions",
+        "description": "The options for the tween animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions.start",
+        "description": "The starting properties of the animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions.end",
+        "description": "The end properties of the animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "1000",
+        "defaultRaw": 1000,
+        "name": "pOtions.duration",
+        "description": "The duration of the animation in milliseconds"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "\"linear\"",
+        "defaultRaw": "linear",
+        "name": "pOtions.easing",
+        "description": "The easing function to use for the animation"
+      }
+    ]
+  },
+  {
+    "__docId__": 205,
+    "kind": "method",
+    "name": "linear",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.linear",
+    "access": "public",
+    "description": null,
+    "lineNumber": 21,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 206,
+    "kind": "method",
+    "name": "easeInQuad",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInQuad",
+    "access": "public",
+    "description": null,
+    "lineNumber": 24,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 207,
+    "kind": "method",
+    "name": "easeOutQuad",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutQuad",
+    "access": "public",
+    "description": null,
+    "lineNumber": 27,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 208,
+    "kind": "method",
+    "name": "easeInOutQuad",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutQuad",
+    "access": "public",
+    "description": null,
+    "lineNumber": 30,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 209,
+    "kind": "method",
+    "name": "easeInSine",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInSine",
+    "access": "public",
+    "description": null,
+    "lineNumber": 34,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 210,
+    "kind": "method",
+    "name": "easeOutSine",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutSine",
+    "access": "public",
+    "description": null,
+    "lineNumber": 37,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 211,
+    "kind": "method",
+    "name": "easeInOutSine",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutSine",
+    "access": "public",
+    "description": null,
+    "lineNumber": 40,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 212,
+    "kind": "method",
+    "name": "easeInExpo",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInExpo",
+    "access": "public",
+    "description": null,
+    "lineNumber": 43,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 213,
+    "kind": "method",
+    "name": "easeOutExpo",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutExpo",
+    "access": "public",
+    "description": null,
+    "lineNumber": 46,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 214,
+    "kind": "method",
+    "name": "easeInOutExpo",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutExpo",
+    "access": "public",
+    "description": null,
+    "lineNumber": 49,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 215,
+    "kind": "method",
+    "name": "easeInCirc",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInCirc",
+    "access": "public",
+    "description": null,
+    "lineNumber": 55,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 216,
+    "kind": "method",
+    "name": "easeOutCirc",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutCirc",
+    "access": "public",
+    "description": null,
+    "lineNumber": 58,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 217,
+    "kind": "method",
+    "name": "easeInOutCirc",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutCirc",
+    "access": "public",
+    "description": null,
+    "lineNumber": 61,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 218,
+    "kind": "method",
+    "name": "easeInCubic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInCubic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 65,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 219,
+    "kind": "method",
+    "name": "easeOutCubic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutCubic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 68,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 220,
+    "kind": "method",
+    "name": "easeInOutCubic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutCubic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 71,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 221,
+    "kind": "method",
+    "name": "easeInQuart",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInQuart",
+    "access": "public",
+    "description": null,
+    "lineNumber": 75,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 222,
+    "kind": "method",
+    "name": "easeOutQuart",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutQuart",
+    "access": "public",
+    "description": null,
+    "lineNumber": 78,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 223,
+    "kind": "method",
+    "name": "easeInOutQuart",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutQuart",
+    "access": "public",
+    "description": null,
+    "lineNumber": 81,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 224,
+    "kind": "method",
+    "name": "easeInQuint",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInQuint",
+    "access": "public",
+    "description": null,
+    "lineNumber": 85,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 225,
+    "kind": "method",
+    "name": "easeOutQuint",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutQuint",
+    "access": "public",
+    "description": null,
+    "lineNumber": 88,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 226,
+    "kind": "method",
+    "name": "easeInOutQuint",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutQuint",
+    "access": "public",
+    "description": null,
+    "lineNumber": 91,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 227,
+    "kind": "method",
+    "name": "easeInElastic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInElastic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 95,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 228,
+    "kind": "method",
+    "name": "easeOutElastic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutElastic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 115,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 229,
+    "kind": "method",
+    "name": "easeInOutElastic",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutElastic",
+    "access": "public",
+    "description": null,
+    "lineNumber": 135,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 230,
+    "kind": "method",
+    "name": "easeInBack",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInBack",
+    "access": "public",
+    "description": null,
+    "lineNumber": 156,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 231,
+    "kind": "method",
+    "name": "easeOutBack",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutBack",
+    "access": "public",
+    "description": null,
+    "lineNumber": 160,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 232,
+    "kind": "method",
+    "name": "easeInOutBack",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutBack",
+    "access": "public",
+    "description": null,
+    "lineNumber": 164,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 233,
+    "kind": "method",
+    "name": "easeInBounce",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInBounce",
+    "access": "public",
+    "description": null,
+    "lineNumber": 170,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 234,
+    "kind": "method",
+    "name": "easeOutBounce",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeOutBounce",
+    "access": "public",
+    "description": null,
+    "lineNumber": 174,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 235,
+    "kind": "method",
+    "name": "easeInOutBounce",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.easeInOutBounce",
+    "access": "public",
+    "description": null,
+    "lineNumber": 194,
+    "undocument": true,
+    "params": [
+      {
+        "name": "t",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "c",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "d",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 236,
+    "kind": "method",
+    "name": "_clamp",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween._clamp",
+    "access": "private",
+    "description": "",
+    "lineNumber": 206,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{number} The number clamped between the minimum and maximum values"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pNumber",
+        "description": "The number to clamp"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pMin",
+        "description": "The minimum number"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pMax",
+        "description": "The maximum number"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "number"
+      ],
+      "spread": false,
+      "description": "The number clamped between the minimum and maximum values"
+    }
+  },
+  {
+    "__docId__": 237,
+    "kind": "method",
+    "name": "_hexToRgb",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween._hexToRgb",
+    "access": "private",
+    "description": "Converts an Hex color value to an array of [r, g, b].",
+    "lineNumber": 216,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pHex",
+        "description": "The Hex color in the form \"#fff\" or \"#ffffff\" or tagless."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Array"
+      ],
+      "spread": false,
+      "description": "The array [r, g, b]."
+    }
+  },
+  {
+    "__docId__": 238,
+    "kind": "method",
+    "name": "_rgbToHex",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween._rgbToHex",
+    "access": "private",
+    "description": "Converts an array of [r, g, b] to an Hex color code.",
+    "lineNumber": 234,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pColorArray",
+        "description": "The rgb color array to convert into a hex\nreturn {string} The hex color"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 239,
+    "kind": "method",
+    "name": "_build",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#_build",
+    "access": "private",
+    "description": "Builds/Rebuilds the tween object with new info",
+    "lineNumber": 246,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pStart",
+        "description": "The start object containing the start values"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pEnd",
+        "description": "The end object containing the end values"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pDuration",
+        "description": "The duration of the effect"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "function"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pEasing",
+        "description": "The easing function to use"
+      }
+    ],
+    "return": null
+  },
+  {
+    "__docId__": 240,
+    "kind": "member",
+    "name": "start",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#start",
+    "access": "public",
+    "description": null,
+    "lineNumber": 247,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 241,
+    "kind": "member",
+    "name": "end",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#end",
+    "access": "public",
+    "description": null,
+    "lineNumber": 248,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 242,
+    "kind": "member",
+    "name": "duration",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#duration",
+    "access": "public",
+    "description": null,
+    "lineNumber": 249,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 243,
+    "kind": "member",
+    "name": "easing",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#easing",
+    "access": "public",
+    "description": null,
+    "lineNumber": 250,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 244,
+    "kind": "member",
+    "name": "events",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#events",
+    "access": "public",
+    "description": null,
+    "lineNumber": 251,
+    "undocument": true,
+    "type": {
+      "types": [
+        "{}"
+      ]
+    }
+  },
+  {
+    "__docId__": 245,
+    "kind": "member",
+    "name": "exportedValues",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#exportedValues",
+    "access": "public",
+    "description": null,
+    "lineNumber": 252,
+    "undocument": true,
+    "type": {
+      "types": [
+        "{}"
+      ]
+    }
+  },
+  {
+    "__docId__": 246,
+    "kind": "member",
+    "name": "tweening",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#tweening",
+    "access": "public",
+    "description": null,
+    "lineNumber": 253,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "__docId__": 247,
+    "kind": "member",
+    "name": "update",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#update",
+    "access": "public",
+    "description": null,
+    "lineNumber": 254,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 248,
+    "kind": "member",
+    "name": "paused",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#paused",
+    "access": "public",
+    "description": null,
+    "lineNumber": 255,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "__docId__": 249,
+    "kind": "member",
+    "name": "lastTime",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#lastTime",
+    "access": "public",
+    "description": null,
+    "lineNumber": 256,
+    "undocument": true,
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 250,
+    "kind": "member",
+    "name": "elapsed",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#elapsed",
+    "access": "public",
+    "description": null,
+    "lineNumber": 257,
+    "undocument": true,
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 251,
+    "kind": "method",
+    "name": "build",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#build",
+    "access": "public",
+    "description": "",
+    "lineNumber": 266,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions",
+        "description": "The options for the tween animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions.start",
+        "description": "The starting properties of the animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "{}",
+        "defaultRaw": {},
+        "name": "pOtions.end",
+        "description": "The end properties of the animation"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "1000",
+        "defaultRaw": 1000,
+        "name": "pOtions.duration",
+        "description": "The duration of the animation in milliseconds"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "\"linear\"",
+        "defaultRaw": "linear",
+        "name": "pOtions.easing",
+        "description": "The easing function to use for the animation"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 252,
+    "kind": "typedef",
+    "name": "Event",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": true,
+    "longname": "src/vendor/tween.mjs~Tween.Event",
+    "access": "public",
+    "description": "",
+    "properties": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "The event name"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "function"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "callback",
+        "description": "The function to be called when the event is triggered"
+      }
+    ],
+    "type": {
+      "types": [
+        "Object"
+      ],
+      "optional": false,
+      "name": "Event"
+    }
+  },
+  {
+    "__docId__": 253,
+    "kind": "method",
+    "name": "on",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#on",
+    "access": "public",
+    "description": "Attaches a callback to the specified event.",
+    "lineNumber": 281,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event['event']"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pEvent",
+        "description": "The event to attach the callback to"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Event['callback']"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pCallback",
+        "description": "The function to be called when the event is triggered"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Tween"
+      ],
+      "spread": false,
+      "description": "The Tween instance"
+    }
+  },
+  {
+    "__docId__": 254,
+    "kind": "member",
+    "name": "animationFrame",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#animationFrame",
+    "access": "public",
+    "description": "Update each frame.",
+    "lineNumber": 301,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 258,
+    "kind": "method",
+    "name": "animate",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#animate",
+    "access": "public",
+    "description": "Animates the tween by oscillating between the start and end properties.",
+    "lineNumber": 351,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "function"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pUpdate",
+        "description": "A callback function to update the values during the oscillation."
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "false",
+        "defaultRaw": false,
+        "name": "pOscillate",
+        "description": "A flag to indicate if the tween should oscillate."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Tween"
+      ],
+      "spread": false,
+      "description": "Returns the Tween instance for method chaining."
+    }
+  },
+  {
+    "__docId__": 262,
+    "kind": "member",
+    "name": "oscillating",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#oscillating",
+    "access": "public",
+    "description": null,
+    "lineNumber": 373,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 263,
+    "kind": "method",
+    "name": "resume",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#resume",
+    "access": "public",
+    "description": "Resumes the tween animation",
+    "lineNumber": 385,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Tween} The instance of the Tween object"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Tween"
+      ],
+      "spread": false,
+      "description": "The instance of the Tween object"
+    },
+    "params": []
+  },
+  {
+    "__docId__": 266,
+    "kind": "method",
+    "name": "pause",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#pause",
+    "access": "public",
+    "description": "Pauses the tween animation",
+    "lineNumber": 400,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Tween} The instance of the Tween object"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Tween"
+      ],
+      "spread": false,
+      "description": "The instance of the Tween object"
+    },
+    "params": []
+  },
+  {
+    "__docId__": 268,
+    "kind": "method",
+    "name": "stop",
+    "memberof": "src/vendor/tween.mjs~Tween",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/vendor/tween.mjs~Tween#stop",
+    "access": "public",
+    "description": "Stops the tween and clears all data.",
+    "lineNumber": 412,
+    "params": [],
+    "return": null
+  },
+  {
     "kind": "index",
     "content": "# ESound\r\nA plugin that will easily allow you to play sounds and control them.\r\n\r\n#INCLUDE SCRIPT esound.min.js\r\n\r\n**🚧🚧 Docs coming soon 🚧🚧**\r\n",
-    "longname": "Z:\\Business\\Evitca Studio\\github\\ESound\\README.md",
+    "longname": "Z:\\Business\\Evitca Studio\\Github\\ESound\\README.md",
     "name": "./README.md",
     "static": true,
     "access": "public"
   },
   {
     "kind": "packageJSON",
-    "content": "{\n  \"name\": \"esound\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Class for managing sounds\",\n  \"main\": \"esound.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/EvitcaStudio/ESound.git\"\n  },\n  \"author\": \"https://github.com/doubleactii\",\n  \"license\": \"ISC\",\n  \"bugs\": {\n    \"url\": \"https://github.com/EvitcaStudio/ESound/issues\"\n  },\n  \"homepage\": \"https://github.com/EvitcaStudio/ESound#readme\",\n  \"devDependencies\": {\n    \"@babel/core\": \"^7.21.0\",\n    \"@babel/preset-env\": \"^7.20.2\",\n    \"babel-loader\": \"^9.1.2\",\n    \"webpack\": \"^5.75.0\",\n    \"webpack-cli\": \"^5.0.1\"\n  }\n}\n",
-    "longname": "Z:\\Business\\Evitca Studio\\github\\ESound\\package.json",
+    "content": "{\n  \"name\": \"esound\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Class for managing sounds\",\n  \"main\": \"esound.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\",\n    \"build-dist\": \"npx webpack && uglifyjs dist/esound.min.mjs -m -c --comments -o dist/esound.min.mjs && esdoc -c esdoc.json\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/EvitcaStudio/ESound.git\"\n  },\n  \"author\": \"https://github.com/doubleactii\",\n  \"license\": \"UNLICENSED\",\n  \"bugs\": {\n    \"url\": \"https://github.com/EvitcaStudio/ESound/issues\"\n  },\n  \"homepage\": \"https://github.com/EvitcaStudio/ESound#readme\",\n  \"devDependencies\": {\n    \"@babel/core\": \"^7.21.0\",\n    \"@babel/preset-env\": \"^7.20.2\",\n    \"babel-loader\": \"^9.1.2\",\n    \"esdoc\": \"^1.1.0\",\n    \"esdoc-ecmascript-proposal-plugin\": \"^1.0.0\",\n    \"esdoc-standard-plugin\": \"^1.0.0\",\n    \"uglify-js\": \"^3.17.4\",\n    \"webpack\": \"^5.75.0\",\n    \"webpack-cli\": \"^5.0.1\"\n  }\n}\n",
+    "longname": "Z:\\Business\\Evitca Studio\\Github\\ESound\\package.json",
     "name": "package.json",
     "static": true,
     "access": "public"

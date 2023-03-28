@@ -1,20 +1,26 @@
 window.esdocSearchIndex = [
   [
-    "esound/src/esound.js~esound",
+    "esound/src/esound.mjs~esound",
     "variable/index.html#static-variable-ESound",
-    "<span>ESound</span> <span class=\"search-result-import-path\">esound/src/esound.js</span>",
+    "<span>ESound</span> <span class=\"search-result-import-path\">esound/src/esound.mjs</span>",
     "variable"
   ],
   [
-    "esound/src/esound.js~esoundmanagersingleton",
-    "class/src/esound.js~ESoundManagerSingleton.html",
-    "<span>ESoundManagerSingleton</span> <span class=\"search-result-import-path\">esound/src/esound.js</span>",
+    "esound/src/esound.mjs~esoundmanagersingleton",
+    "class/src/esound.mjs~ESoundManagerSingleton.html",
+    "<span>ESoundManagerSingleton</span> <span class=\"search-result-import-path\">esound/src/esound.mjs</span>",
     "class"
   ],
   [
-    "esound/src/esound.js~sound",
-    "class/src/esound.js~Sound.html",
-    "<span>Sound</span> <span class=\"search-result-import-path\">esound/src/esound.js</span>",
+    "esound/src/esound.mjs~sound",
+    "class/src/esound.mjs~Sound.html",
+    "<span>Sound</span> <span class=\"search-result-import-path\">esound/src/esound.mjs</span>",
+    "class"
+  ],
+  [
+    "esound/src/vendor/tween.mjs~tween",
+    "class/src/vendor/tween.mjs~Tween.html",
+    "<span>Tween</span> <span class=\"search-result-import-path\">esound/src/vendor/tween.mjs</span>",
     "class"
   ],
   [
@@ -300,567 +306,909 @@ window.esdocSearchIndex = [
     "external"
   ],
   [
-    "src/esound.js",
-    "file/src/esound.js.html",
-    "src/esound.js",
+    "src/esound.mjs",
+    "file/src/esound.mjs.html",
+    "src/esound.mjs",
     "file"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#_previousgainnodevalue",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-_previousGainNodeValue",
-    "src/esound.js~ESoundManagerSingleton#_previousGainNodeValue",
+    "src/esound.mjs~esoundmanagersingleton#_previousgainnodevalue",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-_previousGainNodeValue",
+    "src/esound.mjs~ESoundManagerSingleton#_previousGainNodeValue",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#abilitytoplaysound",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-abilityToPlaySound",
-    "src/esound.js~ESoundManagerSingleton#abilityToPlaySound",
+    "src/esound.mjs~esoundmanagersingleton#abilitytoplaysound",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-abilityToPlaySound",
+    "src/esound.mjs~ESoundManagerSingleton#abilityToPlaySound",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#adjustvolume",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-adjustVolume",
-    "src/esound.js~ESoundManagerSingleton#adjustVolume",
+    "src/esound.mjs~esoundmanagersingleton#adjustvolume",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-adjustVolume",
+    "src/esound.mjs~ESoundManagerSingleton#adjustVolume",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#audioctx",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-audioCtx",
-    "src/esound.js~ESoundManagerSingleton#audioCtx",
+    "src/esound.mjs~esoundmanagersingleton#audioctx",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-audioCtx",
+    "src/esound.mjs~ESoundManagerSingleton#audioCtx",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#canplaysound",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-canPlaySound",
-    "src/esound.js~ESoundManagerSingleton#canPlaySound",
+    "src/esound.mjs~esoundmanagersingleton#canplaysound",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-canPlaySound",
+    "src/esound.mjs~ESoundManagerSingleton#canPlaySound",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#constructor",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-constructor-constructor",
-    "src/esound.js~ESoundManagerSingleton#constructor",
+    "src/esound.mjs~esoundmanagersingleton#constructor",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-constructor-constructor",
+    "src/esound.mjs~ESoundManagerSingleton#constructor",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#createsound",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-createSound",
-    "src/esound.js~ESoundManagerSingleton#createSound",
+    "src/esound.mjs~esoundmanagersingleton#createsound",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-createSound",
+    "src/esound.mjs~ESoundManagerSingleton#createSound",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#emit",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-emit",
-    "src/esound.js~ESoundManagerSingleton#emit",
+    "src/esound.mjs~esoundmanagersingleton#emit",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-emit",
+    "src/esound.mjs~ESoundManagerSingleton#emit",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#enablechecker",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-enableChecker",
-    "src/esound.js~ESoundManagerSingleton#enableChecker",
+    "src/esound.mjs~esoundmanagersingleton#enablechecker",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-enableChecker",
+    "src/esound.mjs~ESoundManagerSingleton#enableChecker",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#fade",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-fade",
-    "src/esound.js~ESoundManagerSingleton#fade",
+    "src/esound.mjs~esoundmanagersingleton#fade",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-fade",
+    "src/esound.mjs~ESoundManagerSingleton#fade",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#fader",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-fader",
-    "src/esound.js~ESoundManagerSingleton#fader",
+    "src/esound.mjs~esoundmanagersingleton#fader",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-fader",
+    "src/esound.mjs~ESoundManagerSingleton#fader",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#focused",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-focused",
-    "src/esound.js~ESoundManagerSingleton#focused",
+    "src/esound.mjs~esoundmanagersingleton#focused",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-focused",
+    "src/esound.mjs~ESoundManagerSingleton#focused",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#gainnode",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-gainNode",
-    "src/esound.js~ESoundManagerSingleton#gainNode",
+    "src/esound.mjs~esoundmanagersingleton#gainnode",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-gainNode",
+    "src/esound.mjs~ESoundManagerSingleton#gainNode",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#ismuted",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-isMuted",
-    "src/esound.js~ESoundManagerSingleton#isMuted",
+    "src/esound.mjs~esoundmanagersingleton#ismuted",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-isMuted",
+    "src/esound.mjs~ESoundManagerSingleton#isMuted",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#killallsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-killAllSounds",
-    "src/esound.js~ESoundManagerSingleton#killAllSounds",
+    "src/esound.mjs~esoundmanagersingleton#killallsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-killAllSounds",
+    "src/esound.mjs~ESoundManagerSingleton#killAllSounds",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#loadedbuffers",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-loadedBuffers",
-    "src/esound.js~ESoundManagerSingleton#loadedBuffers",
+    "src/esound.mjs~esoundmanagersingleton#loadedbuffers",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-loadedBuffers",
+    "src/esound.mjs~ESoundManagerSingleton#loadedBuffers",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#muted",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-muted",
-    "src/esound.js~ESoundManagerSingleton#muted",
+    "src/esound.mjs~esoundmanagersingleton#muted",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-muted",
+    "src/esound.mjs~ESoundManagerSingleton#muted",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#pauseallsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-pauseAllSounds",
-    "src/esound.js~ESoundManagerSingleton#pauseAllSounds",
+    "src/esound.mjs~esoundmanagersingleton#pauseallsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-pauseAllSounds",
+    "src/esound.mjs~ESoundManagerSingleton#pauseAllSounds",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#pausedsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-pausedSounds",
-    "src/esound.js~ESoundManagerSingleton#pausedSounds",
+    "src/esound.mjs~esoundmanagersingleton#pausedsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-pausedSounds",
+    "src/esound.mjs~ESoundManagerSingleton#pausedSounds",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#playqueuedsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-playQueuedSounds",
-    "src/esound.js~ESoundManagerSingleton#playQueuedSounds",
+    "src/esound.mjs~esoundmanagersingleton#playqueuedsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-playQueuedSounds",
+    "src/esound.mjs~ESoundManagerSingleton#playQueuedSounds",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#queuedsoundstofade",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-queuedSoundsToFade",
-    "src/esound.js~ESoundManagerSingleton#queuedSoundsToFade",
+    "src/esound.mjs~esoundmanagersingleton#queuedsoundstofade",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-queuedSoundsToFade",
+    "src/esound.mjs~ESoundManagerSingleton#queuedSoundsToFade",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#queuedsoundstoplay",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-queuedSoundsToPlay",
-    "src/esound.js~ESoundManagerSingleton#queuedSoundsToPlay",
+    "src/esound.mjs~esoundmanagersingleton#queuedsoundstoplay",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-queuedSoundsToPlay",
+    "src/esound.mjs~ESoundManagerSingleton#queuedSoundsToPlay",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#queuedtostop",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-queuedToStop",
-    "src/esound.js~ESoundManagerSingleton#queuedToStop",
+    "src/esound.mjs~esoundmanagersingleton#queuedtostop",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-queuedToStop",
+    "src/esound.mjs~ESoundManagerSingleton#queuedToStop",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#ready",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-ready",
-    "src/esound.js~ESoundManagerSingleton#ready",
+    "src/esound.mjs~esoundmanagersingleton#ready",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-ready",
+    "src/esound.mjs~ESoundManagerSingleton#ready",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#recyclesound",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-recycleSound",
-    "src/esound.js~ESoundManagerSingleton#recycleSound",
+    "src/esound.mjs~esoundmanagersingleton#recyclesound",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-recycleSound",
+    "src/esound.mjs~ESoundManagerSingleton#recycleSound",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#recycledsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-recycledSounds",
-    "src/esound.js~ESoundManagerSingleton#recycledSounds",
+    "src/esound.mjs~esoundmanagersingleton#recycledsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-recycledSounds",
+    "src/esound.mjs~ESoundManagerSingleton#recycledSounds",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#resumeallsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-resumeAllSounds",
-    "src/esound.js~ESoundManagerSingleton#resumeAllSounds",
+    "src/esound.mjs~esoundmanagersingleton#resumeallsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-resumeAllSounds",
+    "src/esound.mjs~ESoundManagerSingleton#resumeAllSounds",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#resumeaudioctx",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-resumeAudioCtx",
-    "src/esound.js~ESoundManagerSingleton#resumeAudioCtx",
+    "src/esound.mjs~esoundmanagersingleton#resumeaudioctx",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-resumeAudioCtx",
+    "src/esound.mjs~ESoundManagerSingleton#resumeAudioCtx",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#soundsplaying",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-soundsPlaying",
-    "src/esound.js~ESoundManagerSingleton#soundsPlaying",
+    "src/esound.mjs~esoundmanagersingleton#soundsplaying",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-soundsPlaying",
+    "src/esound.mjs~ESoundManagerSingleton#soundsPlaying",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#state",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-state",
-    "src/esound.js~ESoundManagerSingleton#state",
+    "src/esound.mjs~esoundmanagersingleton#state",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-state",
+    "src/esound.mjs~ESoundManagerSingleton#state",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#stopallsounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-stopAllSounds",
-    "src/esound.js~ESoundManagerSingleton#stopAllSounds",
+    "src/esound.mjs~esoundmanagersingleton#stopallsounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-stopAllSounds",
+    "src/esound.mjs~ESoundManagerSingleton#stopAllSounds",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#togglemute",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-toggleMute",
-    "src/esound.js~ESoundManagerSingleton#toggleMute",
+    "src/esound.mjs~esoundmanagersingleton#togglemute",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-toggleMute",
+    "src/esound.mjs~ESoundManagerSingleton#toggleMute",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#unloadsound",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-method-unloadSound",
-    "src/esound.js~ESoundManagerSingleton#unloadSound",
+    "src/esound.mjs~esoundmanagersingleton#unloadsound",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-method-unloadSound",
+    "src/esound.mjs~ESoundManagerSingleton#unloadSound",
     "method"
   ],
   [
-    "src/esound.js~esoundmanagersingleton#volume",
-    "class/src/esound.js~ESoundManagerSingleton.html#instance-member-volume",
-    "src/esound.js~ESoundManagerSingleton#volume",
+    "src/esound.mjs~esoundmanagersingleton#volume",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#instance-member-volume",
+    "src/esound.mjs~ESoundManagerSingleton#volume",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.frame_rate",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-FRAME_RATE",
-    "src/esound.js~ESoundManagerSingleton.FRAME_RATE",
+    "src/esound.mjs~esoundmanagersingleton.frame_rate",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-FRAME_RATE",
+    "src/esound.mjs~ESoundManagerSingleton.FRAME_RATE",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.max_playback_rate",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-MAX_PLAYBACK_RATE",
-    "src/esound.js~ESoundManagerSingleton.MAX_PLAYBACK_RATE",
+    "src/esound.mjs~esoundmanagersingleton.max_playback_rate",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-MAX_PLAYBACK_RATE",
+    "src/esound.mjs~ESoundManagerSingleton.MAX_PLAYBACK_RATE",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.max_recycled_sounds",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-MAX_RECYCLED_SOUNDS",
-    "src/esound.js~ESoundManagerSingleton.MAX_RECYCLED_SOUNDS",
+    "src/esound.mjs~esoundmanagersingleton.max_recycled_sounds",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-MAX_RECYCLED_SOUNDS",
+    "src/esound.mjs~ESoundManagerSingleton.MAX_RECYCLED_SOUNDS",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.max_volume",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-MAX_VOLUME",
-    "src/esound.js~ESoundManagerSingleton.MAX_VOLUME",
+    "src/esound.mjs~esoundmanagersingleton.max_volume",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-MAX_VOLUME",
+    "src/esound.mjs~ESoundManagerSingleton.MAX_VOLUME",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.min_volume",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-MIN_VOLUME",
-    "src/esound.js~ESoundManagerSingleton.MIN_VOLUME",
+    "src/esound.mjs~esoundmanagersingleton.min_volume",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-MIN_VOLUME",
+    "src/esound.mjs~ESoundManagerSingleton.MIN_VOLUME",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.clamp",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-clamp",
-    "src/esound.js~ESoundManagerSingleton.clamp",
+    "src/esound.mjs~esoundmanagersingleton.clamp",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-clamp",
+    "src/esound.mjs~ESoundManagerSingleton.clamp",
     "member"
   ],
   [
-    "src/esound.js~esoundmanagersingleton.normalize",
-    "class/src/esound.js~ESoundManagerSingleton.html#static-member-normalize",
-    "src/esound.js~ESoundManagerSingleton.normalize",
+    "src/esound.mjs~esoundmanagersingleton.normalize",
+    "class/src/esound.mjs~ESoundManagerSingleton.html#static-member-normalize",
+    "src/esound.mjs~ESoundManagerSingleton.normalize",
     "member"
   ],
   [
-    "src/esound.js~sound#_info",
-    "class/src/esound.js~Sound.html#instance-member-_info",
-    "src/esound.js~Sound#_info",
+    "src/esound.mjs~sound#_info",
+    "class/src/esound.mjs~Sound.html#instance-member-_info",
+    "src/esound.mjs~Sound#_info",
     "member"
   ],
   [
-    "src/esound.js~sound#_loop",
-    "class/src/esound.js~Sound.html#instance-member-_loop",
-    "src/esound.js~Sound#_loop",
+    "src/esound.mjs~sound#_loop",
+    "class/src/esound.mjs~Sound.html#instance-member-_loop",
+    "src/esound.mjs~Sound#_loop",
     "member"
   ],
   [
-    "src/esound.js~sound#_playbackrate",
-    "class/src/esound.js~Sound.html#instance-member-_playbackRate",
-    "src/esound.js~Sound#_playbackRate",
+    "src/esound.mjs~sound#_playbackrate",
+    "class/src/esound.mjs~Sound.html#instance-member-_playbackRate",
+    "src/esound.mjs~Sound#_playbackRate",
     "member"
   ],
   [
-    "src/esound.js~sound#_volume",
-    "class/src/esound.js~Sound.html#instance-member-_volume",
-    "src/esound.js~Sound#_volume",
+    "src/esound.mjs~sound#_volume",
+    "class/src/esound.mjs~Sound.html#instance-member-_volume",
+    "src/esound.mjs~Sound#_volume",
     "member"
   ],
   [
-    "src/esound.js~sound#build",
-    "class/src/esound.js~Sound.html#instance-method-build",
-    "src/esound.js~Sound#build",
+    "src/esound.mjs~sound#build",
+    "class/src/esound.mjs~Sound.html#instance-method-build",
+    "src/esound.mjs~Sound#build",
     "method"
   ],
   [
-    "src/esound.js~sound#canplayunfocused",
-    "class/src/esound.js~Sound.html#instance-method-canPlayUnfocused",
-    "src/esound.js~Sound#canPlayUnfocused",
+    "src/esound.mjs~sound#canplayunfocused",
+    "class/src/esound.mjs~Sound.html#instance-method-canPlayUnfocused",
+    "src/esound.mjs~Sound#canPlayUnfocused",
     "method"
   ],
   [
-    "src/esound.js~sound#constructor",
-    "class/src/esound.js~Sound.html#instance-constructor-constructor",
-    "src/esound.js~Sound#constructor",
+    "src/esound.mjs~sound#constructor",
+    "class/src/esound.mjs~Sound.html#instance-constructor-constructor",
+    "src/esound.mjs~Sound#constructor",
     "method"
   ],
   [
-    "src/esound.js~sound#duration",
-    "class/src/esound.js~Sound.html#instance-member-duration",
-    "src/esound.js~Sound#duration",
+    "src/esound.mjs~sound#duration",
+    "class/src/esound.mjs~Sound.html#instance-member-duration",
+    "src/esound.mjs~Sound#duration",
     "member"
   ],
   [
-    "src/esound.js~sound#endtime",
-    "class/src/esound.js~Sound.html#instance-member-endTime",
-    "src/esound.js~Sound#endTime",
+    "src/esound.mjs~sound#endtime",
+    "class/src/esound.mjs~Sound.html#instance-member-endTime",
+    "src/esound.mjs~Sound#endTime",
     "member"
   ],
   [
-    "src/esound.js~sound#events",
-    "class/src/esound.js~Sound.html#instance-member-events",
-    "src/esound.js~Sound#events",
+    "src/esound.mjs~sound#events",
+    "class/src/esound.mjs~Sound.html#instance-member-events",
+    "src/esound.mjs~Sound#events",
     "member"
   ],
   [
-    "src/esound.js~sound#fade",
-    "class/src/esound.js~Sound.html#instance-method-fade",
-    "src/esound.js~Sound#fade",
+    "src/esound.mjs~sound#fade",
+    "class/src/esound.mjs~Sound.html#instance-method-fade",
+    "src/esound.mjs~Sound#fade",
     "method"
   ],
   [
-    "src/esound.js~sound#fader",
-    "class/src/esound.js~Sound.html#instance-member-fader",
-    "src/esound.js~Sound#fader",
+    "src/esound.mjs~sound#fader",
+    "class/src/esound.mjs~Sound.html#instance-member-fader",
+    "src/esound.mjs~Sound#fader",
     "member"
   ],
   [
-    "src/esound.js~sound#gainnode",
-    "class/src/esound.js~Sound.html#instance-member-gainNode",
-    "src/esound.js~Sound#gainNode",
+    "src/esound.mjs~sound#gainnode",
+    "class/src/esound.mjs~Sound.html#instance-member-gainNode",
+    "src/esound.mjs~Sound#gainNode",
     "member"
   ],
   [
-    "src/esound.js~sound#getcurrenttime",
-    "class/src/esound.js~Sound.html#instance-method-getCurrentTime",
-    "src/esound.js~Sound#getCurrentTime",
+    "src/esound.mjs~sound#getcurrenttime",
+    "class/src/esound.mjs~Sound.html#instance-method-getCurrentTime",
+    "src/esound.mjs~Sound#getCurrentTime",
     "method"
   ],
   [
-    "src/esound.js~sound#info",
-    "class/src/esound.js~Sound.html#instance-set-info",
-    "src/esound.js~Sound#info",
+    "src/esound.mjs~sound#info",
+    "class/src/esound.mjs~Sound.html#instance-set-info",
+    "src/esound.mjs~Sound#info",
     "member"
   ],
   [
-    "src/esound.js~sound#info",
-    "class/src/esound.js~Sound.html#instance-get-info",
-    "src/esound.js~Sound#info",
+    "src/esound.mjs~sound#info",
+    "class/src/esound.mjs~Sound.html#instance-get-info",
+    "src/esound.mjs~Sound#info",
     "member"
   ],
   [
-    "src/esound.js~sound#kill",
-    "class/src/esound.js~Sound.html#instance-method-kill",
-    "src/esound.js~Sound#kill",
+    "src/esound.mjs~sound#kill",
+    "class/src/esound.mjs~Sound.html#instance-method-kill",
+    "src/esound.mjs~Sound#kill",
     "method"
   ],
   [
-    "src/esound.js~sound#load",
-    "class/src/esound.js~Sound.html#instance-method-load",
-    "src/esound.js~Sound#load",
+    "src/esound.mjs~sound#load",
+    "class/src/esound.mjs~Sound.html#instance-method-load",
+    "src/esound.mjs~Sound#load",
     "method"
   ],
   [
-    "src/esound.js~sound#loaded",
-    "class/src/esound.js~Sound.html#instance-member-loaded",
-    "src/esound.js~Sound#loaded",
+    "src/esound.mjs~sound#loaded",
+    "class/src/esound.mjs~Sound.html#instance-member-loaded",
+    "src/esound.mjs~Sound#loaded",
     "member"
   ],
   [
-    "src/esound.js~sound#loop",
-    "class/src/esound.js~Sound.html#instance-get-loop",
-    "src/esound.js~Sound#loop",
+    "src/esound.mjs~sound#loop",
+    "class/src/esound.mjs~Sound.html#instance-get-loop",
+    "src/esound.mjs~Sound#loop",
     "member"
   ],
   [
-    "src/esound.js~sound#loop",
-    "class/src/esound.js~Sound.html#instance-set-loop",
-    "src/esound.js~Sound#loop",
+    "src/esound.mjs~sound#loop",
+    "class/src/esound.mjs~Sound.html#instance-set-loop",
+    "src/esound.mjs~Sound#loop",
     "member"
   ],
   [
-    "src/esound.js~sound#muted",
-    "class/src/esound.js~Sound.html#instance-member-muted",
-    "src/esound.js~Sound#muted",
+    "src/esound.mjs~sound#muted",
+    "class/src/esound.mjs~Sound.html#instance-member-muted",
+    "src/esound.mjs~Sound#muted",
     "member"
   ],
   [
-    "src/esound.js~sound#on",
-    "class/src/esound.js~Sound.html#instance-method-on",
-    "src/esound.js~Sound#on",
+    "src/esound.mjs~sound#on",
+    "class/src/esound.mjs~Sound.html#instance-method-on",
+    "src/esound.mjs~Sound#on",
     "method"
   ],
   [
-    "src/esound.js~sound#onended",
-    "class/src/esound.js~Sound.html#instance-member-onEnded",
-    "src/esound.js~Sound#onEnded",
+    "src/esound.mjs~sound#onended",
+    "class/src/esound.mjs~Sound.html#instance-member-onEnded",
+    "src/esound.mjs~Sound#onEnded",
     "member"
   ],
   [
-    "src/esound.js~sound#onresumed",
-    "class/src/esound.js~Sound.html#instance-member-onResumed",
-    "src/esound.js~Sound#onResumed",
+    "src/esound.mjs~sound#onresumed",
+    "class/src/esound.mjs~Sound.html#instance-member-onResumed",
+    "src/esound.mjs~Sound#onResumed",
     "member"
   ],
   [
-    "src/esound.js~sound#onstarted",
-    "class/src/esound.js~Sound.html#instance-member-onStarted",
-    "src/esound.js~Sound#onStarted",
+    "src/esound.mjs~sound#onstarted",
+    "class/src/esound.mjs~Sound.html#instance-member-onStarted",
+    "src/esound.mjs~Sound#onStarted",
     "member"
   ],
   [
-    "src/esound.js~sound#onstopped",
-    "class/src/esound.js~Sound.html#instance-member-onStopped",
-    "src/esound.js~Sound#onStopped",
+    "src/esound.mjs~sound#onstopped",
+    "class/src/esound.mjs~Sound.html#instance-member-onStopped",
+    "src/esound.mjs~Sound#onStopped",
     "member"
   ],
   [
-    "src/esound.js~sound#onsuspended",
-    "class/src/esound.js~Sound.html#instance-member-onSuspended",
-    "src/esound.js~Sound#onSuspended",
+    "src/esound.mjs~sound#onsuspended",
+    "class/src/esound.mjs~Sound.html#instance-member-onSuspended",
+    "src/esound.mjs~Sound#onSuspended",
     "member"
   ],
   [
-    "src/esound.js~sound#pause",
-    "class/src/esound.js~Sound.html#instance-method-pause",
-    "src/esound.js~Sound#pause",
+    "src/esound.mjs~sound#pause",
+    "class/src/esound.mjs~Sound.html#instance-method-pause",
+    "src/esound.mjs~Sound#pause",
     "method"
   ],
   [
-    "src/esound.js~sound#pausedtimestamp",
-    "class/src/esound.js~Sound.html#instance-member-pausedTimeStamp",
-    "src/esound.js~Sound#pausedTimeStamp",
+    "src/esound.mjs~sound#pausedtimestamp",
+    "class/src/esound.mjs~Sound.html#instance-member-pausedTimeStamp",
+    "src/esound.mjs~Sound#pausedTimeStamp",
     "member"
   ],
   [
-    "src/esound.js~sound#play",
-    "class/src/esound.js~Sound.html#instance-method-play",
-    "src/esound.js~Sound#play",
+    "src/esound.mjs~sound#play",
+    "class/src/esound.mjs~Sound.html#instance-method-play",
+    "src/esound.mjs~Sound#play",
     "method"
   ],
   [
-    "src/esound.js~sound#playafterload",
-    "class/src/esound.js~Sound.html#instance-member-playAfterLoad",
-    "src/esound.js~Sound#playAfterLoad",
+    "src/esound.mjs~sound#playafterload",
+    "class/src/esound.mjs~Sound.html#instance-member-playAfterLoad",
+    "src/esound.mjs~Sound#playAfterLoad",
     "member"
   ],
   [
-    "src/esound.js~sound#playunfocused",
-    "class/src/esound.js~Sound.html#instance-member-playUnfocused",
-    "src/esound.js~Sound#playUnfocused",
+    "src/esound.mjs~sound#playunfocused",
+    "class/src/esound.mjs~Sound.html#instance-member-playUnfocused",
+    "src/esound.mjs~Sound#playUnfocused",
     "member"
   ],
   [
-    "src/esound.js~sound#playbackrate",
-    "class/src/esound.js~Sound.html#instance-get-playbackRate",
-    "src/esound.js~Sound#playbackRate",
+    "src/esound.mjs~sound#playbackrate",
+    "class/src/esound.mjs~Sound.html#instance-get-playbackRate",
+    "src/esound.mjs~Sound#playbackRate",
     "member"
   ],
   [
-    "src/esound.js~sound#playbackrate",
-    "class/src/esound.js~Sound.html#instance-set-playbackRate",
-    "src/esound.js~Sound#playbackRate",
+    "src/esound.mjs~sound#playbackrate",
+    "class/src/esound.mjs~Sound.html#instance-set-playbackRate",
+    "src/esound.mjs~Sound#playbackRate",
     "member"
   ],
   [
-    "src/esound.js~sound#queuedfade",
-    "class/src/esound.js~Sound.html#instance-method-queuedFade",
-    "src/esound.js~Sound#queuedFade",
+    "src/esound.mjs~sound#queuedfade",
+    "class/src/esound.mjs~Sound.html#instance-method-queuedFade",
+    "src/esound.mjs~Sound#queuedFade",
     "method"
   ],
   [
-    "src/esound.js~sound#restart",
-    "class/src/esound.js~Sound.html#instance-method-restart",
-    "src/esound.js~Sound#restart",
+    "src/esound.mjs~sound#restart",
+    "class/src/esound.mjs~Sound.html#instance-method-restart",
+    "src/esound.mjs~Sound#restart",
     "method"
   ],
   [
-    "src/esound.js~sound#resume",
-    "class/src/esound.js~Sound.html#instance-method-resume",
-    "src/esound.js~Sound#resume",
+    "src/esound.mjs~sound#resume",
+    "class/src/esound.mjs~Sound.html#instance-method-resume",
+    "src/esound.mjs~Sound#resume",
     "method"
   ],
   [
-    "src/esound.js~sound#save",
-    "class/src/esound.js~Sound.html#instance-member-save",
-    "src/esound.js~Sound#save",
+    "src/esound.mjs~sound#save",
+    "class/src/esound.mjs~Sound.html#instance-member-save",
+    "src/esound.mjs~Sound#save",
     "member"
   ],
   [
-    "src/esound.js~sound#soundpath",
-    "class/src/esound.js~Sound.html#instance-member-soundPath",
-    "src/esound.js~Sound#soundPath",
+    "src/esound.mjs~sound#soundpath",
+    "class/src/esound.mjs~Sound.html#instance-member-soundPath",
+    "src/esound.mjs~Sound#soundPath",
     "member"
   ],
   [
-    "src/esound.js~sound#source",
-    "class/src/esound.js~Sound.html#instance-member-source",
-    "src/esound.js~Sound#source",
+    "src/esound.mjs~sound#source",
+    "class/src/esound.mjs~Sound.html#instance-member-source",
+    "src/esound.mjs~Sound#source",
     "member"
   ],
   [
-    "src/esound.js~sound#starttime",
-    "class/src/esound.js~Sound.html#instance-member-startTime",
-    "src/esound.js~Sound#startTime",
+    "src/esound.mjs~sound#starttime",
+    "class/src/esound.mjs~Sound.html#instance-member-startTime",
+    "src/esound.mjs~Sound#startTime",
     "member"
   ],
   [
-    "src/esound.js~sound#startedtimestamp",
-    "class/src/esound.js~Sound.html#instance-member-startedTimeStamp",
-    "src/esound.js~Sound#startedTimeStamp",
+    "src/esound.mjs~sound#startedtimestamp",
+    "class/src/esound.mjs~Sound.html#instance-member-startedTimeStamp",
+    "src/esound.mjs~Sound#startedTimeStamp",
     "member"
   ],
   [
-    "src/esound.js~sound#state",
-    "class/src/esound.js~Sound.html#instance-member-state",
-    "src/esound.js~Sound#state",
+    "src/esound.mjs~sound#state",
+    "class/src/esound.mjs~Sound.html#instance-member-state",
+    "src/esound.mjs~Sound#state",
     "member"
   ],
   [
-    "src/esound.js~sound#stop",
-    "class/src/esound.js~Sound.html#instance-method-stop",
-    "src/esound.js~Sound#stop",
+    "src/esound.mjs~sound#stop",
+    "class/src/esound.mjs~Sound.html#instance-method-stop",
+    "src/esound.mjs~Sound#stop",
     "method"
   ],
   [
-    "src/esound.js~sound#stopsignal",
-    "class/src/esound.js~Sound.html#instance-member-stopSignal",
-    "src/esound.js~Sound#stopSignal",
+    "src/esound.mjs~sound#stopsignal",
+    "class/src/esound.mjs~Sound.html#instance-member-stopSignal",
+    "src/esound.mjs~Sound#stopSignal",
     "member"
   ],
   [
-    "src/esound.js~sound#toggleloop",
-    "class/src/esound.js~Sound.html#instance-method-toggleLoop",
-    "src/esound.js~Sound#toggleLoop",
+    "src/esound.mjs~sound#toggleloop",
+    "class/src/esound.mjs~Sound.html#instance-method-toggleLoop",
+    "src/esound.mjs~Sound#toggleLoop",
     "method"
   ],
   [
-    "src/esound.js~sound#togglemute",
-    "class/src/esound.js~Sound.html#instance-method-toggleMute",
-    "src/esound.js~Sound#toggleMute",
+    "src/esound.mjs~sound#togglemute",
+    "class/src/esound.mjs~Sound.html#instance-method-toggleMute",
+    "src/esound.mjs~Sound#toggleMute",
     "method"
   ],
   [
-    "src/esound.js~sound#volume",
-    "class/src/esound.js~Sound.html#instance-get-volume",
-    "src/esound.js~Sound#volume",
+    "src/esound.mjs~sound#volume",
+    "class/src/esound.mjs~Sound.html#instance-get-volume",
+    "src/esound.mjs~Sound#volume",
     "member"
   ],
   [
-    "src/esound.js~sound#volume",
-    "class/src/esound.js~Sound.html#instance-set-volume",
-    "src/esound.js~Sound#volume",
+    "src/esound.mjs~sound#volume",
+    "class/src/esound.mjs~Sound.html#instance-set-volume",
+    "src/esound.mjs~Sound#volume",
     "member"
   ],
   [
-    "src/esound.js~sound#wipe",
-    "class/src/esound.js~Sound.html#instance-method-wipe",
-    "src/esound.js~Sound#wipe",
+    "src/esound.mjs~sound#wipe",
+    "class/src/esound.mjs~Sound.html#instance-method-wipe",
+    "src/esound.mjs~Sound#wipe",
     "method"
   ],
   [
-    "src/esound.js~sound.event",
+    "src/esound.mjs~sound.event",
     "typedef/index.html#static-typedef-Event",
-    "src/esound.js~Sound.Event",
+    "src/esound.mjs~Sound.Event",
     "typedef"
+  ],
+  [
+    "src/vendor/tween.mjs",
+    "file/src/vendor/tween.mjs.html",
+    "src/vendor/tween.mjs",
+    "file"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#_build",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-_build",
+    "src/vendor/tween.mjs~Tween#_build",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#animate",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-animate",
+    "src/vendor/tween.mjs~Tween#animate",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#animationframe",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-animationFrame",
+    "src/vendor/tween.mjs~Tween#animationFrame",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#build",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-build",
+    "src/vendor/tween.mjs~Tween#build",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#constructor",
+    "class/src/vendor/tween.mjs~Tween.html#instance-constructor-constructor",
+    "src/vendor/tween.mjs~Tween#constructor",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#duration",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-duration",
+    "src/vendor/tween.mjs~Tween#duration",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#easing",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-easing",
+    "src/vendor/tween.mjs~Tween#easing",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#elapsed",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-elapsed",
+    "src/vendor/tween.mjs~Tween#elapsed",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#end",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-end",
+    "src/vendor/tween.mjs~Tween#end",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#events",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-events",
+    "src/vendor/tween.mjs~Tween#events",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#exportedvalues",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-exportedValues",
+    "src/vendor/tween.mjs~Tween#exportedValues",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#lasttime",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-lastTime",
+    "src/vendor/tween.mjs~Tween#lastTime",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#on",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-on",
+    "src/vendor/tween.mjs~Tween#on",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#oscillating",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-oscillating",
+    "src/vendor/tween.mjs~Tween#oscillating",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#pause",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-pause",
+    "src/vendor/tween.mjs~Tween#pause",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#paused",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-paused",
+    "src/vendor/tween.mjs~Tween#paused",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#resume",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-resume",
+    "src/vendor/tween.mjs~Tween#resume",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#start",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-start",
+    "src/vendor/tween.mjs~Tween#start",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#stop",
+    "class/src/vendor/tween.mjs~Tween.html#instance-method-stop",
+    "src/vendor/tween.mjs~Tween#stop",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#tweening",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-tweening",
+    "src/vendor/tween.mjs~Tween#tweening",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween#update",
+    "class/src/vendor/tween.mjs~Tween.html#instance-member-update",
+    "src/vendor/tween.mjs~Tween#update",
+    "member"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.event",
+    "typedef/index.html#static-typedef-Event",
+    "src/vendor/tween.mjs~Tween.Event",
+    "typedef"
+  ],
+  [
+    "src/vendor/tween.mjs~tween._clamp",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-_clamp",
+    "src/vendor/tween.mjs~Tween._clamp",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween._hextorgb",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-_hexToRgb",
+    "src/vendor/tween.mjs~Tween._hexToRgb",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween._rgbtohex",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-_rgbToHex",
+    "src/vendor/tween.mjs~Tween._rgbToHex",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinback",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInBack",
+    "src/vendor/tween.mjs~Tween.easeInBack",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinbounce",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInBounce",
+    "src/vendor/tween.mjs~Tween.easeInBounce",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeincirc",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInCirc",
+    "src/vendor/tween.mjs~Tween.easeInCirc",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeincubic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInCubic",
+    "src/vendor/tween.mjs~Tween.easeInCubic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinelastic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInElastic",
+    "src/vendor/tween.mjs~Tween.easeInElastic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinexpo",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInExpo",
+    "src/vendor/tween.mjs~Tween.easeInExpo",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutback",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutBack",
+    "src/vendor/tween.mjs~Tween.easeInOutBack",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutbounce",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutBounce",
+    "src/vendor/tween.mjs~Tween.easeInOutBounce",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutcirc",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutCirc",
+    "src/vendor/tween.mjs~Tween.easeInOutCirc",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutcubic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutCubic",
+    "src/vendor/tween.mjs~Tween.easeInOutCubic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutelastic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutElastic",
+    "src/vendor/tween.mjs~Tween.easeInOutElastic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutexpo",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutExpo",
+    "src/vendor/tween.mjs~Tween.easeInOutExpo",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutquad",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutQuad",
+    "src/vendor/tween.mjs~Tween.easeInOutQuad",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutquart",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutQuart",
+    "src/vendor/tween.mjs~Tween.easeInOutQuart",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutquint",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutQuint",
+    "src/vendor/tween.mjs~Tween.easeInOutQuint",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinoutsine",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInOutSine",
+    "src/vendor/tween.mjs~Tween.easeInOutSine",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinquad",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInQuad",
+    "src/vendor/tween.mjs~Tween.easeInQuad",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinquart",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInQuart",
+    "src/vendor/tween.mjs~Tween.easeInQuart",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinquint",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInQuint",
+    "src/vendor/tween.mjs~Tween.easeInQuint",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeinsine",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeInSine",
+    "src/vendor/tween.mjs~Tween.easeInSine",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutback",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutBack",
+    "src/vendor/tween.mjs~Tween.easeOutBack",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutbounce",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutBounce",
+    "src/vendor/tween.mjs~Tween.easeOutBounce",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutcirc",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutCirc",
+    "src/vendor/tween.mjs~Tween.easeOutCirc",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutcubic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutCubic",
+    "src/vendor/tween.mjs~Tween.easeOutCubic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutelastic",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutElastic",
+    "src/vendor/tween.mjs~Tween.easeOutElastic",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutexpo",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutExpo",
+    "src/vendor/tween.mjs~Tween.easeOutExpo",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutquad",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutQuad",
+    "src/vendor/tween.mjs~Tween.easeOutQuad",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutquart",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutQuart",
+    "src/vendor/tween.mjs~Tween.easeOutQuart",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutquint",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutQuint",
+    "src/vendor/tween.mjs~Tween.easeOutQuint",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.easeoutsine",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-easeOutSine",
+    "src/vendor/tween.mjs~Tween.easeOutSine",
+    "method"
+  ],
+  [
+    "src/vendor/tween.mjs~tween.linear",
+    "class/src/vendor/tween.mjs~Tween.html#static-method-linear",
+    "src/vendor/tween.mjs~Tween.linear",
+    "method"
   ]
 ]
