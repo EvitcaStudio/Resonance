@@ -1,22 +1,22 @@
 {
-  "name": "esound",
+  "name": "resonance",
   "version": "1.0.0",
   "description": "Class for managing sounds",
-  "main": "esound.js",
+  "main": "resonance.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-dist": "npx webpack && uglifyjs dist/esound.min.mjs -m -c --comments -o dist/esound.min.mjs && esdoc -c esdoc.json"
+    "build-dist": "npx webpack && uglifyjs dist/resonance.min.mjs -m -c --comments -o dist/resonance.min.mjs && esdoc -c esdoc.json"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EvitcaStudio/ESound.git"
+    "url": "git+https://github.com/EvitcaStudio/Resonance.git"
   },
   "author": "https://github.com/doubleactii",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/EvitcaStudio/ESound/issues"
+    "url": "https://github.com/EvitcaStudio/Resonance/issues"
   },
-  "homepage": "https://github.com/EvitcaStudio/ESound#readme",
+  "homepage": "https://github.com/EvitcaStudio/Resonance#readme",
   "devDependencies": {
     "@babel/core": "^7.21.0",
     "@babel/preset-env": "^7.20.2",

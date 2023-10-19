@@ -1,7 +1,7 @@
 const path = require('path');
 module.exports = {
     entry: {
-        esound: './src/esound.mjs',
+        resonance: './src/resonance.mjs',
     },
     output: {
       filename: '[name].min.mjs',

@@ -16,9 +16,9 @@
         "typeInference": {"enable": true},
         "brand": {
           "logo": "./evitcastudio_round_branding.png",
-          "title": "ESound",
+          "title": "Resonance",
           "description": "Class for managing sounds",
-          "repository": "https://github.com/EvitcaStudio/ESound",
+          "repository": "https://github.com/EvitcaStudio/Resonance",
           "author": "https://github.com/doubleactii",
           "image": "./evitcastudio_round_branding.png"
         }
