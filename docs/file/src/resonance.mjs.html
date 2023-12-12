@@ -518,6 +518,7 @@ class ResonanceSingleton {
 	/**
 	 * This will start playing sounds that were initially blocked by not having a user gesture.
 	 * This will also restart sounds when a mobile device backs out of an app, and then rejoins the app
+	 * @private
 	 */
 	resumeAudioCtx() {
 		if (this.audioCtx.state !== &apos;running&apos;) {
