@@ -3,7 +3,7 @@
     "destination": "./docs",
     "includes": ["\\.js$", "\\.mjs$"],
     "index": "./README.md",
-    "excludes": ["tween.js"],
+    "excludes": ["tween.min.mjs"],
     "plugins": [
     {
       "name": "esdoc-standard-plugin",
