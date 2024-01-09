@@ -1,5 +1,6 @@
 import { Tween } from "./vendor/tween.min.mjs";
 import { Sound } from "./sound.mjs";
+import { Logger } from './vendor/logger.min.mjs';
 
 /**
 * Class for managing sounds
@@ -68,9 +69,17 @@ class ResonanceSingleton {
 	version = "VERSION_REPLACE_ME";
 	constructor() {
 		if (!window.AudioContext && !window.webkitAudioContext) {
-			console.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');
+			this.logger.prefix('Resonance-Module').error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');
 			return;
 		}
+
+        /** The logger module this module uses to log errors / logs.
+         * @private
+         * @type {Object}
+         */
+        this.logger = new Logger();
+        this.logger.registerType('Resonance-Module', '#ff6600');
+
 		// For WebKit- and Blink-based browsers
 		window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// Attach events to start audio through gestures
@@ -231,7 +240,7 @@ class ResonanceSingleton {
 		if (this.state === 'fading') return;
 		pVolume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);
 		if (!Tween[pEase]) {
-			console.error('Invalid pEase value. Reverted to default.');
+			this.logger.prefix('Resonance-Module').error('Invalid pEase value. Reverted to default.');
 		}
 		this.state = 'fading';
 		this.fader.duration = Math.max(pDuration, 0);
@@ -353,7 +362,7 @@ class ResonanceSingleton {
 					emitSound();
 				}
 				const error = (pError) => {
-					console.error(`Error with decoding audio data "${pSoundPath}"`);
+					this.logger.prefix('Resonance-Module').error(`Error with decoding audio data "${pSoundPath}"`);
 				}
 				self.audioCtx.decodeAudioData(audioData, success, error);
 			};
@@ -487,10 +496,10 @@ class ResonanceSingleton {
 	resumeAudioCtx() {
 		if (this.audioCtx.state !== 'running') {
 			this.audioCtx.resume().then(() => {
-				// console.log('Resonance: autostart attempt of audio context worked.');
+				// this.logger.prefix('Resonance-Module').log('Resonance: autostart attempt of audio context worked.');
 			},
 			() => {
-				// console.warn('Resonance: autostart attempt of audio context failed.');
+				// this.logger.prefix('Resonance-Module').warn('Resonance: autostart attempt of audio context failed.');
 			});
 		}
 		this.ready = true;

@@ -567,7 +567,7 @@
     "__docId__": 48,
     "kind": "file",
     "name": "src/resonance.mjs",
-    "content": "import { Tween } from \"./vendor/tween.min.mjs\";\r\nimport { Sound } from \"./sound.mjs\";\r\n\r\n/**\r\n* Class for managing sounds\r\n* @class ResonanceSingleton  \r\n* @license Resonance does not have a license at this time. For licensing contact the author\r\n* @author https://github.com/doubleactii\r\n\r\nSafari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.\r\nOtherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.\r\n*/\r\nclass ResonanceSingleton {\r\n\t/**\r\n\t * The max volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_VOLUME = 200;\r\n\t/**\r\n\t * The min volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MIN_VOLUME = -200;\r\n\t/**\r\n\t * The max number of sounds that can be recycled\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_RECYCLED_SOUNDS = 500;\r\n\t/**\r\n\t * The max speed this sound can be played at\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_PLAYBACK_RATE = 10;\r\n\t/**\r\n\t * The frame rate at which to fade the sounds\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic FRAME_RATE = 60;\r\n\t/**\r\n\t * \r\n\t * @param {number} pVal - Value to clamp\r\n\t * @param {number} pMin - Minimum value\r\n\t * @param {number} pMax - Maximum value\r\n\t * @returns The clamped number\r\n\t */\r\n\tstatic clamp = (pVal, pMin, pMax) => {\r\n\t\treturn Math.max(pMin, Math.min(pVal, pMax));\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pValue - The number to normalize within a range\r\n\t * @param {number} pMin - The min number\r\n\t * @param {number} pMax - The max number\r\n\t * @param {number} pRange - The range to normalize within\r\n\t * @returns The normalized number\r\n\t */\r\n\tstatic normalize = (pValue, pMin=0, pMax=100, pRange=1) => {\r\n\t\treturn (pValue - pMin) / (pMax - pMin) * pRange;\r\n\t}\r\n\t/**\r\n\t * The version of the module.\r\n\t */\r\n\tversion = \"VERSION_REPLACE_ME\";\r\n\tconstructor() {\r\n\t\tif (!window.AudioContext && !window.webkitAudioContext) {\r\n\t\t\tconsole.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');\r\n\t\t\treturn;\r\n\t\t}\r\n\t\t// For WebKit- and Blink-based browsers\r\n\t\twindow.AudioContext = window.AudioContext || window.webkitAudioContext;\r\n\t\t// Attach events to start audio through gestures\r\n\t\twindow.addEventListener('mousedown', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('touchstart', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('load', this.resumeAudioCtx.bind(this));\r\n\t\t// When the window is unfocused, all sounds are paused\r\n\t\twindow.addEventListener('blur', () => {\r\n\t\t\tthis.focused = false;\r\n\t\t\tif (this.soundsPlaying.length) this.pauseAllSounds(true);\r\n\t\t});\r\n\t\t// When the window is focused all sounds are resumed, and queued sounds are played\r\n\t\twindow.addEventListener('focus', () => {\r\n\t\t\tthis.focused = true;\r\n\t\t\tif (this.pausedSounds.length) this.resumeAllSounds(true);\r\n\t\t\tif (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();\t\t\t\t\r\n\t\t});\r\n\t\t/**\r\n\t\t * The audio context all audio will dervie from\r\n\t\t * \r\n\t\t * @type {AudioContext}\r\n\t\t */\r\n\t\tthis.audioCtx = new AudioContext();\r\n\t\t// For older browser support that has this old API.\r\n\t\tif (!this.audioCtx.createGain && this.audioCtx.createGainNode) this.audioCtx.createGain = this.audioCtx.createGainNode;\r\n\t\t/**\r\n\t\t * Gain node\r\n\t\t * @type {GainNode}\r\n\t\t */\r\n\t\tthis.gainNode = this.audioCtx.createGain();\r\n\t\t// Assign volume to gainNode\r\n\t\tthis.gainNode.gain.value = ResonanceSingleton.normalize(ResonanceSingleton.MAX_VOLUME);\r\n\t\t// Connect gain node to speakers\r\n\t\tthis.gainNode.connect(this.audioCtx.destination);\r\n\t\t/**\r\n\t\t * Array of sounds that are currently playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.soundsPlaying = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are currently paused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.pausedSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that can be resused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.recycledSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToPlay = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for fading\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToFade = [];\r\n\t\t/**\r\n\t\t * An object that stores the buffer data of a sound so it does not have to be loaded each time\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.loadedBuffers = {};\r\n\t\t/**\r\n\t\t * An object that stores fade information\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.fader = {};\r\n\t\t/**\r\n\t\t * The master volume \r\n\t\t * \r\n\t\t * @type {number}\r\n\t\t */\r\n\t\tthis.volume = 100;\r\n\t\t/**\r\n\t\t * Mute status\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.muted = false;\r\n\t\t/**\r\n\t\t * Current state of the library\r\n\t\t * \r\n\t\t * @type {string}\r\n\t\t */\r\n\t\tthis.state = null;\r\n\t\t/**\r\n\t\t * Whether or Resonance has the window's focus. (Sound are paused when the focus is lost, and resumed when its gained)\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.focused = true;\r\n\t\t/**\r\n\t\t * The checker function to resolve to true or false denoting if a sound can be played\r\n\t\t * Master control over which sounds can play\r\n\t\t * \r\n\t\t * @type {Function}\r\n\t\t */\r\n\t\tthis.abilityToPlaySound = null;\r\n\t}\r\n\t/**\r\n\t * Function to check whether this library can play a sound at a given moment.\r\n\t * \r\n\t * @returns {boolean} Whether a sound can be played or not.\r\n\t */\r\n\tcanPlaySound() {\r\n\t\tif (this.abilityToPlaySound) {\r\n\t\t\tif (!this.abilityToPlaySound()) return false;\r\n\t\t}\r\n\t\treturn true;\r\n\t}\r\n\t/**\r\n\t * API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\r\n\t * Enables a checker to become the master checker over whether a sound can play\r\n\t * If their defined conditions return false, then the sound cannot be played\r\n\t * \r\n\t * @param {Function} pCheckerFunction - The function that will resolve to true or false denoting if a sound can be played\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tenableChecker(pCheckerFunction) {\r\n\t\tif (typeof(pCheckerFunction) === 'function') {\r\n\t\t\tthis.abilityToPlaySound = pCheckerFunction;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Function to adjust master volume\r\n\t * \r\n\t * @param {number} pVolume - The number to change the volume to\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tadjustVolume(pVolume) {\r\n\t\t// maybe show a GUI of the volume changing\r\n\t\tthis.volume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);\r\n\t\tthis.gainNode.gain.value = ResonanceSingleton.normalize(this.volume);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\tif (this.state === 'fading') return;\r\n\t\tpVolume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tconsole.error('Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\tthis.state = 'fading';\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this.volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ResonanceSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!self.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.adjustVolume(Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations));\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\t\t\t\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.raf = null;\r\n\t\t\t\tself.state = null;\r\n\t\t\t\tself.adjustVolume(pVolume);\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Master mute\r\n\t * \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis._previousGainNodeValue = this.gainNode.gain.value;\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Checks if the sound manager is currently muted\r\n\t * \r\n\t * @returns {boolean} Whether the sound manager is muted\r\n\t */\r\n\tisMuted() {\r\n\t\treturn this.muted;\r\n\t}\r\n\t/**\r\n\t * Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc\r\n\t * \r\n\t * @param {string} pSoundPath - The path to the file\r\n\t * @param {number} [pVolume=100] - The volume to play the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @returns {SoundSource } The source to this emitted sound. Call source.kill() to stop this sound while its playing. This is the only API this sound has\r\n\t */\r\n\temit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1) {\r\n\t\tif (!this.canPlaySound()) return\r\n\t\t// a very cheap sound that can be used if certain conditions are met. \r\n\t\t// This sound cannot be referenced and cannot be stopped or configured after creation.\r\n\t\t// If the buffer is loaded, this sound is eligable to play in the background\r\n\t\t// This sound is not going to be saved, this sound is not going to be lopped,\r\n\t\t// and this sound will not use any callbacks. This sound will be very lightweight and will not exist in memory\r\n\t\tconst self = this;\r\n\t\tconst source = self.audioCtx.createBufferSource();\r\n\t\t// Create a function to kill this sound\r\n\t\tsource.kill = function() {\r\n\t\t\tif (!this.buffer) {\r\n\t\t\t\tthis.queuedToStop = true;\r\n\t\t\t} else {\r\n\t\t\t\tthis.stop();\r\n\t\t\t}\r\n\t\t}\r\n\t\tconst emitSound = function() {\r\n\t\t\tconst gainNode = self.audioCtx.createGain();\r\n\t\t\tgainNode.gain.value = ResonanceSingleton.normalize(ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME));\r\n\t\t\tgainNode.connect(self.gainNode);\r\n\t\t\tsource.connect(gainNode);\r\n\t\t\tsource.buffer = self.loadedBuffers[pSoundPath];\r\n\t\t\tsource.playbackRate.value = pPlaybackRate;\r\n\t\t\tif (!source.start) source.start = source.noteOn;\r\n\t\t\tsource.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));\t\t\r\n\t\t}\r\n\t\t// Check if the loaded buffers already contain the loaded sound data for this sound\r\n\t\tif (this.loadedBuffers[pSoundPath]) {\r\n\t\t\temitSound();\r\n\t\t// Otherwise load it\r\n\t\t} else {\r\n\t\t\tconst request = new XMLHttpRequest();\r\n\t\t\trequest.open('GET', pSoundPath);\r\n\t\t\trequest.responseType = 'arraybuffer';\r\n\t\t\trequest.onload = function() {\r\n\t\t\t\tconst audioData = request.response;\r\n\t\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\t\tself.loadedBuffers[pSoundPath] = pDecodedData;\r\n\t\t\t\t\t// if the user wants to stop the sound before it loads, don't play it\r\n\t\t\t\t\tif (source.queuedToStop) return;\r\n\t\t\t\t\temitSound();\r\n\t\t\t\t}\r\n\t\t\t\tconst error = (pError) => {\r\n\t\t\t\t\tconsole.error(`Error with decoding audio data \"${pSoundPath}\"`);\r\n\t\t\t\t}\r\n\t\t\t\tself.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t\t};\r\n\t\t\trequest.send();\r\n\t\t}\r\n\t\treturn source;\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} [pVolume=100] - The volume of the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} [pSave=false] - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} [pPlayUnfocused=false] - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} [pLoop=false] - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tcreateSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\t// If there is a reusable sound, use that sound rather than create a new one\r\n\t\tif (this.recycledSounds.length) {\r\n\t\t\tconst sound = this.recycledSounds.pop();\r\n\t\t\tsound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t\t\treturn sound;\r\n\t\t}\r\n\t\treturn new Sound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * This effectively stops all sounds in the game except those specified in the pException array\r\n\t * \r\n\t * @param {Array} pException - an array of sounds that should not stop\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tstopAllSounds(pException) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If the sound is not set to be saved it will be killed\r\n\t\t\tif (Array.isArray(pException) && pException.includes(sound)) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}\r\n\t\t\tsound.stop();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This effectively kills all sounds in the game and subjects them to be recycled \r\n\t * \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tkillAllSounds() {\r\n\t\t// this effectively kills all sounds in the game, and subjects them to be recycled\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\tsound.kill();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Pauses all sounds in the game\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being unfocused\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tpauseAllSounds(pFocus) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused\r\n\t\t\tif (pFocus && sound.canPlayUnfocused()) continue;\r\n\t\t\tsound.pause();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes all sounds in games\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being focused\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tresumeAllSounds(pFocus) {\r\n\t\tfor (let i = this.pausedSounds.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.pausedSounds[i];\r\n\t\t\tsound.resume();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * @private\r\n\t * Finds all queued sounds (sounds that were played when the game was minimized or out of focus and plays them)\r\n\t */\r\n\tplayQueuedSounds() {\r\n\t\tfor (let i = this.queuedSoundsToPlay.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToPlay[i];\r\n\t\t\tthis.queuedSoundsToPlay.splice(i, 1);\r\n\t\t\tsound.play();\r\n\t\t}\r\n\r\n\t\tfor (let i = this.queuedSoundsToFade.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToFade[i];\r\n\t\t\tthis.queuedSoundsToFade.splice(i, 1);\r\n\t\t\tsound.queuedFade();\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Removes the loaded audio buffer data for this sound\r\n\t * \r\n\t * @param {string} pSoundPath - The path of the sound file\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tunloadSound(pSoundPath) {\r\n\t\tif (this.loadedBuffers[pSoundPath]) delete this.loadedBuffers[pSoundPath];\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed\r\n\t * \r\n\t * @private\r\n\t * @param {Sound} pSound - The sound to recycle \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\trecycleSound(pSound) {\r\n\t\tif (!(pSound instanceof Sound)) return this;\r\n\t\tpSound.kill();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This will start playing sounds that were initially blocked by not having a user gesture.\r\n\t * This will also restart sounds when a mobile device backs out of an app, and then rejoins the app\r\n\t * @private\r\n\t */\r\n\tresumeAudioCtx() {\r\n\t\tif (this.audioCtx.state !== 'running') {\r\n\t\t\tthis.audioCtx.resume().then(() => {\r\n\t\t\t\t// console.log('Resonance: autostart attempt of audio context worked.');\r\n\t\t\t},\r\n\t\t\t() => {\r\n\t\t\t\t// console.warn('Resonance: autostart attempt of audio context failed.');\r\n\t\t\t});\r\n\t\t}\r\n\t\tthis.ready = true;\r\n\t}\r\n};\r\n\r\nexport const Resonance = new ResonanceSingleton();",
+    "content": "import { Tween } from \"./vendor/tween.min.mjs\";\r\nimport { Sound } from \"./sound.mjs\";\r\nimport { Logger } from './vendor/logger.min.mjs';\r\n\r\n/**\r\n* Class for managing sounds\r\n* @class ResonanceSingleton  \r\n* @license Resonance does not have a license at this time. For licensing contact the author\r\n* @author https://github.com/doubleactii\r\n\r\nSafari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.\r\nOtherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.\r\n*/\r\nclass ResonanceSingleton {\r\n\t/**\r\n\t * The max volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_VOLUME = 200;\r\n\t/**\r\n\t * The min volume to be used\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MIN_VOLUME = -200;\r\n\t/**\r\n\t * The max number of sounds that can be recycled\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_RECYCLED_SOUNDS = 500;\r\n\t/**\r\n\t * The max speed this sound can be played at\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic MAX_PLAYBACK_RATE = 10;\r\n\t/**\r\n\t * The frame rate at which to fade the sounds\r\n\t * \r\n\t * @type {number}\r\n\t */\r\n\tstatic FRAME_RATE = 60;\r\n\t/**\r\n\t * \r\n\t * @param {number} pVal - Value to clamp\r\n\t * @param {number} pMin - Minimum value\r\n\t * @param {number} pMax - Maximum value\r\n\t * @returns The clamped number\r\n\t */\r\n\tstatic clamp = (pVal, pMin, pMax) => {\r\n\t\treturn Math.max(pMin, Math.min(pVal, pMax));\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pValue - The number to normalize within a range\r\n\t * @param {number} pMin - The min number\r\n\t * @param {number} pMax - The max number\r\n\t * @param {number} pRange - The range to normalize within\r\n\t * @returns The normalized number\r\n\t */\r\n\tstatic normalize = (pValue, pMin=0, pMax=100, pRange=1) => {\r\n\t\treturn (pValue - pMin) / (pMax - pMin) * pRange;\r\n\t}\r\n\t/**\r\n\t * The version of the module.\r\n\t */\r\n\tversion = \"VERSION_REPLACE_ME\";\r\n\tconstructor() {\r\n\t\tif (!window.AudioContext && !window.webkitAudioContext) {\r\n\t\t\tthis.logger.prefix('Resonance-Module').error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');\r\n\t\t\treturn;\r\n\t\t}\r\n\r\n        /** The logger module this module uses to log errors / logs.\r\n         * @private\r\n         * @type {Object}\r\n         */\r\n        this.logger = new Logger();\r\n        this.logger.registerType('Resonance-Module', '#ff6600');\r\n\r\n\t\t// For WebKit- and Blink-based browsers\r\n\t\twindow.AudioContext = window.AudioContext || window.webkitAudioContext;\r\n\t\t// Attach events to start audio through gestures\r\n\t\twindow.addEventListener('mousedown', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('touchstart', this.resumeAudioCtx.bind(this));\r\n\t\twindow.addEventListener('load', this.resumeAudioCtx.bind(this));\r\n\t\t// When the window is unfocused, all sounds are paused\r\n\t\twindow.addEventListener('blur', () => {\r\n\t\t\tthis.focused = false;\r\n\t\t\tif (this.soundsPlaying.length) this.pauseAllSounds(true);\r\n\t\t});\r\n\t\t// When the window is focused all sounds are resumed, and queued sounds are played\r\n\t\twindow.addEventListener('focus', () => {\r\n\t\t\tthis.focused = true;\r\n\t\t\tif (this.pausedSounds.length) this.resumeAllSounds(true);\r\n\t\t\tif (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();\t\t\t\t\r\n\t\t});\r\n\t\t/**\r\n\t\t * The audio context all audio will dervie from\r\n\t\t * \r\n\t\t * @type {AudioContext}\r\n\t\t */\r\n\t\tthis.audioCtx = new AudioContext();\r\n\t\t// For older browser support that has this old API.\r\n\t\tif (!this.audioCtx.createGain && this.audioCtx.createGainNode) this.audioCtx.createGain = this.audioCtx.createGainNode;\r\n\t\t/**\r\n\t\t * Gain node\r\n\t\t * @type {GainNode}\r\n\t\t */\r\n\t\tthis.gainNode = this.audioCtx.createGain();\r\n\t\t// Assign volume to gainNode\r\n\t\tthis.gainNode.gain.value = ResonanceSingleton.normalize(ResonanceSingleton.MAX_VOLUME);\r\n\t\t// Connect gain node to speakers\r\n\t\tthis.gainNode.connect(this.audioCtx.destination);\r\n\t\t/**\r\n\t\t * Array of sounds that are currently playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.soundsPlaying = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are currently paused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.pausedSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that can be resused\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.recycledSounds = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for playing\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToPlay = [];\r\n\t\t/**\r\n\t\t * Array of sounds that are queued for fading\r\n\t\t * \r\n\t\t * @type {Array}\r\n\t\t */\r\n\t\tthis.queuedSoundsToFade = [];\r\n\t\t/**\r\n\t\t * An object that stores the buffer data of a sound so it does not have to be loaded each time\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.loadedBuffers = {};\r\n\t\t/**\r\n\t\t * An object that stores fade information\r\n\t\t * \r\n\t\t * @type {Object}\r\n\t\t */\r\n\t\tthis.fader = {};\r\n\t\t/**\r\n\t\t * The master volume \r\n\t\t * \r\n\t\t * @type {number}\r\n\t\t */\r\n\t\tthis.volume = 100;\r\n\t\t/**\r\n\t\t * Mute status\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.muted = false;\r\n\t\t/**\r\n\t\t * Current state of the library\r\n\t\t * \r\n\t\t * @type {string}\r\n\t\t */\r\n\t\tthis.state = null;\r\n\t\t/**\r\n\t\t * Whether or Resonance has the window's focus. (Sound are paused when the focus is lost, and resumed when its gained)\r\n\t\t * \r\n\t\t * @type {boolean}\r\n\t\t */\r\n\t\tthis.focused = true;\r\n\t\t/**\r\n\t\t * The checker function to resolve to true or false denoting if a sound can be played\r\n\t\t * Master control over which sounds can play\r\n\t\t * \r\n\t\t * @type {Function}\r\n\t\t */\r\n\t\tthis.abilityToPlaySound = null;\r\n\t}\r\n\t/**\r\n\t * Function to check whether this library can play a sound at a given moment.\r\n\t * \r\n\t * @returns {boolean} Whether a sound can be played or not.\r\n\t */\r\n\tcanPlaySound() {\r\n\t\tif (this.abilityToPlaySound) {\r\n\t\t\tif (!this.abilityToPlaySound()) return false;\r\n\t\t}\r\n\t\treturn true;\r\n\t}\r\n\t/**\r\n\t * API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\r\n\t * Enables a checker to become the master checker over whether a sound can play\r\n\t * If their defined conditions return false, then the sound cannot be played\r\n\t * \r\n\t * @param {Function} pCheckerFunction - The function that will resolve to true or false denoting if a sound can be played\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tenableChecker(pCheckerFunction) {\r\n\t\tif (typeof(pCheckerFunction) === 'function') {\r\n\t\t\tthis.abilityToPlaySound = pCheckerFunction;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Function to adjust master volume\r\n\t * \r\n\t * @param {number} pVolume - The number to change the volume to\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tadjustVolume(pVolume) {\r\n\t\t// maybe show a GUI of the volume changing\r\n\t\tthis.volume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);\r\n\t\tthis.gainNode.gain.value = ResonanceSingleton.normalize(this.volume);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Fades this sound to the specified volume in the specified duration via the specified ease\r\n\t * \r\n\t * @param {number} [pVolume=100] - The volume to fade to\r\n\t * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n\t * @param {function} [pEase='easeOutCubic'] - Easing function\r\n\t * @param {function} pCallback - Callback to be called when the fade is over\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tfade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n\t\tif (isNaN(pVolume)) return;\r\n\t\tif (isNaN(pDuration)) return;\r\n\t\tif (this.state === 'fading') return;\r\n\t\tpVolume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);\r\n\t\tif (!Tween[pEase]) {\r\n\t\t\tthis.logger.prefix('Resonance-Module').error('Invalid pEase value. Reverted to default.');\r\n\t\t}\r\n\t\tthis.state = 'fading';\r\n\t\tthis.fader.duration = Math.max(pDuration, 0);\r\n\t\tthis.fader.currentIteration = 0;\r\n\t\tthis.fader.initialValue = this.volume;\r\n\t\tthis.fader.changeInValue = pVolume - this.fader.initialValue;\r\n\t\tthis.fader.totalIterations = this.fader.duration / (1000 / ResonanceSingleton.FRAME_RATE);\r\n\t\tthis.fader.startStamp = null;\r\n\t\tthis.fader.previousTimeStamp = null;\r\n\t\t// This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n\t\t// When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n\t\t// The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n\t\tthis.fader.durationOffScreen = [0, 0];\r\n\r\n\t\tconst self = this;\r\n\t\tconst fadeInterval = function(pTimeStamp) {\r\n\t\t\tif (!self.focused) {\r\n\t\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t\t\tself.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tif (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n\t\t\tself.adjustVolume(Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations));\r\n\t\t\tif (self.fader.durationOffScreen[1]) {\r\n\t\t\t\tself.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n\t\t\t\tself.fader.durationOffScreen[1] = 0;\r\n\t\t\t}\t\t\t\r\n\t\t\tconst elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n\t\t\tif (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n\t\t\tif (elapsed < self.fader.duration) {\r\n\t\t\t\tself.fader.previousTimeStamp = pTimeStamp;\r\n\t\t\t} else {\r\n\t\t\t\tcancelAnimationFrame(self.fader.raf);\r\n\t\t\t\tself.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.raf = null;\r\n\t\t\t\tself.state = null;\r\n\t\t\t\tself.adjustVolume(pVolume);\r\n\t\t\t\tif (typeof(pCallback) === 'function') pCallback();\r\n\t\t\t\treturn;\r\n\t\t\t}\r\n\t\t\tself.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\t}\r\n\t\tthis.fader.raf = requestAnimationFrame(fadeInterval);\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Master mute\r\n\t * \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\ttoggleMute() {\r\n\t\tthis.muted = this.muted ? false : true;\r\n\t\tif (this.muted) {\r\n\t\t\tthis._previousGainNodeValue = this.gainNode.gain.value;\r\n\t\t\tthis.gainNode.gain.value = 0;\r\n\t\t} else {\r\n\t\t\tthis.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Checks if the sound manager is currently muted\r\n\t * \r\n\t * @returns {boolean} Whether the sound manager is muted\r\n\t */\r\n\tisMuted() {\r\n\t\treturn this.muted;\r\n\t}\r\n\t/**\r\n\t * Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc\r\n\t * \r\n\t * @param {string} pSoundPath - The path to the file\r\n\t * @param {number} [pVolume=100] - The volume to play the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @returns {SoundSource } The source to this emitted sound. Call source.kill() to stop this sound while its playing. This is the only API this sound has\r\n\t */\r\n\temit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1) {\r\n\t\tif (!this.canPlaySound()) return\r\n\t\t// a very cheap sound that can be used if certain conditions are met. \r\n\t\t// This sound cannot be referenced and cannot be stopped or configured after creation.\r\n\t\t// If the buffer is loaded, this sound is eligable to play in the background\r\n\t\t// This sound is not going to be saved, this sound is not going to be lopped,\r\n\t\t// and this sound will not use any callbacks. This sound will be very lightweight and will not exist in memory\r\n\t\tconst self = this;\r\n\t\tconst source = self.audioCtx.createBufferSource();\r\n\t\t// Create a function to kill this sound\r\n\t\tsource.kill = function() {\r\n\t\t\tif (!this.buffer) {\r\n\t\t\t\tthis.queuedToStop = true;\r\n\t\t\t} else {\r\n\t\t\t\tthis.stop();\r\n\t\t\t}\r\n\t\t}\r\n\t\tconst emitSound = function() {\r\n\t\t\tconst gainNode = self.audioCtx.createGain();\r\n\t\t\tgainNode.gain.value = ResonanceSingleton.normalize(ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME));\r\n\t\t\tgainNode.connect(self.gainNode);\r\n\t\t\tsource.connect(gainNode);\r\n\t\t\tsource.buffer = self.loadedBuffers[pSoundPath];\r\n\t\t\tsource.playbackRate.value = pPlaybackRate;\r\n\t\t\tif (!source.start) source.start = source.noteOn;\r\n\t\t\tsource.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));\t\t\r\n\t\t}\r\n\t\t// Check if the loaded buffers already contain the loaded sound data for this sound\r\n\t\tif (this.loadedBuffers[pSoundPath]) {\r\n\t\t\temitSound();\r\n\t\t// Otherwise load it\r\n\t\t} else {\r\n\t\t\tconst request = new XMLHttpRequest();\r\n\t\t\trequest.open('GET', pSoundPath);\r\n\t\t\trequest.responseType = 'arraybuffer';\r\n\t\t\trequest.onload = function() {\r\n\t\t\t\tconst audioData = request.response;\r\n\t\t\t\tconst success = (pDecodedData) => {\r\n\t\t\t\t\tself.loadedBuffers[pSoundPath] = pDecodedData;\r\n\t\t\t\t\t// if the user wants to stop the sound before it loads, don't play it\r\n\t\t\t\t\tif (source.queuedToStop) return;\r\n\t\t\t\t\temitSound();\r\n\t\t\t\t}\r\n\t\t\t\tconst error = (pError) => {\r\n\t\t\t\t\tthis.logger.prefix('Resonance-Module').error(`Error with decoding audio data \"${pSoundPath}\"`);\r\n\t\t\t\t}\r\n\t\t\t\tself.audioCtx.decodeAudioData(audioData, success, error);\r\n\t\t\t};\r\n\t\t\trequest.send();\r\n\t\t}\r\n\t\treturn source;\r\n\t}\r\n\t/**\r\n\t * \r\n\t * @param {number} pSoundPath - The path of the sound file\r\n\t * @param {number} [pVolume=100] - The volume of the sound\r\n\t * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)\r\n\t * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)\r\n\t * @param {boolean} [pSave=false] - Whether to save this sound, or recycle it when it's completed\r\n\t * @param {boolean} [pPlayUnfocused=false] - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n\t * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n\t * @param {boolean} [pLoop=false] - Whether this sound should loop or not\r\n\t * @returns { Sound } - A sound object that has vast API on controlling it\r\n\t */\r\n\tcreateSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n\t\t// If there is a reusable sound, use that sound rather than create a new one\r\n\t\tif (this.recycledSounds.length) {\r\n\t\t\tconst sound = this.recycledSounds.pop();\r\n\t\t\tsound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t\t\treturn sound;\r\n\t\t}\r\n\t\treturn new Sound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n\t}\r\n\t/**\r\n\t * This effectively stops all sounds in the game except those specified in the pException array\r\n\t * \r\n\t * @param {Array} pException - an array of sounds that should not stop\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tstopAllSounds(pException) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If the sound is not set to be saved it will be killed\r\n\t\t\tif (Array.isArray(pException) && pException.includes(sound)) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}\r\n\t\t\tsound.stop();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This effectively kills all sounds in the game and subjects them to be recycled \r\n\t * \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tkillAllSounds() {\r\n\t\t// this effectively kills all sounds in the game, and subjects them to be recycled\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\tsound.kill();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Pauses all sounds in the game\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being unfocused\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tpauseAllSounds(pFocus) {\r\n\t\tfor (let i = this.soundsPlaying.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.soundsPlaying[i];\r\n\t\t\t// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused\r\n\t\t\tif (pFocus && sound.canPlayUnfocused()) continue;\r\n\t\t\tsound.pause();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Resumes all sounds in games\r\n\t * \r\n\t * @param {boolean} pFocus - If this function was called automatically by the game being focused\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tresumeAllSounds(pFocus) {\r\n\t\tfor (let i = this.pausedSounds.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.pausedSounds[i];\r\n\t\t\tsound.resume();\r\n\t\t}\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * @private\r\n\t * Finds all queued sounds (sounds that were played when the game was minimized or out of focus and plays them)\r\n\t */\r\n\tplayQueuedSounds() {\r\n\t\tfor (let i = this.queuedSoundsToPlay.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToPlay[i];\r\n\t\t\tthis.queuedSoundsToPlay.splice(i, 1);\r\n\t\t\tsound.play();\r\n\t\t}\r\n\r\n\t\tfor (let i = this.queuedSoundsToFade.length - 1; i >= 0; i--) {\r\n\t\t\tconst sound = this.queuedSoundsToFade[i];\r\n\t\t\tthis.queuedSoundsToFade.splice(i, 1);\r\n\t\t\tsound.queuedFade();\r\n\t\t}\r\n\t}\r\n\t/**\r\n\t * Removes the loaded audio buffer data for this sound\r\n\t * \r\n\t * @param {string} pSoundPath - The path of the sound file\r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\tunloadSound(pSoundPath) {\r\n\t\tif (this.loadedBuffers[pSoundPath]) delete this.loadedBuffers[pSoundPath];\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed\r\n\t * \r\n\t * @private\r\n\t * @param {Sound} pSound - The sound to recycle \r\n\t * @returns {ResonanceSingleton} This instance\r\n\t */\r\n\trecycleSound(pSound) {\r\n\t\tif (!(pSound instanceof Sound)) return this;\r\n\t\tpSound.kill();\r\n\t\treturn this;\r\n\t}\r\n\t/**\r\n\t * This will start playing sounds that were initially blocked by not having a user gesture.\r\n\t * This will also restart sounds when a mobile device backs out of an app, and then rejoins the app\r\n\t * @private\r\n\t */\r\n\tresumeAudioCtx() {\r\n\t\tif (this.audioCtx.state !== 'running') {\r\n\t\t\tthis.audioCtx.resume().then(() => {\r\n\t\t\t\t// this.logger.prefix('Resonance-Module').log('Resonance: autostart attempt of audio context worked.');\r\n\t\t\t},\r\n\t\t\t() => {\r\n\t\t\t\t// this.logger.prefix('Resonance-Module').warn('Resonance: autostart attempt of audio context failed.');\r\n\t\t\t});\r\n\t\t}\r\n\t\tthis.ready = true;\r\n\t}\r\n};\r\n\r\nexport const Resonance = new ResonanceSingleton();",
     "static": true,
     "longname": "C:/Users/jared/Documents/Github/Resonance/src/resonance.mjs",
     "access": "public",
@@ -586,7 +586,7 @@
     "importPath": "resonance/src/resonance.mjs",
     "importStyle": "{Resonance}",
     "description": null,
-    "lineNumber": 500,
+    "lineNumber": 509,
     "undocument": true,
     "type": {
       "types": [
@@ -606,7 +606,7 @@
     "importPath": "resonance/src/resonance.mjs",
     "importStyle": null,
     "description": "Class for managing sounds",
-    "lineNumber": 13,
+    "lineNumber": 14,
     "pseudoExport": true,
     "unknown": [
       {
@@ -633,7 +633,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.MAX_VOLUME",
     "access": "public",
     "description": "The max volume to be used",
-    "lineNumber": 19,
+    "lineNumber": 20,
     "type": {
       "nullable": null,
       "types": [
@@ -652,7 +652,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.MIN_VOLUME",
     "access": "public",
     "description": "The min volume to be used",
-    "lineNumber": 25,
+    "lineNumber": 26,
     "type": {
       "nullable": null,
       "types": [
@@ -671,7 +671,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.MAX_RECYCLED_SOUNDS",
     "access": "public",
     "description": "The max number of sounds that can be recycled",
-    "lineNumber": 31,
+    "lineNumber": 32,
     "type": {
       "nullable": null,
       "types": [
@@ -690,7 +690,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.MAX_PLAYBACK_RATE",
     "access": "public",
     "description": "The max speed this sound can be played at",
-    "lineNumber": 37,
+    "lineNumber": 38,
     "type": {
       "nullable": null,
       "types": [
@@ -709,7 +709,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.FRAME_RATE",
     "access": "public",
     "description": "The frame rate at which to fade the sounds",
-    "lineNumber": 43,
+    "lineNumber": 44,
     "type": {
       "nullable": null,
       "types": [
@@ -728,7 +728,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.clamp",
     "access": "public",
     "description": "",
-    "lineNumber": 51,
+    "lineNumber": 52,
     "unknown": [
       {
         "tagName": "@returns",
@@ -790,7 +790,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton.normalize",
     "access": "public",
     "description": "",
-    "lineNumber": 62,
+    "lineNumber": 63,
     "unknown": [
       {
         "tagName": "@returns",
@@ -862,7 +862,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#version",
     "access": "public",
     "description": "The version of the module.",
-    "lineNumber": 68,
+    "lineNumber": 69,
     "type": {
       "types": [
         "*"
@@ -880,11 +880,30 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#constructor",
     "access": "public",
     "description": null,
-    "lineNumber": 69,
+    "lineNumber": 70,
     "undocument": true
   },
   {
     "__docId__": 60,
+    "kind": "member",
+    "name": "logger",
+    "memberof": "src/resonance.mjs~ResonanceSingleton",
+    "static": false,
+    "longname": "src/resonance.mjs~ResonanceSingleton#logger",
+    "access": "private",
+    "description": "The logger module this module uses to log errors / logs.",
+    "lineNumber": 80,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 61,
     "kind": "member",
     "name": "focused",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -892,7 +911,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#focused",
     "access": "public",
     "description": null,
-    "lineNumber": 82,
+    "lineNumber": 91,
     "undocument": true,
     "type": {
       "types": [
@@ -901,7 +920,7 @@
     }
   },
   {
-    "__docId__": 62,
+    "__docId__": 63,
     "kind": "member",
     "name": "audioCtx",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -909,7 +928,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#audioCtx",
     "access": "public",
     "description": "The audio context all audio will dervie from",
-    "lineNumber": 96,
+    "lineNumber": 105,
     "type": {
       "nullable": null,
       "types": [
@@ -920,7 +939,7 @@
     }
   },
   {
-    "__docId__": 63,
+    "__docId__": 64,
     "kind": "member",
     "name": "gainNode",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -928,7 +947,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#gainNode",
     "access": "public",
     "description": "Gain node",
-    "lineNumber": 103,
+    "lineNumber": 112,
     "type": {
       "nullable": null,
       "types": [
@@ -939,7 +958,7 @@
     }
   },
   {
-    "__docId__": 64,
+    "__docId__": 65,
     "kind": "member",
     "name": "soundsPlaying",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -947,26 +966,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#soundsPlaying",
     "access": "public",
     "description": "Array of sounds that are currently playing",
-    "lineNumber": 113,
-    "type": {
-      "nullable": null,
-      "types": [
-        "Array"
-      ],
-      "spread": false,
-      "description": null
-    }
-  },
-  {
-    "__docId__": 65,
-    "kind": "member",
-    "name": "pausedSounds",
-    "memberof": "src/resonance.mjs~ResonanceSingleton",
-    "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#pausedSounds",
-    "access": "public",
-    "description": "Array of sounds that are currently paused",
-    "lineNumber": 119,
+    "lineNumber": 122,
     "type": {
       "nullable": null,
       "types": [
@@ -979,13 +979,13 @@
   {
     "__docId__": 66,
     "kind": "member",
-    "name": "recycledSounds",
+    "name": "pausedSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#recycledSounds",
+    "longname": "src/resonance.mjs~ResonanceSingleton#pausedSounds",
     "access": "public",
-    "description": "Array of sounds that can be resused",
-    "lineNumber": 125,
+    "description": "Array of sounds that are currently paused",
+    "lineNumber": 128,
     "type": {
       "nullable": null,
       "types": [
@@ -998,13 +998,13 @@
   {
     "__docId__": 67,
     "kind": "member",
-    "name": "queuedSoundsToPlay",
+    "name": "recycledSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#queuedSoundsToPlay",
+    "longname": "src/resonance.mjs~ResonanceSingleton#recycledSounds",
     "access": "public",
-    "description": "Array of sounds that are queued for playing",
-    "lineNumber": 131,
+    "description": "Array of sounds that can be resused",
+    "lineNumber": 134,
     "type": {
       "nullable": null,
       "types": [
@@ -1017,13 +1017,13 @@
   {
     "__docId__": 68,
     "kind": "member",
-    "name": "queuedSoundsToFade",
+    "name": "queuedSoundsToPlay",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#queuedSoundsToFade",
+    "longname": "src/resonance.mjs~ResonanceSingleton#queuedSoundsToPlay",
     "access": "public",
-    "description": "Array of sounds that are queued for fading",
-    "lineNumber": 137,
+    "description": "Array of sounds that are queued for playing",
+    "lineNumber": 140,
     "type": {
       "nullable": null,
       "types": [
@@ -1036,17 +1036,17 @@
   {
     "__docId__": 69,
     "kind": "member",
-    "name": "loadedBuffers",
+    "name": "queuedSoundsToFade",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#loadedBuffers",
+    "longname": "src/resonance.mjs~ResonanceSingleton#queuedSoundsToFade",
     "access": "public",
-    "description": "An object that stores the buffer data of a sound so it does not have to be loaded each time",
-    "lineNumber": 143,
+    "description": "Array of sounds that are queued for fading",
+    "lineNumber": 146,
     "type": {
       "nullable": null,
       "types": [
-        "Object"
+        "Array"
       ],
       "spread": false,
       "description": null
@@ -1055,13 +1055,13 @@
   {
     "__docId__": 70,
     "kind": "member",
-    "name": "fader",
+    "name": "loadedBuffers",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
-    "longname": "src/resonance.mjs~ResonanceSingleton#fader",
+    "longname": "src/resonance.mjs~ResonanceSingleton#loadedBuffers",
     "access": "public",
-    "description": "An object that stores fade information",
-    "lineNumber": 149,
+    "description": "An object that stores the buffer data of a sound so it does not have to be loaded each time",
+    "lineNumber": 152,
     "type": {
       "nullable": null,
       "types": [
@@ -1074,13 +1074,32 @@
   {
     "__docId__": 71,
     "kind": "member",
+    "name": "fader",
+    "memberof": "src/resonance.mjs~ResonanceSingleton",
+    "static": false,
+    "longname": "src/resonance.mjs~ResonanceSingleton#fader",
+    "access": "public",
+    "description": "An object that stores fade information",
+    "lineNumber": 158,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 72,
+    "kind": "member",
     "name": "volume",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
     "static": false,
     "longname": "src/resonance.mjs~ResonanceSingleton#volume",
     "access": "public",
     "description": "The master volume ",
-    "lineNumber": 155,
+    "lineNumber": 164,
     "type": {
       "nullable": null,
       "types": [
@@ -1091,7 +1110,7 @@
     }
   },
   {
-    "__docId__": 72,
+    "__docId__": 73,
     "kind": "member",
     "name": "muted",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1099,7 +1118,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#muted",
     "access": "public",
     "description": "Mute status",
-    "lineNumber": 161,
+    "lineNumber": 170,
     "type": {
       "nullable": null,
       "types": [
@@ -1110,7 +1129,7 @@
     }
   },
   {
-    "__docId__": 73,
+    "__docId__": 74,
     "kind": "member",
     "name": "state",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1118,7 +1137,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#state",
     "access": "public",
     "description": "Current state of the library",
-    "lineNumber": 167,
+    "lineNumber": 176,
     "type": {
       "nullable": null,
       "types": [
@@ -1129,7 +1148,7 @@
     }
   },
   {
-    "__docId__": 75,
+    "__docId__": 76,
     "kind": "member",
     "name": "abilityToPlaySound",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1137,7 +1156,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#abilityToPlaySound",
     "access": "public",
     "description": "The checker function to resolve to true or false denoting if a sound can be played\nMaster control over which sounds can play",
-    "lineNumber": 180,
+    "lineNumber": 189,
     "type": {
       "nullable": null,
       "types": [
@@ -1148,7 +1167,7 @@
     }
   },
   {
-    "__docId__": 76,
+    "__docId__": 77,
     "kind": "method",
     "name": "canPlaySound",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1158,7 +1177,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#canPlaySound",
     "access": "public",
     "description": "Function to check whether this library can play a sound at a given moment.",
-    "lineNumber": 187,
+    "lineNumber": 196,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1176,7 +1195,7 @@
     "params": []
   },
   {
-    "__docId__": 77,
+    "__docId__": 78,
     "kind": "method",
     "name": "enableChecker",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1186,7 +1205,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#enableChecker",
     "access": "public",
     "description": "API for the developer to define when a sound can and cannot be played. Any sound that tries to play while this returns false will not play\nEnables a checker to become the master checker over whether a sound can play\nIf their defined conditions return false, then the sound cannot be played",
-    "lineNumber": 201,
+    "lineNumber": 210,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1215,7 +1234,7 @@
     }
   },
   {
-    "__docId__": 79,
+    "__docId__": 80,
     "kind": "method",
     "name": "adjustVolume",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1225,7 +1244,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#adjustVolume",
     "access": "public",
     "description": "Function to adjust master volume",
-    "lineNumber": 213,
+    "lineNumber": 222,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1254,7 +1273,7 @@
     }
   },
   {
-    "__docId__": 81,
+    "__docId__": 82,
     "kind": "method",
     "name": "fade",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1264,7 +1283,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#fade",
     "access": "public",
     "description": "Fades this sound to the specified volume in the specified duration via the specified ease",
-    "lineNumber": 228,
+    "lineNumber": 237,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1329,7 +1348,7 @@
     }
   },
   {
-    "__docId__": 83,
+    "__docId__": 84,
     "kind": "method",
     "name": "toggleMute",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1339,7 +1358,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#toggleMute",
     "access": "public",
     "description": "Master mute",
-    "lineNumber": 284,
+    "lineNumber": 293,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1357,7 +1376,7 @@
     "params": []
   },
   {
-    "__docId__": 85,
+    "__docId__": 86,
     "kind": "member",
     "name": "_previousGainNodeValue",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1365,7 +1384,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#_previousGainNodeValue",
     "access": "private",
     "description": null,
-    "lineNumber": 287,
+    "lineNumber": 296,
     "undocument": true,
     "type": {
       "types": [
@@ -1374,7 +1393,7 @@
     }
   },
   {
-    "__docId__": 86,
+    "__docId__": 87,
     "kind": "method",
     "name": "isMuted",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1384,7 +1403,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#isMuted",
     "access": "public",
     "description": "Checks if the sound manager is currently muted",
-    "lineNumber": 299,
+    "lineNumber": 308,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1402,7 +1421,7 @@
     "params": []
   },
   {
-    "__docId__": 87,
+    "__docId__": 88,
     "kind": "method",
     "name": "emit",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1412,7 +1431,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#emit",
     "access": "public",
     "description": "Plays a sound that is not stored. Plays the sound only. You can only kill this sound, no repeat, no changing volume, etc",
-    "lineNumber": 312,
+    "lineNumber": 321,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1489,7 +1508,7 @@
     }
   },
   {
-    "__docId__": 88,
+    "__docId__": 89,
     "kind": "member",
     "name": "queuedToStop",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1497,7 +1516,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#queuedToStop",
     "access": "public",
     "description": null,
-    "lineNumber": 324,
+    "lineNumber": 333,
     "undocument": true,
     "type": {
       "types": [
@@ -1506,7 +1525,7 @@
     }
   },
   {
-    "__docId__": 89,
+    "__docId__": 90,
     "kind": "method",
     "name": "createSound",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1516,7 +1535,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#createSound",
     "access": "public",
     "description": "",
-    "lineNumber": 376,
+    "lineNumber": 385,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1629,7 +1648,7 @@
     }
   },
   {
-    "__docId__": 90,
+    "__docId__": 91,
     "kind": "method",
     "name": "stopAllSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1639,7 +1658,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#stopAllSounds",
     "access": "public",
     "description": "This effectively stops all sounds in the game except those specified in the pException array",
-    "lineNumber": 391,
+    "lineNumber": 400,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1668,7 +1687,7 @@
     }
   },
   {
-    "__docId__": 91,
+    "__docId__": 92,
     "kind": "method",
     "name": "killAllSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1678,7 +1697,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#killAllSounds",
     "access": "public",
     "description": "This effectively kills all sounds in the game and subjects them to be recycled ",
-    "lineNumber": 407,
+    "lineNumber": 416,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1696,7 +1715,7 @@
     "params": []
   },
   {
-    "__docId__": 92,
+    "__docId__": 93,
     "kind": "method",
     "name": "pauseAllSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1706,7 +1725,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#pauseAllSounds",
     "access": "public",
     "description": "Pauses all sounds in the game",
-    "lineNumber": 421,
+    "lineNumber": 430,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1735,7 +1754,7 @@
     }
   },
   {
-    "__docId__": 93,
+    "__docId__": 94,
     "kind": "method",
     "name": "resumeAllSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1745,7 +1764,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#resumeAllSounds",
     "access": "public",
     "description": "Resumes all sounds in games",
-    "lineNumber": 436,
+    "lineNumber": 445,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1774,7 +1793,7 @@
     }
   },
   {
-    "__docId__": 94,
+    "__docId__": 95,
     "kind": "method",
     "name": "playQueuedSounds",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1784,12 +1803,12 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#playQueuedSounds",
     "access": "private",
     "description": "",
-    "lineNumber": 447,
+    "lineNumber": 456,
     "params": [],
     "return": null
   },
   {
-    "__docId__": 95,
+    "__docId__": 96,
     "kind": "method",
     "name": "unloadSound",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1799,7 +1818,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#unloadSound",
     "access": "public",
     "description": "Removes the loaded audio buffer data for this sound",
-    "lineNumber": 466,
+    "lineNumber": 475,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1828,7 +1847,7 @@
     }
   },
   {
-    "__docId__": 96,
+    "__docId__": 97,
     "kind": "method",
     "name": "recycleSound",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1838,7 +1857,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#recycleSound",
     "access": "private",
     "description": "Recycles the sound for reuse later instead of deleting it. All binding info on the sound is removed",
-    "lineNumber": 477,
+    "lineNumber": 486,
     "unknown": [
       {
         "tagName": "@returns",
@@ -1867,7 +1886,7 @@
     }
   },
   {
-    "__docId__": 97,
+    "__docId__": 98,
     "kind": "method",
     "name": "resumeAudioCtx",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1877,12 +1896,12 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#resumeAudioCtx",
     "access": "private",
     "description": "This will start playing sounds that were initially blocked by not having a user gesture.\nThis will also restart sounds when a mobile device backs out of an app, and then rejoins the app",
-    "lineNumber": 487,
+    "lineNumber": 496,
     "params": [],
     "return": null
   },
   {
-    "__docId__": 98,
+    "__docId__": 99,
     "kind": "member",
     "name": "ready",
     "memberof": "src/resonance.mjs~ResonanceSingleton",
@@ -1890,7 +1909,7 @@
     "longname": "src/resonance.mjs~ResonanceSingleton#ready",
     "access": "public",
     "description": null,
-    "lineNumber": 496,
+    "lineNumber": 505,
     "undocument": true,
     "type": {
       "types": [
@@ -1899,10 +1918,10 @@
     }
   },
   {
-    "__docId__": 99,
+    "__docId__": 100,
     "kind": "file",
     "name": "src/sound.mjs",
-    "content": "import { Resonance } from \"./resonance.mjs\";\r\n/**\r\n * A small class to represent a sound. Has useful API to handle the sound.\r\n * \r\n * @class Sound\r\n */\r\nclass Sound {\r\n    /**\r\n     * The path of the sound.\r\n     * @private\r\n     * @type {string}\r\n     */\r\n    soundPath = null;\r\n    /**\r\n     * The start time of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    startTime = null;\r\n    /**\r\n     * The end time of ththise sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    endTime = null;\r\n    /**\r\n     * Whether to save this sound or not.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    save = null;\r\n    /**\r\n     * The duration of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    duration = null;\r\n    /**\r\n     * The source of this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    source = null;\r\n    /**\r\n     * The gain node of this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    gainNode = null;\r\n    /**\r\n     * Whether this sound is loaded.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    loaded = false;\r\n    /**\r\n     * If this sound is to play after it is loaded.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    playAfterLoad = false;\r\n    /**\r\n     * If this sound is muted.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    muted = false;\r\n    /**\r\n     * The state of this sound.\r\n     * @private\r\n     * @type {string}\r\n     */\r\n    state = null;\r\n    /**\r\n     * The start timestamp of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    startedTimeStamp = null;\r\n    /**\r\n     * The timestamp of this sound when it was paused so it can be resumed at the same timestamp.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    pausedTimeStamp = 0;\r\n    /**\r\n     * If this sound plays without window focus.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    playUnfocused = null;\r\n    /**\r\n     * Object holding the fading information for this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    fader = {};\r\n    /**\r\n     * Events tied to this sound. start | end | pause | resume\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    events = {};\r\n    /**\r\n     * Whether this sound was sent a stop signal.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    stopSignal = false;\r\n    /**\r\n     * If this sound is to loop.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _loop = false;\r\n    /**\r\n     * The playback rate of this sound.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _playbackRate = 1;\r\n    /**\r\n     * The volume of this sound.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _volume = 100;\r\n    /**\r\n     * Info tied to this sound.\r\n     * @private\r\n     * @property {string} soundPath - The path this sound uses for its source\r\n     * @property {number} duration - The duration of this sound\r\n     * @type {boolean}\r\n     */\r\n    _info = { 'soundPath': null, 'duration': null };\r\n    /**\r\n     * @param {number} pSoundPath - The path of the sound file\r\n     * @param {number} pVolume - The volume of the sound\r\n     * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n     * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n     * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be played automatically when the game screen is not focused\r\n     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n     * @param {boolean} pLoop - Whether this sound should loop or not\r\n     * @returns { Sound } - A sound object that has vast API on controlling it\r\n     */\r\n    constructor(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n        this.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n    }\r\n    /**\r\n     * Gets the current volume of this sound\r\n     * \r\n     * @returns {number} The current volume of this sound\r\n     */\r\n    get volume() {\r\n        return this._volume;\r\n    }\r\n    /**\r\n     * Sets the volume of this sound\r\n     * \r\n     * @param {number} pNewVolume - The volume to set\r\n     */\r\n    set volume(pNewVolume) {\r\n        this._volume = Resonance.constructor.clamp(pNewVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        if (this.loaded) this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n    }\r\n    /**\r\n     * Attaches a callback to the specified event.\r\n     * @param {Object} pEvent - The event to attach the callback to\r\n     * @param {Function} pCallback - The function to be called when the event is triggered\r\n     * @return {this} The Sound instance\r\n     */\r\n    on(pEvent, pCallback) {\r\n        if (typeof(pCallback) === \"function\") {\r\n            switch (pEvent) {\r\n                case \"start\":\r\n                case \"stop\":\r\n                case \"end\":\r\n                case \"pause\":\r\n                case \"resume\":\r\n                    this.events[pEvent] = pCallback;\r\n                    break;\r\n                default:\r\n                    console.error(`The event \"${pEvent}\" is not supported.`);\r\n            }\r\n        } else {\r\n            console.error(`The callback for event \"${pEvent}\" is not a function.`);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Toggleable mute feature for this sound. Flips between muted and unmuted\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    toggleMute() {\r\n        if (!this.loaded || !this.source) return;\r\n        this.muted = this.muted ? false : true;\r\n        if (this.muted) {\r\n            this.gainNode.gain.value = 0;\r\n        } else {\r\n            this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Get the loop status of this sound\r\n     * \r\n     * @returns {boolean} Whether this sound is set to loop or not\r\n     */\r\n    get loop() {\r\n        return this._loop;\r\n    }\r\n    /**\r\n     * Set the loop status of this sound\r\n     * \r\n     * @param {boolean} pLoopValue - The value which to set the loop status to. Truthy values resolve to true, and falsely values resovle to false\r\n     */\r\n    set loop(pLoopValue) {\r\n        this._loop = pLoopValue ? true : false;\r\n        if (this.source) this.source.loop = this._loop;\r\n    }\r\n    /**\r\n     * Toggleable loop feature for this sound. Flips between loop and unlooped\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    toggleLoop() {\r\n        this._loop = this._loop ? false : true;\r\n        if (this.source) this.source.loop = this._loop;\r\n        return this;\r\n    }\r\n    /**\r\n     * Get the playback status of this sound\r\n     * \r\n     * @returns {number} The playback rate of this sound\r\n     */\r\n    get playbackRate() {\r\n        return this._playbackRate;\r\n    }\r\n    /**\r\n     * Set the playback status of this sound\r\n     * \r\n     * @param {number} pNewPlaybackRate - The value which to set the playback status to. Clamped to 10\r\n     */\t\r\n    set playbackRate(pNewPlaybackRate) {\r\n        this._playbackRate = Resonance.constructor.clamp(pNewPlaybackRate, 1, Resonance.constructor.MAX_PLAYBACK_RATE);\r\n        if (this.source) this.source.playbackRate.value = this._playbackRate;\r\n    }\r\n    /**\r\n     * Set the info of this sound\r\n     * The new value is not used, as this is a \"read-only\" variable. So any attempts to set it will not work\r\n     * \r\n     * @param {*} pNewInfo - The new value\r\n     */\t\r\n    set info(pNewInfo) {\r\n        // makes this variable read only basically\r\n        this._info = this._info;\r\n    }\r\n    /**\r\n     * Get the info object of this sound\r\n     * \r\n     * @returns {Objecct} The info object of this sound\r\n     */\r\n    get info() {\r\n        if (this.loaded) {\r\n            if (this.source) {\r\n                this._info.duration = this.duration;\r\n            }\r\n            this._info.soundPath = this.soundPath;\r\n        } else {\r\n            this._info.soundPath = this.soundPath;\r\n        }\r\n        return { ...this._info };\r\n    }\r\n    /**\r\n     * \r\n     * @param {number} pSoundPath - The path of the sound file\r\n     * @param {number} pVolume - The volume of the sound\r\n     * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n     * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n     * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n     * @param {boolean} pLoop - Whether this sound should loop or not\r\n     * @returns { Sound } - A sound object that has vast API on controlling it\r\n     */\r\n    build(pSoundPath, pVolume=100, pStartTime=0, pEndTime=0, pSave=false, pPlayUnfocused=false, pPlaybackRate=1, pLoop=false) {\r\n        this.soundPath = pSoundPath;\r\n        this.startTime = Math.max(pStartTime, 0);\r\n        this.endTime = Math.max(pEndTime, 0);\r\n        this.save = pLoop ? true : pSave;\r\n        this._playbackRate = Resonance.constructor.clamp(pPlaybackRate, 1, Resonance.constructor.MAX_PLAYBACK_RATE);\r\n        this.playUnfocused = pPlayUnfocused ? true : false;\r\n        this.state = null;\r\n        this._loop = pLoop ? true : false;\r\n        this._volume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        // If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play\r\n        // this sound, it will just use the buffer data of the previous sound that had it.\r\n        if (!Resonance.loadedBuffers[this.soundPath]) {\r\n            this.load();\r\n        } else {\r\n            this.loaded = true;\r\n        }\r\n    }\r\n    /**\r\n     * Loads this sound and stores its data so future sounds can use the same buffer\r\n     */\r\n    load() {\r\n        const request = new XMLHttpRequest();\r\n        const self = this;\r\n        request.open('GET', self.soundPath);\r\n        request.responseType = 'arraybuffer';\r\n        request.onload = function() {\r\n            const audioData = request.response;\r\n            const success = (pDecodedData) => {\r\n                self.loaded = true;\r\n                Resonance.loadedBuffers[self.soundPath] = pDecodedData;\r\n                // The developer attempted to play the sound while it was still loading,\r\n                // This has been set so that the sound will play once it's finished loading now\r\n                if (self.playAfterLoad) {\r\n                    // A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play\r\n                    if (self.stopSignal) {\r\n                        self.stopSignal = false;\r\n                        return;\r\n                    } else {\r\n                        self.play();\r\n                    }\r\n                }\r\n            }\r\n            const error = (pError) => {\r\n                self.loaded = false;\r\n                console.error(`Error with decoding audio data \"${self.soundPath}\" This sound has been killed.`);\r\n                self.kill();\r\n            }\r\n            Resonance.audioCtx.decodeAudioData(audioData, success, error);\r\n        };\r\n        request.send();\r\n    }\r\n    /**\r\n     * Pauses this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    pause() {\r\n        if (!this.loaded) return;\r\n        this.stop('suspended');\r\n        this.state = 'suspended';\r\n        this.pausedTimeStamp = Resonance.audioCtx.currentTime - this.startedTimeStamp;\r\n        // This sound is no longer considered to be playing, so remove it from the array\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        // If this sound is not apart of the suspended sounds array add it\r\n        if (!Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.push(this);\r\n        if (typeof(this.events.pause) === 'function') this.events.pause();\r\n        return this;\r\n    }\r\n    /**\r\n     * Resumes playing this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    resume() {\r\n        if (!this.loaded) return;\r\n        // This sound is no longer considered to be suspended, so remove it from the array\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        // This sound is no longer suspended and is now playing again, add it to the playing array\r\n        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);\r\n        // this will use the this.pausedTimeStamp value to resume\r\n        this.play(true);\r\n        this.state = this.fader.raf ? 'fading' : 'playing';\r\n        if (typeof(this.events.resume) === 'function') this.events.resume();\r\n        return this;\r\n    }\r\n    /**\r\n     * Stops this sound from playing\r\n     * \r\n     * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched\r\n     * @returns {this} This sound instance\r\n     */\r\n    stop(pState) {\r\n        // The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.\r\n        if (!this.source) {\r\n            this.stopSignal = true;\r\n            return;\r\n        }\r\n        const wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;\r\n        // This sound is no longer considered to be playing, so remove it from the array\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        if (this.source) {\r\n            if (!this.source.stop) this.source.stop = this.source.noteOff;\r\n            this.source.stop();\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n            this.source = null;\r\n            this.gainNode = null;\r\n        }\r\n        this.state = pState ? pState : 'stopped';\r\n        if (this.state === 'stopped' && wasPlaying && typeof(this.events.stop) === 'function') this.events.stop();\r\n        return this;\r\n    }\r\n    /**\r\n     * Plays this sound\r\n     * \r\n     * @param {boolean} pResume - If this is being played from a paused state\r\n     * @returns {this} This sound instance\r\n     */\r\n    play(pResume) {\r\n        // A sound cannot be played if it's sound name is not referencable, \r\n        // a sound that is recycled has no sound information to be played\r\n        // and if the game's API doesn't allow a sound to be played at it's current time, then it can't play.\r\n        if (!this.soundPath || this.state === 'recycled' || !Resonance.canPlaySound()) return;\r\n        // If this sound is not loaded, it cannot be played, however there is a chance that a sound with the same buffer\r\n        // information has been played before and stored. In this case it does not need to wait to load, it instead checks to see\r\n        // if that buffer information is avaiable, and if it is, it allows the sound to be played with that data.\r\n        if (!this.loaded && !Resonance.loadedBuffers[this.soundPath]) {\r\n            this.playAfterLoad = true;\r\n            return;\r\n        }\r\n        // The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost\r\n        if (!Resonance.focused && !this.canPlayUnfocused()) {\r\n            if (!Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.push(this);\r\n            return;\r\n        }\r\n        // if you already have a soure and a gainNode, disconnect them and let them be garbage collected\r\n        if (this.source) {\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n            this.source = null;\r\n            this.gainNode = null;\r\n        }\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        const source = Resonance.audioCtx.createBufferSource();\r\n        const gainNode = Resonance.audioCtx.createGain();\r\n        const self = this;\r\n        gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n        gainNode.connect(Resonance.gainNode);\r\n        source.connect(gainNode);\r\n        // Resonance.gainNode.connect(Resonance.audioCtx.destination);\r\n        source.buffer = Resonance.loadedBuffers[this.soundPath];\r\n        source.playbackRate.value = this._playbackRate;\r\n        // sound.stop() calls this as well\r\n        source.onended = function() {\r\n            // if this sound was stopped, and it is a sound that will be saved return early\r\n            if (self.state === 'stopped' && self.save) {\r\n                return;\r\n            } else if (self.state === 'restart') {\r\n                // since the sound is restarting we don't want it to fire off the `onEnded` event.\r\n                self.play();\r\n                return;\r\n            } else if (self.state === 'suspended') {\r\n                return;\r\n            }\r\n            if (self.state !== 'stopped' && typeof(self.events.end) === 'function') self.events.end();\r\n            if (self._loop) {\r\n                self.play();\r\n                return;\r\n            }\r\n            /*\r\n                If this is a one use sound, it will be recycled or killed.\r\n                A developer may still hold a reference to this sound but will not be able to do anything to it.\r\n                If you are using a one use sound, it is best to play a sound on its creation without storing it.\r\n                Resonance.createSound('soundPath', volume, startTime, endTime, playrate, loop).play()\r\n            */\r\n            if (!self.save) self.kill();\r\n        };\r\n        this.source = source;\r\n        this.gainNode = gainNode;\r\n        this.duration = source.buffer.duration;\r\n        this.playAfterLoad = null;\r\n        if (!source.start) source.start = source.noteOn;\r\n        source.start(0, (this.pausedTimeStamp ? this.pausedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);\r\n/* \t\t\t\t\r\n        // This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.\r\n        source.loop = this._loop;\r\n        source.loopStart = this.startTime;\r\n        source.loopEnd = this.endTime ? this.endTime : source.buffer.duration; \r\n*/\r\n        this.state = 'playing';\r\n        this.startedTimeStamp = Resonance.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);\r\n        this.pausedTimeStamp = 0;\r\n        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);\r\n        if (!pResume && typeof(this.events.start) === 'function') this.events.start();\r\n        return this;\r\n    }\r\n    /**\r\n     * Restarts this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    restart() {\r\n        this.stop('restart');\r\n        return this;\r\n    }\r\n    /**\r\n     * Get whether this sound will play when the window is unfocused\r\n     * @returns {boolean} Whether or not this sound will play when the window is unfocused\r\n     */\r\n    canPlayUnfocused() {\r\n        return this.playUnfocused ? true : false;\r\n    }\r\n    /**\r\n     * Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.\r\n     * If the recycle manager is full, this sound will become an empty class instance.\r\n     */\r\n    kill() {\r\n        this.wipe();\r\n        if (Resonance.recycledSounds.length < Resonance.constructor.MAX_RECYCLED_SOUNDS)  {\r\n            Resonance.recycledSounds.push(this);\r\n        } else {\r\n            // remove all properties from this sound object, since it no longer will be used.\r\n            // any references to this should be removed so that it can be garbage collected\r\n            for (const variable in this) delete this[variable];\r\n        }\r\n    }\r\n    /**\r\n     * Resets this sound to default state\r\n     */\r\n    wipe() {\r\n        this.onStarted = null;\r\n        this.onStopped = null;\r\n        this.onEnded = null;\r\n        this.onSuspended = null;\r\n        this.onResumed = null;\r\n        this.stop('wipe');\r\n        cancelAnimationFrame(this.fader.raf);\r\n        if (this.source) {\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n        }\r\n        this.soundPath = null;\r\n        this.startTime = null;\r\n        this.endTime = null;\r\n        this.save = null;\r\n        this.duration = null;\r\n        this._playbackRate = 1;\r\n        this.source = null;\r\n        this.gainNode = null;\r\n        this.loaded = false;\r\n        this.playAfterLoad = null;\r\n        this.state = 'recycled';\r\n        this.startedTimeStamp = null;\r\n        this.pausedTimeStamp = 0;\r\n        this.playUnfocused = null;\r\n        this.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;\r\n        this.stopSignal = false;\r\n        this._loop = false;\r\n        this._volume = 100;\r\n        this._info.soundPath = this._info.duration = null;\r\n        for (const prop in this.events) {\r\n            delete this.events[prop];\r\n        }\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        if (Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.splice(Resonance.queuedSoundsToPlay.indexOf(this), 1);\r\n        if (Resonance.queuedSoundsToFade.includes(this)) Resonance.queuedSoundsToFade.splice(Resonance.queuedSoundsToFade.indexOf(this), 1);\r\n    }\r\n    /**\r\n     * Get the current timestamp of the sound playing\r\n     * \r\n     * @returns {number} The current timestamp into the sound\r\n     */\r\n    getCurrentTime() {\r\n        if (this.pausedTimeStamp) {\r\n            return this.pausedTimeStamp * this._playbackRate;\r\n        } else if (this.startedTimeStamp) {\r\n            return Resonance.audioCtx.currentTime - this.startedTimeStamp;\r\n        } else {\r\n            return 0;\r\n        }\r\n    }\r\n    /**\r\n     * Fades this sound to the specified volume in the specified duration via the specified ease\r\n     * \r\n     * @param {number} [pVolume=100] - The volume to fade to\r\n     * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n     * @param {function} [pEase='easeOutCubic'] - Easing function\r\n     * @param {function} pCallback - Callback to be called when the fade is over\r\n     * @returns {this} This sound instance\r\n     */\r\n    fade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n        if (isNaN(pVolume)) return;\r\n        if (isNaN(pDuration)) return;\r\n        // If a sound is not playing, it cannot be faded.\r\n        if (this.state !== 'playing' && Resonance.focused) return;\r\n        // The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus\r\n        if (!Resonance.focused && !this.canPlayUnfocused()) {\r\n            // If this sound is already queued to fade, then just exit out\r\n            if (Resonance.queuedSoundsToFade.includes(this)) return;\r\n            this.fader.queue = {\r\n                'volume': pVolume,\r\n                'duration': pDuration,\r\n                'ease': pEase,\r\n                'callback': pCallback\r\n            }\r\n            Resonance.queuedSoundsToFade.push(this);\r\n            return;\r\n        }\r\n        if (!Tween[pEase]) {\r\n            pEase = 'easeOutCubic';\r\n            console.warn('Resonance: Invalid pEase value. Reverted to default.');\r\n        }\r\n        // Get rid of the queue information if it exists, it is no longer needed\r\n        if (this.fader.queue) this.fader.queue = null;\r\n        pVolume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        this.fader.duration = Math.max(pDuration, 0);\r\n        this.fader.currentIteration = 0;\r\n        this.fader.initialValue = this._volume;\r\n        this.fader.changeInValue = pVolume - this.fader.initialValue;\r\n        this.fader.totalIterations = this.fader.duration / (1000 / Resonance.constructor.FRAME_RATE);\r\n        this.fader.startStamp = null;\r\n        this.fader.previousTimeStamp = null;\r\n        // This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n        // When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n        // The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n        this.fader.durationOffScreen = [0, 0];\r\n        this.state = 'fading';\r\n\r\n        const self = this;\r\n        const fadeInterval = function(pTimeStamp) {\r\n            if (!Resonance.focused) {\r\n                self.fader.raf = requestAnimationFrame(fadeInterval);\r\n                self.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n                return;\r\n            }\r\n            if (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n            self.volume = Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations);\r\n            if (self.fader.durationOffScreen[1]) {\r\n                self.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n                self.fader.durationOffScreen[1] = 0;\r\n            }\r\n            const elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n            if (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n            if (elapsed < self.fader.duration) {\r\n                self.fader.previousTimeStamp = pTimeStamp;\r\n            } else {\r\n                cancelAnimationFrame(self.fader.raf);\r\n                self.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.queue = self.fader.raf = null;\r\n                // When a sound is faded down to `0` or any other value. Just because it may be muted, does not mean it is stopped. \r\n                // The state of the sound is still considered to be playing after its done fading\r\n                self.state = 'playing';\t\t\t\t\t\t\r\n                self.volume = pVolume;\r\n                if (typeof(pCallback) === 'function') pCallback();\r\n                return;\r\n            }\r\n            self.fader.raf = requestAnimationFrame(fadeInterval);\r\n        }\r\n        this.fader.raf = requestAnimationFrame(fadeInterval);\r\n        return this;\r\n    }\r\n    /**\r\n     * Start the queued fade\r\n     */\r\n    queuedFade() {\r\n        if (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);\r\n    }\r\n}\r\n\r\nexport { Sound };",
+    "content": "import { Resonance } from \"./resonance.mjs\";\r\n/**\r\n * A small class to represent a sound. Has useful API to handle the sound.\r\n * \r\n * @class Sound\r\n */\r\nclass Sound {\r\n    /**\r\n     * The path of the sound.\r\n     * @private\r\n     * @type {string}\r\n     */\r\n    soundPath = null;\r\n    /**\r\n     * The start time of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    startTime = null;\r\n    /**\r\n     * The end time of ththise sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    endTime = null;\r\n    /**\r\n     * Whether to save this sound or not.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    save = null;\r\n    /**\r\n     * The duration of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    duration = null;\r\n    /**\r\n     * The source of this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    source = null;\r\n    /**\r\n     * The gain node of this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    gainNode = null;\r\n    /**\r\n     * Whether this sound is loaded.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    loaded = false;\r\n    /**\r\n     * If this sound is to play after it is loaded.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    playAfterLoad = false;\r\n    /**\r\n     * If this sound is muted.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    muted = false;\r\n    /**\r\n     * The state of this sound.\r\n     * @private\r\n     * @type {string}\r\n     */\r\n    state = null;\r\n    /**\r\n     * The start timestamp of this sound.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    startedTimeStamp = null;\r\n    /**\r\n     * The timestamp of this sound when it was paused so it can be resumed at the same timestamp.\r\n     * @private\r\n     * @type {number}\r\n     */\r\n    pausedTimeStamp = 0;\r\n    /**\r\n     * If this sound plays without window focus.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    playUnfocused = null;\r\n    /**\r\n     * Object holding the fading information for this sound.\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    fader = {};\r\n    /**\r\n     * Events tied to this sound. start | end | pause | resume\r\n     * @private\r\n     * @type {Object}\r\n     */\r\n    events = {};\r\n    /**\r\n     * Whether this sound was sent a stop signal.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    stopSignal = false;\r\n    /**\r\n     * If this sound is to loop.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _loop = false;\r\n    /**\r\n     * The playback rate of this sound.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _playbackRate = 1;\r\n    /**\r\n     * The volume of this sound.\r\n     * @private\r\n     * @type {boolean}\r\n     */\r\n    _volume = 100;\r\n    /**\r\n     * Info tied to this sound.\r\n     * @private\r\n     * @property {string} soundPath - The path this sound uses for its source\r\n     * @property {number} duration - The duration of this sound\r\n     * @type {boolean}\r\n     */\r\n    _info = { 'soundPath': null, 'duration': null };\r\n    /**\r\n     * @param {number} pSoundPath - The path of the sound file\r\n     * @param {number} pVolume - The volume of the sound\r\n     * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n     * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n     * @param {boolean} pPlayUnfocused - If this sound is set to playUnfocused then it will not be played automatically when the game screen is not focused\r\n     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n     * @param {boolean} pLoop - Whether this sound should loop or not\r\n     * @returns { Sound } - A sound object that has vast API on controlling it\r\n     */\r\n    constructor(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop) {\r\n        this.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);\r\n    }\r\n    /**\r\n     * Gets the current volume of this sound\r\n     * \r\n     * @returns {number} The current volume of this sound\r\n     */\r\n    get volume() {\r\n        return this._volume;\r\n    }\r\n    /**\r\n     * Sets the volume of this sound\r\n     * \r\n     * @param {number} pNewVolume - The volume to set\r\n     */\r\n    set volume(pNewVolume) {\r\n        this._volume = Resonance.constructor.clamp(pNewVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        if (this.loaded) this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n    }\r\n    /**\r\n     * Attaches a callback to the specified event.\r\n     * @param {Object} pEvent - The event to attach the callback to\r\n     * @param {Function} pCallback - The function to be called when the event is triggered\r\n     * @return {this} The Sound instance\r\n     */\r\n    on(pEvent, pCallback) {\r\n        if (typeof(pCallback) === \"function\") {\r\n            switch (pEvent) {\r\n                case \"start\":\r\n                case \"stop\":\r\n                case \"end\":\r\n                case \"pause\":\r\n                case \"resume\":\r\n                    this.events[pEvent] = pCallback;\r\n                    break;\r\n                default:\r\n                    Resonance.logger.prefix('Resonance-Module').error(`The event \"${pEvent}\" is not supported.`);\r\n            }\r\n        } else {\r\n            Resonance.logger.prefix('Resonance-Module').error(`The callback for event \"${pEvent}\" is not a function.`);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Toggleable mute feature for this sound. Flips between muted and unmuted\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    toggleMute() {\r\n        if (!this.loaded || !this.source) return;\r\n        this.muted = this.muted ? false : true;\r\n        if (this.muted) {\r\n            this.gainNode.gain.value = 0;\r\n        } else {\r\n            this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n        }\r\n        return this;\r\n    }\r\n    /**\r\n     * Get the loop status of this sound\r\n     * \r\n     * @returns {boolean} Whether this sound is set to loop or not\r\n     */\r\n    get loop() {\r\n        return this._loop;\r\n    }\r\n    /**\r\n     * Set the loop status of this sound\r\n     * \r\n     * @param {boolean} pLoopValue - The value which to set the loop status to. Truthy values resolve to true, and falsely values resovle to false\r\n     */\r\n    set loop(pLoopValue) {\r\n        this._loop = pLoopValue ? true : false;\r\n        if (this.source) this.source.loop = this._loop;\r\n    }\r\n    /**\r\n     * Toggleable loop feature for this sound. Flips between loop and unlooped\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    toggleLoop() {\r\n        this._loop = this._loop ? false : true;\r\n        if (this.source) this.source.loop = this._loop;\r\n        return this;\r\n    }\r\n    /**\r\n     * Get the playback status of this sound\r\n     * \r\n     * @returns {number} The playback rate of this sound\r\n     */\r\n    get playbackRate() {\r\n        return this._playbackRate;\r\n    }\r\n    /**\r\n     * Set the playback status of this sound\r\n     * \r\n     * @param {number} pNewPlaybackRate - The value which to set the playback status to. Clamped to 10\r\n     */\t\r\n    set playbackRate(pNewPlaybackRate) {\r\n        this._playbackRate = Resonance.constructor.clamp(pNewPlaybackRate, 1, Resonance.constructor.MAX_PLAYBACK_RATE);\r\n        if (this.source) this.source.playbackRate.value = this._playbackRate;\r\n    }\r\n    /**\r\n     * Set the info of this sound\r\n     * The new value is not used, as this is a \"read-only\" variable. So any attempts to set it will not work\r\n     * \r\n     * @param {*} pNewInfo - The new value\r\n     */\t\r\n    set info(pNewInfo) {\r\n        // makes this variable read only basically\r\n        this._info = this._info;\r\n    }\r\n    /**\r\n     * Get the info object of this sound\r\n     * \r\n     * @returns {Objecct} The info object of this sound\r\n     */\r\n    get info() {\r\n        if (this.loaded) {\r\n            if (this.source) {\r\n                this._info.duration = this.duration;\r\n            }\r\n            this._info.soundPath = this.soundPath;\r\n        } else {\r\n            this._info.soundPath = this.soundPath;\r\n        }\r\n        return { ...this._info };\r\n    }\r\n    /**\r\n     * \r\n     * @param {number} pSoundPath - The path of the sound file\r\n     * @param {number} pVolume - The volume of the sound\r\n     * @param {number} pStartTime - The start time of this sound (to play a clipped version)\r\n     * @param {number} pEndTime - The end time of this sound (to play a clipped version)\r\n     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed\r\n     * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused\r\n     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)\r\n     * @param {boolean} pLoop - Whether this sound should loop or not\r\n     * @returns { Sound } - A sound object that has vast API on controlling it\r\n     */\r\n    build(pSoundPath, pVolume=100, pStartTime=0, pEndTime=0, pSave=false, pPlayUnfocused=false, pPlaybackRate=1, pLoop=false) {\r\n        this.soundPath = pSoundPath;\r\n        this.startTime = Math.max(pStartTime, 0);\r\n        this.endTime = Math.max(pEndTime, 0);\r\n        this.save = pLoop ? true : pSave;\r\n        this._playbackRate = Resonance.constructor.clamp(pPlaybackRate, 1, Resonance.constructor.MAX_PLAYBACK_RATE);\r\n        this.playUnfocused = pPlayUnfocused ? true : false;\r\n        this.state = null;\r\n        this._loop = pLoop ? true : false;\r\n        this._volume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        // If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play\r\n        // this sound, it will just use the buffer data of the previous sound that had it.\r\n        if (!Resonance.loadedBuffers[this.soundPath]) {\r\n            this.load();\r\n        } else {\r\n            this.loaded = true;\r\n        }\r\n    }\r\n    /**\r\n     * Loads this sound and stores its data so future sounds can use the same buffer\r\n     */\r\n    load() {\r\n        const request = new XMLHttpRequest();\r\n        const self = this;\r\n        request.open('GET', self.soundPath);\r\n        request.responseType = 'arraybuffer';\r\n        request.onload = function() {\r\n            const audioData = request.response;\r\n            const success = (pDecodedData) => {\r\n                self.loaded = true;\r\n                Resonance.loadedBuffers[self.soundPath] = pDecodedData;\r\n                // The developer attempted to play the sound while it was still loading,\r\n                // This has been set so that the sound will play once it's finished loading now\r\n                if (self.playAfterLoad) {\r\n                    // A signal to stop this sound was sent, but the sound wasn't loaded to play at that time, don't allow a sound that is signaled to stop to play\r\n                    if (self.stopSignal) {\r\n                        self.stopSignal = false;\r\n                        return;\r\n                    } else {\r\n                        self.play();\r\n                    }\r\n                }\r\n            }\r\n            const error = (pError) => {\r\n                self.loaded = false;\r\n                Resonance.logger.prefix('Resonance-Module').error(`Error with decoding audio data \"${self.soundPath}\" This sound has been killed.`);\r\n                self.kill();\r\n            }\r\n            Resonance.audioCtx.decodeAudioData(audioData, success, error);\r\n        };\r\n        request.send();\r\n    }\r\n    /**\r\n     * Pauses this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    pause() {\r\n        if (!this.loaded) return;\r\n        this.stop('suspended');\r\n        this.state = 'suspended';\r\n        this.pausedTimeStamp = Resonance.audioCtx.currentTime - this.startedTimeStamp;\r\n        // This sound is no longer considered to be playing, so remove it from the array\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        // If this sound is not apart of the suspended sounds array add it\r\n        if (!Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.push(this);\r\n        if (typeof(this.events.pause) === 'function') this.events.pause();\r\n        return this;\r\n    }\r\n    /**\r\n     * Resumes playing this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    resume() {\r\n        if (!this.loaded) return;\r\n        // This sound is no longer considered to be suspended, so remove it from the array\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        // This sound is no longer suspended and is now playing again, add it to the playing array\r\n        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);\r\n        // this will use the this.pausedTimeStamp value to resume\r\n        this.play(true);\r\n        this.state = this.fader.raf ? 'fading' : 'playing';\r\n        if (typeof(this.events.resume) === 'function') this.events.resume();\r\n        return this;\r\n    }\r\n    /**\r\n     * Stops this sound from playing\r\n     * \r\n     * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched\r\n     * @returns {this} This sound instance\r\n     */\r\n    stop(pState) {\r\n        // The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.\r\n        if (!this.source) {\r\n            this.stopSignal = true;\r\n            return;\r\n        }\r\n        const wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;\r\n        // This sound is no longer considered to be playing, so remove it from the array\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        if (this.source) {\r\n            if (!this.source.stop) this.source.stop = this.source.noteOff;\r\n            this.source.stop();\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n            this.source = null;\r\n            this.gainNode = null;\r\n        }\r\n        this.state = pState ? pState : 'stopped';\r\n        if (this.state === 'stopped' && wasPlaying && typeof(this.events.stop) === 'function') this.events.stop();\r\n        return this;\r\n    }\r\n    /**\r\n     * Plays this sound\r\n     * \r\n     * @param {boolean} pResume - If this is being played from a paused state\r\n     * @returns {this} This sound instance\r\n     */\r\n    play(pResume) {\r\n        // A sound cannot be played if it's sound name is not referencable, \r\n        // a sound that is recycled has no sound information to be played\r\n        // and if the game's API doesn't allow a sound to be played at it's current time, then it can't play.\r\n        if (!this.soundPath || this.state === 'recycled' || !Resonance.canPlaySound()) return;\r\n        // If this sound is not loaded, it cannot be played, however there is a chance that a sound with the same buffer\r\n        // information has been played before and stored. In this case it does not need to wait to load, it instead checks to see\r\n        // if that buffer information is avaiable, and if it is, it allows the sound to be played with that data.\r\n        if (!this.loaded && !Resonance.loadedBuffers[this.soundPath]) {\r\n            this.playAfterLoad = true;\r\n            return;\r\n        }\r\n        // The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost\r\n        if (!Resonance.focused && !this.canPlayUnfocused()) {\r\n            if (!Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.push(this);\r\n            return;\r\n        }\r\n        // if you already have a soure and a gainNode, disconnect them and let them be garbage collected\r\n        if (this.source) {\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n            this.source = null;\r\n            this.gainNode = null;\r\n        }\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        const source = Resonance.audioCtx.createBufferSource();\r\n        const gainNode = Resonance.audioCtx.createGain();\r\n        const self = this;\r\n        gainNode.gain.value = Resonance.constructor.normalize(this._volume);\r\n        gainNode.connect(Resonance.gainNode);\r\n        source.connect(gainNode);\r\n        // Resonance.gainNode.connect(Resonance.audioCtx.destination);\r\n        source.buffer = Resonance.loadedBuffers[this.soundPath];\r\n        source.playbackRate.value = this._playbackRate;\r\n        // sound.stop() calls this as well\r\n        source.onended = function() {\r\n            // if this sound was stopped, and it is a sound that will be saved return early\r\n            if (self.state === 'stopped' && self.save) {\r\n                return;\r\n            } else if (self.state === 'restart') {\r\n                // since the sound is restarting we don't want it to fire off the `onEnded` event.\r\n                self.play();\r\n                return;\r\n            } else if (self.state === 'suspended') {\r\n                return;\r\n            }\r\n            if (self.state !== 'stopped' && typeof(self.events.end) === 'function') self.events.end();\r\n            if (self._loop) {\r\n                self.play();\r\n                return;\r\n            }\r\n            /*\r\n                If this is a one use sound, it will be recycled or killed.\r\n                A developer may still hold a reference to this sound but will not be able to do anything to it.\r\n                If you are using a one use sound, it is best to play a sound on its creation without storing it.\r\n                Resonance.createSound('soundPath', volume, startTime, endTime, playrate, loop).play()\r\n            */\r\n            if (!self.save) self.kill();\r\n        };\r\n        this.source = source;\r\n        this.gainNode = gainNode;\r\n        this.duration = source.buffer.duration;\r\n        this.playAfterLoad = null;\r\n        if (!source.start) source.start = source.noteOn;\r\n        source.start(0, (this.pausedTimeStamp ? this.pausedTimeStamp * this._playbackRate: this.startTime), this.endTime ? this.endTime : this.duration);\r\n/* \t\t\t\t\r\n        // This works, however it is commented out because manually looping is alot easier to do, and easier to stuff callbacks into it when done manually.\r\n        source.loop = this._loop;\r\n        source.loopStart = this.startTime;\r\n        source.loopEnd = this.endTime ? this.endTime : source.buffer.duration; \r\n*/\r\n        this.state = 'playing';\r\n        this.startedTimeStamp = Resonance.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);\r\n        this.pausedTimeStamp = 0;\r\n        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);\r\n        if (!pResume && typeof(this.events.start) === 'function') this.events.start();\r\n        return this;\r\n    }\r\n    /**\r\n     * Restarts this sound\r\n     * \r\n     * @returns {this} This sound instance\r\n     */\r\n    restart() {\r\n        this.stop('restart');\r\n        return this;\r\n    }\r\n    /**\r\n     * Get whether this sound will play when the window is unfocused\r\n     * @returns {boolean} Whether or not this sound will play when the window is unfocused\r\n     */\r\n    canPlayUnfocused() {\r\n        return this.playUnfocused ? true : false;\r\n    }\r\n    /**\r\n     * Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.\r\n     * If the recycle manager is full, this sound will become an empty class instance.\r\n     */\r\n    kill() {\r\n        this.wipe();\r\n        if (Resonance.recycledSounds.length < Resonance.constructor.MAX_RECYCLED_SOUNDS)  {\r\n            Resonance.recycledSounds.push(this);\r\n        } else {\r\n            // remove all properties from this sound object, since it no longer will be used.\r\n            // any references to this should be removed so that it can be garbage collected\r\n            for (const variable in this) delete this[variable];\r\n        }\r\n    }\r\n    /**\r\n     * Resets this sound to default state\r\n     */\r\n    wipe() {\r\n        this.onStarted = null;\r\n        this.onStopped = null;\r\n        this.onEnded = null;\r\n        this.onSuspended = null;\r\n        this.onResumed = null;\r\n        this.stop('wipe');\r\n        cancelAnimationFrame(this.fader.raf);\r\n        if (this.source) {\r\n            this.source.disconnect();\r\n            this.gainNode.disconnect();\r\n        }\r\n        this.soundPath = null;\r\n        this.startTime = null;\r\n        this.endTime = null;\r\n        this.save = null;\r\n        this.duration = null;\r\n        this._playbackRate = 1;\r\n        this.source = null;\r\n        this.gainNode = null;\r\n        this.loaded = false;\r\n        this.playAfterLoad = null;\r\n        this.state = 'recycled';\r\n        this.startedTimeStamp = null;\r\n        this.pausedTimeStamp = 0;\r\n        this.playUnfocused = null;\r\n        this.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;\r\n        this.stopSignal = false;\r\n        this._loop = false;\r\n        this._volume = 100;\r\n        this._info.soundPath = this._info.duration = null;\r\n        for (const prop in this.events) {\r\n            delete this.events[prop];\r\n        }\r\n        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);\r\n        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);\r\n        if (Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.splice(Resonance.queuedSoundsToPlay.indexOf(this), 1);\r\n        if (Resonance.queuedSoundsToFade.includes(this)) Resonance.queuedSoundsToFade.splice(Resonance.queuedSoundsToFade.indexOf(this), 1);\r\n    }\r\n    /**\r\n     * Get the current timestamp of the sound playing\r\n     * \r\n     * @returns {number} The current timestamp into the sound\r\n     */\r\n    getCurrentTime() {\r\n        if (this.pausedTimeStamp) {\r\n            return this.pausedTimeStamp * this._playbackRate;\r\n        } else if (this.startedTimeStamp) {\r\n            return Resonance.audioCtx.currentTime - this.startedTimeStamp;\r\n        } else {\r\n            return 0;\r\n        }\r\n    }\r\n    /**\r\n     * Fades this sound to the specified volume in the specified duration via the specified ease\r\n     * \r\n     * @param {number} [pVolume=100] - The volume to fade to\r\n     * @param {number} [pDuration=5000] - The duration of the fade in ms\r\n     * @param {function} [pEase='easeOutCubic'] - Easing function\r\n     * @param {function} pCallback - Callback to be called when the fade is over\r\n     * @returns {this} This sound instance\r\n     */\r\n    fade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {\r\n        if (isNaN(pVolume)) return;\r\n        if (isNaN(pDuration)) return;\r\n        // If a sound is not playing, it cannot be faded.\r\n        if (this.state !== 'playing' && Resonance.focused) return;\r\n        // The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus\r\n        if (!Resonance.focused && !this.canPlayUnfocused()) {\r\n            // If this sound is already queued to fade, then just exit out\r\n            if (Resonance.queuedSoundsToFade.includes(this)) return;\r\n            this.fader.queue = {\r\n                'volume': pVolume,\r\n                'duration': pDuration,\r\n                'ease': pEase,\r\n                'callback': pCallback\r\n            }\r\n            Resonance.queuedSoundsToFade.push(this);\r\n            return;\r\n        }\r\n        if (!Tween[pEase]) {\r\n            pEase = 'easeOutCubic';\r\n            Resonance.logger.prefix('Resonance-Module').warn('Resonance: Invalid pEase value. Reverted to default.');\r\n        }\r\n        // Get rid of the queue information if it exists, it is no longer needed\r\n        if (this.fader.queue) this.fader.queue = null;\r\n        pVolume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);\r\n        this.fader.duration = Math.max(pDuration, 0);\r\n        this.fader.currentIteration = 0;\r\n        this.fader.initialValue = this._volume;\r\n        this.fader.changeInValue = pVolume - this.fader.initialValue;\r\n        this.fader.totalIterations = this.fader.duration / (1000 / Resonance.constructor.FRAME_RATE);\r\n        this.fader.startStamp = null;\r\n        this.fader.previousTimeStamp = null;\r\n        // This is due to the fact the fader interval is still active, and incrementing the timestamp if the game is not focused\r\n        // When the game is focused, we need to get the value of time that the player was away from the screen and remove it from the current timestamp.\r\n        // The first index holds the alotted time, the second index is used to count the time, when the screen is focused, all the time from the second index gets dumped to the first, and it repeats if neccasary.\r\n        this.fader.durationOffScreen = [0, 0];\r\n        this.state = 'fading';\r\n\r\n        const self = this;\r\n        const fadeInterval = function(pTimeStamp) {\r\n            if (!Resonance.focused) {\r\n                self.fader.raf = requestAnimationFrame(fadeInterval);\r\n                self.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;\r\n                return;\r\n            }\r\n            if (self.fader.startStamp === null) self.fader.startStamp = pTimeStamp;\r\n            self.volume = Tween[pEase](self.fader.currentIteration, self.fader.initialValue, self.fader.changeInValue, self.fader.totalIterations);\r\n            if (self.fader.durationOffScreen[1]) {\r\n                self.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];\r\n                self.fader.durationOffScreen[1] = 0;\r\n            }\r\n            const elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;\r\n            if (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;\r\n            if (elapsed < self.fader.duration) {\r\n                self.fader.previousTimeStamp = pTimeStamp;\r\n            } else {\r\n                cancelAnimationFrame(self.fader.raf);\r\n                self.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.queue = self.fader.raf = null;\r\n                // When a sound is faded down to `0` or any other value. Just because it may be muted, does not mean it is stopped. \r\n                // The state of the sound is still considered to be playing after its done fading\r\n                self.state = 'playing';\t\t\t\t\t\t\r\n                self.volume = pVolume;\r\n                if (typeof(pCallback) === 'function') pCallback();\r\n                return;\r\n            }\r\n            self.fader.raf = requestAnimationFrame(fadeInterval);\r\n        }\r\n        this.fader.raf = requestAnimationFrame(fadeInterval);\r\n        return this;\r\n    }\r\n    /**\r\n     * Start the queued fade\r\n     */\r\n    queuedFade() {\r\n        if (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);\r\n    }\r\n}\r\n\r\nexport { Sound };",
     "static": true,
     "longname": "C:/Users/jared/Documents/Github/Resonance/src/sound.mjs",
     "access": "public",
@@ -1910,7 +1929,7 @@
     "lineNumber": 1
   },
   {
-    "__docId__": 100,
+    "__docId__": 101,
     "kind": "class",
     "name": "Sound",
     "memberof": "src/sound.mjs",
@@ -1931,7 +1950,7 @@
     "interface": false
   },
   {
-    "__docId__": 101,
+    "__docId__": 102,
     "kind": "member",
     "name": "soundPath",
     "memberof": "src/sound.mjs~Sound",
@@ -1950,7 +1969,7 @@
     }
   },
   {
-    "__docId__": 102,
+    "__docId__": 103,
     "kind": "member",
     "name": "startTime",
     "memberof": "src/sound.mjs~Sound",
@@ -1969,7 +1988,7 @@
     }
   },
   {
-    "__docId__": 103,
+    "__docId__": 104,
     "kind": "member",
     "name": "endTime",
     "memberof": "src/sound.mjs~Sound",
@@ -1988,7 +2007,7 @@
     }
   },
   {
-    "__docId__": 104,
+    "__docId__": 105,
     "kind": "member",
     "name": "save",
     "memberof": "src/sound.mjs~Sound",
@@ -2007,7 +2026,7 @@
     }
   },
   {
-    "__docId__": 105,
+    "__docId__": 106,
     "kind": "member",
     "name": "duration",
     "memberof": "src/sound.mjs~Sound",
@@ -2026,7 +2045,7 @@
     }
   },
   {
-    "__docId__": 106,
+    "__docId__": 107,
     "kind": "member",
     "name": "source",
     "memberof": "src/sound.mjs~Sound",
@@ -2045,7 +2064,7 @@
     }
   },
   {
-    "__docId__": 107,
+    "__docId__": 108,
     "kind": "member",
     "name": "gainNode",
     "memberof": "src/sound.mjs~Sound",
@@ -2064,7 +2083,7 @@
     }
   },
   {
-    "__docId__": 108,
+    "__docId__": 109,
     "kind": "member",
     "name": "loaded",
     "memberof": "src/sound.mjs~Sound",
@@ -2083,7 +2102,7 @@
     }
   },
   {
-    "__docId__": 109,
+    "__docId__": 110,
     "kind": "member",
     "name": "playAfterLoad",
     "memberof": "src/sound.mjs~Sound",
@@ -2102,7 +2121,7 @@
     }
   },
   {
-    "__docId__": 110,
+    "__docId__": 111,
     "kind": "member",
     "name": "muted",
     "memberof": "src/sound.mjs~Sound",
@@ -2121,7 +2140,7 @@
     }
   },
   {
-    "__docId__": 111,
+    "__docId__": 112,
     "kind": "member",
     "name": "state",
     "memberof": "src/sound.mjs~Sound",
@@ -2140,7 +2159,7 @@
     }
   },
   {
-    "__docId__": 112,
+    "__docId__": 113,
     "kind": "member",
     "name": "startedTimeStamp",
     "memberof": "src/sound.mjs~Sound",
@@ -2159,7 +2178,7 @@
     }
   },
   {
-    "__docId__": 113,
+    "__docId__": 114,
     "kind": "member",
     "name": "pausedTimeStamp",
     "memberof": "src/sound.mjs~Sound",
@@ -2178,7 +2197,7 @@
     }
   },
   {
-    "__docId__": 114,
+    "__docId__": 115,
     "kind": "member",
     "name": "playUnfocused",
     "memberof": "src/sound.mjs~Sound",
@@ -2197,7 +2216,7 @@
     }
   },
   {
-    "__docId__": 115,
+    "__docId__": 116,
     "kind": "member",
     "name": "fader",
     "memberof": "src/sound.mjs~Sound",
@@ -2216,7 +2235,7 @@
     }
   },
   {
-    "__docId__": 116,
+    "__docId__": 117,
     "kind": "member",
     "name": "events",
     "memberof": "src/sound.mjs~Sound",
@@ -2235,7 +2254,7 @@
     }
   },
   {
-    "__docId__": 117,
+    "__docId__": 118,
     "kind": "member",
     "name": "stopSignal",
     "memberof": "src/sound.mjs~Sound",
@@ -2254,7 +2273,7 @@
     }
   },
   {
-    "__docId__": 118,
+    "__docId__": 119,
     "kind": "member",
     "name": "_loop",
     "memberof": "src/sound.mjs~Sound",
@@ -2273,7 +2292,7 @@
     }
   },
   {
-    "__docId__": 119,
+    "__docId__": 120,
     "kind": "member",
     "name": "_playbackRate",
     "memberof": "src/sound.mjs~Sound",
@@ -2292,7 +2311,7 @@
     }
   },
   {
-    "__docId__": 120,
+    "__docId__": 121,
     "kind": "member",
     "name": "_volume",
     "memberof": "src/sound.mjs~Sound",
@@ -2311,7 +2330,7 @@
     }
   },
   {
-    "__docId__": 121,
+    "__docId__": 122,
     "kind": "member",
     "name": "_info",
     "memberof": "src/sound.mjs~Sound",
@@ -2352,7 +2371,7 @@
     }
   },
   {
-    "__docId__": 122,
+    "__docId__": 123,
     "kind": "constructor",
     "name": "constructor",
     "memberof": "src/sound.mjs~Sound",
@@ -2461,7 +2480,7 @@
     }
   },
   {
-    "__docId__": 123,
+    "__docId__": 124,
     "kind": "get",
     "name": "volume",
     "memberof": "src/sound.mjs~Sound",
@@ -2493,7 +2512,7 @@
     }
   },
   {
-    "__docId__": 124,
+    "__docId__": 125,
     "kind": "set",
     "name": "volume",
     "memberof": "src/sound.mjs~Sound",
@@ -2518,7 +2537,7 @@
     ]
   },
   {
-    "__docId__": 126,
+    "__docId__": 127,
     "kind": "method",
     "name": "on",
     "memberof": "src/sound.mjs~Sound",
@@ -2561,7 +2580,7 @@
     }
   },
   {
-    "__docId__": 127,
+    "__docId__": 128,
     "kind": "method",
     "name": "toggleMute",
     "memberof": "src/sound.mjs~Sound",
@@ -2589,7 +2608,7 @@
     "params": []
   },
   {
-    "__docId__": 129,
+    "__docId__": 130,
     "kind": "get",
     "name": "loop",
     "memberof": "src/sound.mjs~Sound",
@@ -2621,7 +2640,7 @@
     }
   },
   {
-    "__docId__": 130,
+    "__docId__": 131,
     "kind": "set",
     "name": "loop",
     "memberof": "src/sound.mjs~Sound",
@@ -2646,7 +2665,7 @@
     ]
   },
   {
-    "__docId__": 132,
+    "__docId__": 133,
     "kind": "method",
     "name": "toggleLoop",
     "memberof": "src/sound.mjs~Sound",
@@ -2674,7 +2693,7 @@
     "params": []
   },
   {
-    "__docId__": 134,
+    "__docId__": 135,
     "kind": "get",
     "name": "playbackRate",
     "memberof": "src/sound.mjs~Sound",
@@ -2706,7 +2725,7 @@
     }
   },
   {
-    "__docId__": 135,
+    "__docId__": 136,
     "kind": "set",
     "name": "playbackRate",
     "memberof": "src/sound.mjs~Sound",
@@ -2731,7 +2750,7 @@
     ]
   },
   {
-    "__docId__": 137,
+    "__docId__": 138,
     "kind": "set",
     "name": "info",
     "memberof": "src/sound.mjs~Sound",
@@ -2756,7 +2775,7 @@
     ]
   },
   {
-    "__docId__": 139,
+    "__docId__": 140,
     "kind": "get",
     "name": "info",
     "memberof": "src/sound.mjs~Sound",
@@ -2788,7 +2807,7 @@
     }
   },
   {
-    "__docId__": 140,
+    "__docId__": 141,
     "kind": "method",
     "name": "build",
     "memberof": "src/sound.mjs~Sound",
@@ -2897,7 +2916,7 @@
     }
   },
   {
-    "__docId__": 151,
+    "__docId__": 152,
     "kind": "method",
     "name": "load",
     "memberof": "src/sound.mjs~Sound",
@@ -2912,7 +2931,7 @@
     "return": null
   },
   {
-    "__docId__": 152,
+    "__docId__": 153,
     "kind": "method",
     "name": "pause",
     "memberof": "src/sound.mjs~Sound",
@@ -2940,7 +2959,7 @@
     "params": []
   },
   {
-    "__docId__": 155,
+    "__docId__": 156,
     "kind": "method",
     "name": "resume",
     "memberof": "src/sound.mjs~Sound",
@@ -2968,7 +2987,7 @@
     "params": []
   },
   {
-    "__docId__": 157,
+    "__docId__": 158,
     "kind": "method",
     "name": "stop",
     "memberof": "src/sound.mjs~Sound",
@@ -3007,7 +3026,7 @@
     }
   },
   {
-    "__docId__": 162,
+    "__docId__": 163,
     "kind": "method",
     "name": "play",
     "memberof": "src/sound.mjs~Sound",
@@ -3046,7 +3065,7 @@
     }
   },
   {
-    "__docId__": 173,
+    "__docId__": 174,
     "kind": "method",
     "name": "restart",
     "memberof": "src/sound.mjs~Sound",
@@ -3074,7 +3093,7 @@
     "params": []
   },
   {
-    "__docId__": 174,
+    "__docId__": 175,
     "kind": "method",
     "name": "canPlayUnfocused",
     "memberof": "src/sound.mjs~Sound",
@@ -3102,7 +3121,7 @@
     "params": []
   },
   {
-    "__docId__": 175,
+    "__docId__": 176,
     "kind": "method",
     "name": "kill",
     "memberof": "src/sound.mjs~Sound",
@@ -3117,7 +3136,7 @@
     "return": null
   },
   {
-    "__docId__": 176,
+    "__docId__": 177,
     "kind": "method",
     "name": "wipe",
     "memberof": "src/sound.mjs~Sound",
@@ -3132,7 +3151,7 @@
     "return": null
   },
   {
-    "__docId__": 177,
+    "__docId__": 178,
     "kind": "member",
     "name": "onStarted",
     "memberof": "src/sound.mjs~Sound",
@@ -3149,7 +3168,7 @@
     }
   },
   {
-    "__docId__": 178,
+    "__docId__": 179,
     "kind": "member",
     "name": "onStopped",
     "memberof": "src/sound.mjs~Sound",
@@ -3166,7 +3185,7 @@
     }
   },
   {
-    "__docId__": 179,
+    "__docId__": 180,
     "kind": "member",
     "name": "onEnded",
     "memberof": "src/sound.mjs~Sound",
@@ -3183,7 +3202,7 @@
     }
   },
   {
-    "__docId__": 180,
+    "__docId__": 181,
     "kind": "member",
     "name": "onSuspended",
     "memberof": "src/sound.mjs~Sound",
@@ -3200,7 +3219,7 @@
     }
   },
   {
-    "__docId__": 181,
+    "__docId__": 182,
     "kind": "member",
     "name": "onResumed",
     "memberof": "src/sound.mjs~Sound",
@@ -3217,7 +3236,7 @@
     }
   },
   {
-    "__docId__": 199,
+    "__docId__": 200,
     "kind": "method",
     "name": "getCurrentTime",
     "memberof": "src/sound.mjs~Sound",
@@ -3245,7 +3264,7 @@
     "params": []
   },
   {
-    "__docId__": 200,
+    "__docId__": 201,
     "kind": "method",
     "name": "fade",
     "memberof": "src/sound.mjs~Sound",
@@ -3320,7 +3339,7 @@
     }
   },
   {
-    "__docId__": 202,
+    "__docId__": 203,
     "kind": "method",
     "name": "queuedFade",
     "memberof": "src/sound.mjs~Sound",

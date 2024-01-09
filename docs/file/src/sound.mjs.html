@@ -220,10 +220,10 @@ class Sound {
                     this.events[pEvent] = pCallback;
                     break;
                 default:
-                    console.error(`The event &quot;${pEvent}&quot; is not supported.`);
+                    Resonance.logger.prefix(&apos;Resonance-Module&apos;).error(`The event &quot;${pEvent}&quot; is not supported.`);
             }
         } else {
-            console.error(`The callback for event &quot;${pEvent}&quot; is not a function.`);
+            Resonance.logger.prefix(&apos;Resonance-Module&apos;).error(`The callback for event &quot;${pEvent}&quot; is not a function.`);
         }
         return this;
     }
@@ -369,7 +369,7 @@ class Sound {
             }
             const error = (pError) =&gt; {
                 self.loaded = false;
-                console.error(`Error with decoding audio data &quot;${self.soundPath}&quot; This sound has been killed.`);
+                Resonance.logger.prefix(&apos;Resonance-Module&apos;).error(`Error with decoding audio data &quot;${self.soundPath}&quot; This sound has been killed.`);
                 self.kill();
             }
             Resonance.audioCtx.decodeAudioData(audioData, success, error);
@@ -636,7 +636,7 @@ class Sound {
         }
         if (!Tween[pEase]) {
             pEase = &apos;easeOutCubic&apos;;
-            console.warn(&apos;Resonance: Invalid pEase value. Reverted to default.&apos;);
+            Resonance.logger.prefix(&apos;Resonance-Module&apos;).warn(&apos;Resonance: Invalid pEase value. Reverted to default.&apos;);
         }
         // Get rid of the queue information if it exists, it is no longer needed
         if (this.fader.queue) this.fader.queue = null;

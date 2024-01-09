@@ -402,6 +402,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/resonance.mjs~resonancesingleton#logger",
+    "class/src/resonance.mjs~ResonanceSingleton.html#instance-member-logger",
+    "src/resonance.mjs~ResonanceSingleton#logger",
+    "member"
+  ],
+  [
     "src/resonance.mjs~resonancesingleton#muted",
     "class/src/resonance.mjs~ResonanceSingleton.html#instance-member-muted",
     "src/resonance.mjs~ResonanceSingleton#muted",
