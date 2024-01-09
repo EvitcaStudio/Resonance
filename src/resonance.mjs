@@ -6,7 +6,6 @@ import { Sound } from "./sound.mjs";
 * @class ResonanceSingleton  
 * @license Resonance does not have a license at this time. For licensing contact the author
 * @author https://github.com/doubleactii
-* Copyright (c) 2023 Evitca Studio
 
 Safari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.
 Otherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.
@@ -63,6 +62,10 @@ class ResonanceSingleton {
 	static normalize = (pValue, pMin=0, pMax=100, pRange=1) => {
 		return (pValue - pMin) / (pMax - pMin) * pRange;
 	}
+	/**
+	 * The version of the module.
+	 */
+	version = "VERSION_REPLACE_ME";
 	constructor() {
 		if (!window.AudioContext && !window.webkitAudioContext) {
 			console.error('Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used');

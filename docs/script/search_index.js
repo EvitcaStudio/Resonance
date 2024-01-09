@@ -504,6 +504,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/resonance.mjs~resonancesingleton#version",
+    "class/src/resonance.mjs~ResonanceSingleton.html#instance-member-version",
+    "src/resonance.mjs~ResonanceSingleton#version",
+    "member"
+  ],
+  [
     "src/resonance.mjs~resonancesingleton#volume",
     "class/src/resonance.mjs~ResonanceSingleton.html#instance-member-volume",
     "src/resonance.mjs~ResonanceSingleton#volume",
@@ -862,11 +868,5 @@ window.esdocSearchIndex = [
     "class/src/sound.mjs~Sound.html#instance-method-wipe",
     "src/sound.mjs~Sound#wipe",
     "method"
-  ],
-  [
-    "src/sound.mjs~sound.event",
-    "typedef/index.html#static-typedef-Event",
-    "src/sound.mjs~Sound.Event",
-    "typedef"
   ]
 ]

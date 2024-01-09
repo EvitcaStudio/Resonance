@@ -32,7 +32,6 @@
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/resonance.mjs~ResonanceSingleton.html">ResonanceSingleton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/sound.mjs~Sound.html">Sound</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Resonance">Resonance</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-typedef">T</span><span data-ice="name"><span><a href="typedef/index.html#static-typedef-Event">Event</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -46,7 +45,6 @@ import { Sound } from &quot;./sound.mjs&quot;;
 * @class ResonanceSingleton  
 * @license Resonance does not have a license at this time. For licensing contact the author
 * @author https://github.com/doubleactii
-* Copyright (c) 2023 Evitca Studio
 
 Safari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.
 Otherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.
@@ -103,6 +101,10 @@ class ResonanceSingleton {
 	static normalize = (pValue, pMin=0, pMax=100, pRange=1) =&gt; {
 		return (pValue - pMin) / (pMax - pMin) * pRange;
 	}
+	/**
+	 * The version of the module.
+	 */
+	version = &quot;VERSION_REPLACE_ME&quot;;
 	constructor() {
 		if (!window.AudioContext &amp;&amp; !window.webkitAudioContext) {
 			console.error(&apos;Your device does not support window.AudioContext || window.webkitAudioContext. This library cannot be used&apos;);

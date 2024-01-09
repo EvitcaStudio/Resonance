@@ -165,15 +165,10 @@ class Sound {
         if (this.loaded) this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
     }
     /**
-     * @typedef {Object} Event
-     * @property {string} event - The event name
-     * @property {function} callback - The function to be called when the event is triggered
-     */
-    /**
      * Attaches a callback to the specified event.
-     * @param {Event['event']} pEvent - The event to attach the callback to
-     * @param {Event['callback']} pCallback - The function to be called when the event is triggered
-     * @return {Tween} The Tween instance
+     * @param {Object} pEvent - The event to attach the callback to
+     * @param {Function} pCallback - The function to be called when the event is triggered
+     * @return {this} The Sound instance
      */
     on(pEvent, pCallback) {
         if (typeof(pCallback) === "function") {
@@ -196,7 +191,7 @@ class Sound {
     /**
      * Toggleable mute feature for this sound. Flips between muted and unmuted
      * 
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     toggleMute() {
         if (!this.loaded || !this.source) return;
@@ -228,7 +223,7 @@ class Sound {
     /**
      * Toggleable loop feature for this sound. Flips between loop and unlooped
      * 
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     toggleLoop() {
         this._loop = this._loop ? false : true;
@@ -345,7 +340,7 @@ class Sound {
     /**
      * Pauses this sound
      * 
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     pause() {
         if (!this.loaded) return;
@@ -362,7 +357,7 @@ class Sound {
     /**
      * Resumes playing this sound
      * 
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     resume() {
         if (!this.loaded) return;
@@ -380,7 +375,7 @@ class Sound {
      * Stops this sound from playing
      * 
      * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     stop(pState) {
         // The sound isn't loaded yet, but the developer wants to stop this sound, so we send out a stopSignal, so that when the sound is loaded and attempted to play, it will not play.
@@ -407,7 +402,7 @@ class Sound {
      * Plays this sound
      * 
      * @param {boolean} pResume - If this is being played from a paused state
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     play(pResume) {
         // A sound cannot be played if it's sound name is not referencable, 
@@ -490,7 +485,7 @@ class Sound {
     /**
      * Restarts this sound
      * 
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     restart() {
         this.stop('restart');
@@ -580,7 +575,7 @@ class Sound {
      * @param {number} [pDuration=5000] - The duration of the fade in ms
      * @param {function} [pEase='easeOutCubic'] - Easing function
      * @param {function} pCallback - Callback to be called when the fade is over
-     * @returns {Sound} This sound instance
+     * @returns {this} This sound instance
      */
     fade(pVolume=100, pDuration=5000, pEase='easeOutCubic', pCallback) {
         if (isNaN(pVolume)) return;
