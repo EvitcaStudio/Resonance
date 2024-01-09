@@ -12,9 +12,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "resonance/src/resonance.mjs~sound",
-    "class/src/resonance.mjs~Sound.html",
-    "<span>Sound</span> <span class=\"search-result-import-path\">resonance/src/resonance.mjs</span>",
+    "resonance/src/sound.mjs~sound",
+    "class/src/sound.mjs~Sound.html",
+    "<span>Sound</span> <span class=\"search-result-import-path\">resonance/src/sound.mjs</span>",
     "class"
   ],
   [
@@ -552,315 +552,321 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "src/resonance.mjs~sound#_info",
-    "class/src/resonance.mjs~Sound.html#instance-member-_info",
-    "src/resonance.mjs~Sound#_info",
+    "src/sound.mjs",
+    "file/src/sound.mjs.html",
+    "src/sound.mjs",
+    "file"
+  ],
+  [
+    "src/sound.mjs~sound#_info",
+    "class/src/sound.mjs~Sound.html#instance-member-_info",
+    "src/sound.mjs~Sound#_info",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#_loop",
-    "class/src/resonance.mjs~Sound.html#instance-member-_loop",
-    "src/resonance.mjs~Sound#_loop",
+    "src/sound.mjs~sound#_loop",
+    "class/src/sound.mjs~Sound.html#instance-member-_loop",
+    "src/sound.mjs~Sound#_loop",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#_playbackrate",
-    "class/src/resonance.mjs~Sound.html#instance-member-_playbackRate",
-    "src/resonance.mjs~Sound#_playbackRate",
+    "src/sound.mjs~sound#_playbackrate",
+    "class/src/sound.mjs~Sound.html#instance-member-_playbackRate",
+    "src/sound.mjs~Sound#_playbackRate",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#_volume",
-    "class/src/resonance.mjs~Sound.html#instance-member-_volume",
-    "src/resonance.mjs~Sound#_volume",
+    "src/sound.mjs~sound#_volume",
+    "class/src/sound.mjs~Sound.html#instance-member-_volume",
+    "src/sound.mjs~Sound#_volume",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#build",
-    "class/src/resonance.mjs~Sound.html#instance-method-build",
-    "src/resonance.mjs~Sound#build",
+    "src/sound.mjs~sound#build",
+    "class/src/sound.mjs~Sound.html#instance-method-build",
+    "src/sound.mjs~Sound#build",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#canplayunfocused",
-    "class/src/resonance.mjs~Sound.html#instance-method-canPlayUnfocused",
-    "src/resonance.mjs~Sound#canPlayUnfocused",
+    "src/sound.mjs~sound#canplayunfocused",
+    "class/src/sound.mjs~Sound.html#instance-method-canPlayUnfocused",
+    "src/sound.mjs~Sound#canPlayUnfocused",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#constructor",
-    "class/src/resonance.mjs~Sound.html#instance-constructor-constructor",
-    "src/resonance.mjs~Sound#constructor",
+    "src/sound.mjs~sound#constructor",
+    "class/src/sound.mjs~Sound.html#instance-constructor-constructor",
+    "src/sound.mjs~Sound#constructor",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#duration",
-    "class/src/resonance.mjs~Sound.html#instance-member-duration",
-    "src/resonance.mjs~Sound#duration",
+    "src/sound.mjs~sound#duration",
+    "class/src/sound.mjs~Sound.html#instance-member-duration",
+    "src/sound.mjs~Sound#duration",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#endtime",
-    "class/src/resonance.mjs~Sound.html#instance-member-endTime",
-    "src/resonance.mjs~Sound#endTime",
+    "src/sound.mjs~sound#endtime",
+    "class/src/sound.mjs~Sound.html#instance-member-endTime",
+    "src/sound.mjs~Sound#endTime",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#events",
-    "class/src/resonance.mjs~Sound.html#instance-member-events",
-    "src/resonance.mjs~Sound#events",
+    "src/sound.mjs~sound#events",
+    "class/src/sound.mjs~Sound.html#instance-member-events",
+    "src/sound.mjs~Sound#events",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#fade",
-    "class/src/resonance.mjs~Sound.html#instance-method-fade",
-    "src/resonance.mjs~Sound#fade",
+    "src/sound.mjs~sound#fade",
+    "class/src/sound.mjs~Sound.html#instance-method-fade",
+    "src/sound.mjs~Sound#fade",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#fader",
-    "class/src/resonance.mjs~Sound.html#instance-member-fader",
-    "src/resonance.mjs~Sound#fader",
+    "src/sound.mjs~sound#fader",
+    "class/src/sound.mjs~Sound.html#instance-member-fader",
+    "src/sound.mjs~Sound#fader",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#gainnode",
-    "class/src/resonance.mjs~Sound.html#instance-member-gainNode",
-    "src/resonance.mjs~Sound#gainNode",
+    "src/sound.mjs~sound#gainnode",
+    "class/src/sound.mjs~Sound.html#instance-member-gainNode",
+    "src/sound.mjs~Sound#gainNode",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#getcurrenttime",
-    "class/src/resonance.mjs~Sound.html#instance-method-getCurrentTime",
-    "src/resonance.mjs~Sound#getCurrentTime",
+    "src/sound.mjs~sound#getcurrenttime",
+    "class/src/sound.mjs~Sound.html#instance-method-getCurrentTime",
+    "src/sound.mjs~Sound#getCurrentTime",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#info",
-    "class/src/resonance.mjs~Sound.html#instance-set-info",
-    "src/resonance.mjs~Sound#info",
+    "src/sound.mjs~sound#info",
+    "class/src/sound.mjs~Sound.html#instance-set-info",
+    "src/sound.mjs~Sound#info",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#info",
-    "class/src/resonance.mjs~Sound.html#instance-get-info",
-    "src/resonance.mjs~Sound#info",
+    "src/sound.mjs~sound#info",
+    "class/src/sound.mjs~Sound.html#instance-get-info",
+    "src/sound.mjs~Sound#info",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#kill",
-    "class/src/resonance.mjs~Sound.html#instance-method-kill",
-    "src/resonance.mjs~Sound#kill",
+    "src/sound.mjs~sound#kill",
+    "class/src/sound.mjs~Sound.html#instance-method-kill",
+    "src/sound.mjs~Sound#kill",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#load",
-    "class/src/resonance.mjs~Sound.html#instance-method-load",
-    "src/resonance.mjs~Sound#load",
+    "src/sound.mjs~sound#load",
+    "class/src/sound.mjs~Sound.html#instance-method-load",
+    "src/sound.mjs~Sound#load",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#loaded",
-    "class/src/resonance.mjs~Sound.html#instance-member-loaded",
-    "src/resonance.mjs~Sound#loaded",
+    "src/sound.mjs~sound#loaded",
+    "class/src/sound.mjs~Sound.html#instance-member-loaded",
+    "src/sound.mjs~Sound#loaded",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#loop",
-    "class/src/resonance.mjs~Sound.html#instance-get-loop",
-    "src/resonance.mjs~Sound#loop",
+    "src/sound.mjs~sound#loop",
+    "class/src/sound.mjs~Sound.html#instance-get-loop",
+    "src/sound.mjs~Sound#loop",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#loop",
-    "class/src/resonance.mjs~Sound.html#instance-set-loop",
-    "src/resonance.mjs~Sound#loop",
+    "src/sound.mjs~sound#loop",
+    "class/src/sound.mjs~Sound.html#instance-set-loop",
+    "src/sound.mjs~Sound#loop",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#muted",
-    "class/src/resonance.mjs~Sound.html#instance-member-muted",
-    "src/resonance.mjs~Sound#muted",
+    "src/sound.mjs~sound#muted",
+    "class/src/sound.mjs~Sound.html#instance-member-muted",
+    "src/sound.mjs~Sound#muted",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#on",
-    "class/src/resonance.mjs~Sound.html#instance-method-on",
-    "src/resonance.mjs~Sound#on",
+    "src/sound.mjs~sound#on",
+    "class/src/sound.mjs~Sound.html#instance-method-on",
+    "src/sound.mjs~Sound#on",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#onended",
-    "class/src/resonance.mjs~Sound.html#instance-member-onEnded",
-    "src/resonance.mjs~Sound#onEnded",
+    "src/sound.mjs~sound#onended",
+    "class/src/sound.mjs~Sound.html#instance-member-onEnded",
+    "src/sound.mjs~Sound#onEnded",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#onresumed",
-    "class/src/resonance.mjs~Sound.html#instance-member-onResumed",
-    "src/resonance.mjs~Sound#onResumed",
+    "src/sound.mjs~sound#onresumed",
+    "class/src/sound.mjs~Sound.html#instance-member-onResumed",
+    "src/sound.mjs~Sound#onResumed",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#onstarted",
-    "class/src/resonance.mjs~Sound.html#instance-member-onStarted",
-    "src/resonance.mjs~Sound#onStarted",
+    "src/sound.mjs~sound#onstarted",
+    "class/src/sound.mjs~Sound.html#instance-member-onStarted",
+    "src/sound.mjs~Sound#onStarted",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#onstopped",
-    "class/src/resonance.mjs~Sound.html#instance-member-onStopped",
-    "src/resonance.mjs~Sound#onStopped",
+    "src/sound.mjs~sound#onstopped",
+    "class/src/sound.mjs~Sound.html#instance-member-onStopped",
+    "src/sound.mjs~Sound#onStopped",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#onsuspended",
-    "class/src/resonance.mjs~Sound.html#instance-member-onSuspended",
-    "src/resonance.mjs~Sound#onSuspended",
+    "src/sound.mjs~sound#onsuspended",
+    "class/src/sound.mjs~Sound.html#instance-member-onSuspended",
+    "src/sound.mjs~Sound#onSuspended",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#pause",
-    "class/src/resonance.mjs~Sound.html#instance-method-pause",
-    "src/resonance.mjs~Sound#pause",
+    "src/sound.mjs~sound#pause",
+    "class/src/sound.mjs~Sound.html#instance-method-pause",
+    "src/sound.mjs~Sound#pause",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#pausedtimestamp",
-    "class/src/resonance.mjs~Sound.html#instance-member-pausedTimeStamp",
-    "src/resonance.mjs~Sound#pausedTimeStamp",
+    "src/sound.mjs~sound#pausedtimestamp",
+    "class/src/sound.mjs~Sound.html#instance-member-pausedTimeStamp",
+    "src/sound.mjs~Sound#pausedTimeStamp",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#play",
-    "class/src/resonance.mjs~Sound.html#instance-method-play",
-    "src/resonance.mjs~Sound#play",
+    "src/sound.mjs~sound#play",
+    "class/src/sound.mjs~Sound.html#instance-method-play",
+    "src/sound.mjs~Sound#play",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#playafterload",
-    "class/src/resonance.mjs~Sound.html#instance-member-playAfterLoad",
-    "src/resonance.mjs~Sound#playAfterLoad",
+    "src/sound.mjs~sound#playafterload",
+    "class/src/sound.mjs~Sound.html#instance-member-playAfterLoad",
+    "src/sound.mjs~Sound#playAfterLoad",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#playunfocused",
-    "class/src/resonance.mjs~Sound.html#instance-member-playUnfocused",
-    "src/resonance.mjs~Sound#playUnfocused",
+    "src/sound.mjs~sound#playunfocused",
+    "class/src/sound.mjs~Sound.html#instance-member-playUnfocused",
+    "src/sound.mjs~Sound#playUnfocused",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#playbackrate",
-    "class/src/resonance.mjs~Sound.html#instance-get-playbackRate",
-    "src/resonance.mjs~Sound#playbackRate",
+    "src/sound.mjs~sound#playbackrate",
+    "class/src/sound.mjs~Sound.html#instance-get-playbackRate",
+    "src/sound.mjs~Sound#playbackRate",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#playbackrate",
-    "class/src/resonance.mjs~Sound.html#instance-set-playbackRate",
-    "src/resonance.mjs~Sound#playbackRate",
+    "src/sound.mjs~sound#playbackrate",
+    "class/src/sound.mjs~Sound.html#instance-set-playbackRate",
+    "src/sound.mjs~Sound#playbackRate",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#queuedfade",
-    "class/src/resonance.mjs~Sound.html#instance-method-queuedFade",
-    "src/resonance.mjs~Sound#queuedFade",
+    "src/sound.mjs~sound#queuedfade",
+    "class/src/sound.mjs~Sound.html#instance-method-queuedFade",
+    "src/sound.mjs~Sound#queuedFade",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#restart",
-    "class/src/resonance.mjs~Sound.html#instance-method-restart",
-    "src/resonance.mjs~Sound#restart",
+    "src/sound.mjs~sound#restart",
+    "class/src/sound.mjs~Sound.html#instance-method-restart",
+    "src/sound.mjs~Sound#restart",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#resume",
-    "class/src/resonance.mjs~Sound.html#instance-method-resume",
-    "src/resonance.mjs~Sound#resume",
+    "src/sound.mjs~sound#resume",
+    "class/src/sound.mjs~Sound.html#instance-method-resume",
+    "src/sound.mjs~Sound#resume",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#save",
-    "class/src/resonance.mjs~Sound.html#instance-member-save",
-    "src/resonance.mjs~Sound#save",
+    "src/sound.mjs~sound#save",
+    "class/src/sound.mjs~Sound.html#instance-member-save",
+    "src/sound.mjs~Sound#save",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#soundpath",
-    "class/src/resonance.mjs~Sound.html#instance-member-soundPath",
-    "src/resonance.mjs~Sound#soundPath",
+    "src/sound.mjs~sound#soundpath",
+    "class/src/sound.mjs~Sound.html#instance-member-soundPath",
+    "src/sound.mjs~Sound#soundPath",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#source",
-    "class/src/resonance.mjs~Sound.html#instance-member-source",
-    "src/resonance.mjs~Sound#source",
+    "src/sound.mjs~sound#source",
+    "class/src/sound.mjs~Sound.html#instance-member-source",
+    "src/sound.mjs~Sound#source",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#starttime",
-    "class/src/resonance.mjs~Sound.html#instance-member-startTime",
-    "src/resonance.mjs~Sound#startTime",
+    "src/sound.mjs~sound#starttime",
+    "class/src/sound.mjs~Sound.html#instance-member-startTime",
+    "src/sound.mjs~Sound#startTime",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#startedtimestamp",
-    "class/src/resonance.mjs~Sound.html#instance-member-startedTimeStamp",
-    "src/resonance.mjs~Sound#startedTimeStamp",
+    "src/sound.mjs~sound#startedtimestamp",
+    "class/src/sound.mjs~Sound.html#instance-member-startedTimeStamp",
+    "src/sound.mjs~Sound#startedTimeStamp",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#state",
-    "class/src/resonance.mjs~Sound.html#instance-member-state",
-    "src/resonance.mjs~Sound#state",
+    "src/sound.mjs~sound#state",
+    "class/src/sound.mjs~Sound.html#instance-member-state",
+    "src/sound.mjs~Sound#state",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#stop",
-    "class/src/resonance.mjs~Sound.html#instance-method-stop",
-    "src/resonance.mjs~Sound#stop",
+    "src/sound.mjs~sound#stop",
+    "class/src/sound.mjs~Sound.html#instance-method-stop",
+    "src/sound.mjs~Sound#stop",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#stopsignal",
-    "class/src/resonance.mjs~Sound.html#instance-member-stopSignal",
-    "src/resonance.mjs~Sound#stopSignal",
+    "src/sound.mjs~sound#stopsignal",
+    "class/src/sound.mjs~Sound.html#instance-member-stopSignal",
+    "src/sound.mjs~Sound#stopSignal",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#toggleloop",
-    "class/src/resonance.mjs~Sound.html#instance-method-toggleLoop",
-    "src/resonance.mjs~Sound#toggleLoop",
+    "src/sound.mjs~sound#toggleloop",
+    "class/src/sound.mjs~Sound.html#instance-method-toggleLoop",
+    "src/sound.mjs~Sound#toggleLoop",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#togglemute",
-    "class/src/resonance.mjs~Sound.html#instance-method-toggleMute",
-    "src/resonance.mjs~Sound#toggleMute",
+    "src/sound.mjs~sound#togglemute",
+    "class/src/sound.mjs~Sound.html#instance-method-toggleMute",
+    "src/sound.mjs~Sound#toggleMute",
     "method"
   ],
   [
-    "src/resonance.mjs~sound#volume",
-    "class/src/resonance.mjs~Sound.html#instance-get-volume",
-    "src/resonance.mjs~Sound#volume",
+    "src/sound.mjs~sound#volume",
+    "class/src/sound.mjs~Sound.html#instance-get-volume",
+    "src/sound.mjs~Sound#volume",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#volume",
-    "class/src/resonance.mjs~Sound.html#instance-set-volume",
-    "src/resonance.mjs~Sound#volume",
+    "src/sound.mjs~sound#volume",
+    "class/src/sound.mjs~Sound.html#instance-set-volume",
+    "src/sound.mjs~Sound#volume",
     "member"
   ],
   [
-    "src/resonance.mjs~sound#wipe",
-    "class/src/resonance.mjs~Sound.html#instance-method-wipe",
-    "src/resonance.mjs~Sound#wipe",
+    "src/sound.mjs~sound#wipe",
+    "class/src/sound.mjs~Sound.html#instance-method-wipe",
+    "src/sound.mjs~Sound#wipe",
     "method"
   ],
   [
-    "src/resonance.mjs~sound.event",
+    "src/sound.mjs~sound.event",
     "typedef/index.html#static-typedef-Event",
-    "src/resonance.mjs~Sound.Event",
+    "src/sound.mjs~Sound.Event",
     "typedef"
   ]
 ]
