@@ -162,7 +162,9 @@ class Sound {
      */
     set volume(pNewVolume) {
         this._volume = Resonance.constructor.clamp(pNewVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);
-        if (this.loaded) this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
+        if (this.loaded && this.gainNode) {
+            this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
+        }
     }
     /**
      * Attaches a callback to the specified event.
@@ -197,9 +199,13 @@ class Sound {
         if (!this.loaded || !this.source) return;
         this.muted = this.muted ? false : true;
         if (this.muted) {
-            this.gainNode.gain.value = 0;
+            if (this.gainNode) {
+                this.gainNode.gain.value = 0;
+            }
         } else {
-            this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
+            if (this.gainNode) {
+                this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
+            }
         }
         return this;
     }
@@ -251,7 +257,7 @@ class Sound {
      * Set the info of this sound
      * The new value is not used, as this is a "read-only" variable. So any attempts to set it will not work
      * 
-     * @param {*} pNewInfo - The new value
+     * @param {Object} pNewInfo - The new value
      */	
     set info(pNewInfo) {
         // makes this variable read only basically
@@ -305,6 +311,7 @@ class Sound {
     }
     /**
      * Loads this sound and stores its data so future sounds can use the same buffer
+     * @private
      */
     load() {
         const request = new XMLHttpRequest();
@@ -484,7 +491,7 @@ class Sound {
     }
     /**
      * Restarts this sound
-     * 
+     * @private
      * @returns {this} This sound instance
      */
     restart() {
@@ -493,6 +500,7 @@ class Sound {
     }
     /**
      * Get whether this sound will play when the window is unfocused
+     * @private
      * @returns {boolean} Whether or not this sound will play when the window is unfocused
      */
     canPlayUnfocused() {
@@ -501,6 +509,7 @@ class Sound {
     /**
      * Kills this sound. Wipes it, and recycles it if the recycle manager isn't full.
      * If the recycle manager is full, this sound will become an empty class instance.
+     * @private
      */
     kill() {
         this.wipe();
@@ -514,6 +523,7 @@ class Sound {
     }
     /**
      * Resets this sound to default state
+     * @private
      */
     wipe() {
         this.onStarted = null;

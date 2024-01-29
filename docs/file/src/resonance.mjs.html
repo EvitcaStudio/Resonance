@@ -259,9 +259,11 @@ class ResonanceSingleton {
 	 * @returns {ResonanceSingleton} This instance
 	 */
 	adjustVolume(pVolume) {
-		// maybe show a GUI of the volume changing
+		// Maybe show a GUI of the volume changing
 		this.volume = ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME);
-		this.gainNode.gain.value = ResonanceSingleton.normalize(this.volume);
+		if (this.gainNode) {
+			this.gainNode.gain.value = ResonanceSingleton.normalize(this.volume);
+		}
 		return this;
 	}
 	/**
@@ -332,7 +334,9 @@ class ResonanceSingleton {
 	toggleMute() {
 		this.muted = this.muted ? false : true;
 		if (this.muted) {
-			this._previousGainNodeValue = this.gainNode.gain.value;
+			if (this.gainNode) {
+				this._previousGainNodeValue = this.gainNode.gain.value;
+			}
 			this.gainNode.gain.value = 0;
 		} else {
 			this.gainNode.gain.value = this._previousGainNodeValue ? this._previousGainNodeValue : 1;
