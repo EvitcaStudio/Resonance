@@ -1,0 +1,9 @@
+/**
+* Class for managing sounds
+* @class ResonanceSingleton  
+* @license Resonance does not have a license at this time. For licensing contact the author
+* @author https://github.com/doubleactii
+
+Safari does not support .ogg files, so if you are using safari, do not use .ogg files or this library will not play that sound on safari.
+Otherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.
+*/

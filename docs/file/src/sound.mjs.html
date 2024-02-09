@@ -200,7 +200,7 @@ class Sound {
      * @param {number} pNewVolume - The volume to set
      */
     set volume(pNewVolume) {
-        this._volume = Resonance.constructor.clamp(pNewVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);
+        this._volume = Resonance.constructor.clamp(pNewVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME) * Resonance.constructor.normalize(Resonance.volume);
         if (this.loaded &amp;&amp; this.gainNode) {
             this.gainNode.gain.value = Resonance.constructor.normalize(this._volume);
         }
@@ -339,7 +339,7 @@ class Sound {
         this.playUnfocused = pPlayUnfocused ? true : false;
         this.state = null;
         this._loop = pLoop ? true : false;
-        this._volume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME);
+        this._volume = Resonance.constructor.clamp(pVolume, Resonance.constructor.MIN_VOLUME, Resonance.constructor.MAX_VOLUME) * Resonance.constructor.normalize(Resonance.volume);
         // If this sound will use a buffer that is already stored, do not load it, there is no need, when going to play
         // this sound, it will just use the buffer data of the previous sound that had it.
         if (!Resonance.loadedBuffers[this.soundPath]) {
@@ -593,7 +593,7 @@ class Sound {
         this.fader.duration = this.fader.currentIteration = this.fader.initialValue = this.fader.changeInValue = this.fader.totalIterations = this.fader.startStamp = this.fader.previousTimeStamp = this.fader.durationOffScreen = this.fader.queue = this.fader.raf = null;
         this.stopSignal = false;
         this._loop = false;
-        this._volume = 100;
+        this._volume = 100 * Resonance.constructor.normalize(Resonance.volume);
         this._info.soundPath = this._info.duration = null;
         for (const prop in this.events) {
             delete this.events[prop];
