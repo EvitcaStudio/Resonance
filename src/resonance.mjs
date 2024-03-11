@@ -320,9 +320,10 @@ class ResonanceSingleton {
 	 * @param {number} [pStartTime=0] - The start time of this sound (to play a clipped version)
 	 * @param {number} [pEndTime=duration] - The end time of this sound (to play a clipped version)
 	 * @param {number} [pPlaybackRate=1] - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
+	 * @param {Function} - A callback to call when this sound has finished playing.
 	 * @returns {SoundSource } The source to this emitted sound. Call source.kill() to stop this sound while its playing. This is the only API this sound has
 	 */
-	emit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1) {
+	emit(pSoundPath, pVolume=100, pStartTime=0, pEndTime, pPlaybackRate=1, pCallback) {
 		if (!this.canPlaySound()) return
 		// a very cheap sound that can be used if certain conditions are met. 
 		// This sound cannot be referenced and cannot be stopped or configured after creation.
@@ -338,6 +339,9 @@ class ResonanceSingleton {
 			} else {
 				this.stop();
 			}
+		}
+		if (typeof(pCallback) === 'function') {
+			source.addEventListener('ended', pCallback());
 		}
 		const emitSound = function() {
 			const gainNode = self.audioCtx.createGain();
