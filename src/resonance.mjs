@@ -228,6 +228,30 @@ class ResonanceSingleton {
 		return this;
 	}
 	/**
+	 * Adds a filter to be applied to sounds.
+	 * @param {Sound} pSound - The sound to apply add the filter to.
+	 * @param {Object} pFilter - The filter to add.
+	 */
+	addFilter(pSound, pFilter) {
+		if (pSound instanceof Sound) {
+			pSound.addFilter(pFilter);
+		} else {
+			this.logger.prefix('Resonance-Module').error('Invalid pSound! Cannot add filter to non sound.');
+		}
+	}
+	/**
+	 * Removes a filter from being applied to sounds.
+	 * @param {Sound} pSound - The sound to apply remove the filter from.
+	 * @param {Object} pFilter - The filter to remove.
+	 */
+	removeFilter(pSound, pFilter) {
+		if (pSound instanceof Sound) {
+			pSound.removeFilter(pFilter);
+		} else {
+			this.logger.prefix('Resonance-Module').error('Invalid pSound! Cannot remove filter from non sound.');
+		}
+	}
+	/**
 	 * Fades this sound to the specified volume in the specified duration via the specified ease
 	 * 
 	 * @param {number} [pVolume=100] - The volume to fade to

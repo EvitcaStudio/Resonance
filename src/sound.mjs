@@ -102,6 +102,12 @@ class Sound {
      */
     events = {};
     /**
+     * Array of filters that are currently applied on this sound.
+     * @private
+     * @type {Array}
+     */
+    _filters = [];
+    /**
      * Whether this sound was sent a stop signal.
      * @private
      * @type {boolean}
@@ -379,7 +385,7 @@ class Sound {
         return this;
     }
     /**
-     * Stops this sound from playing
+     * Stops this sound from playing. If any filters are utilized on this sound they are removed.
      * 
      * @param {string} pState - The current state of this sound. It's used to figure out if a callback should be dispatched
      * @returns {this} This sound instance
@@ -396,6 +402,7 @@ class Sound {
         if (this.source) {
             if (!this.source.stop) this.source.stop = this.source.noteOff;
             this.source.stop();
+            this.removeAllFilters();
             this.source.disconnect();
             this.gainNode.disconnect();
             this.source = null;
@@ -428,8 +435,12 @@ class Sound {
             if (!Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.push(this);
             return;
         }
-        // if you already have a soure and a gainNode, disconnect them and let them be garbage collected
+        // if you already have a soure and a gainNode, disconnect them and let them be garbage collected.
+        /**
+         * @todo Investigate if this is needed. Doesn't seem like you have to create a new source and gain node each time.
+         */
         if (this.source) {
+            this.removeAllFilters();
             this.source.disconnect();
             this.gainNode.disconnect();
             this.source = null;
@@ -521,6 +532,54 @@ class Sound {
             for (const variable in this) delete this[variable];
         }
     }
+	/**
+	 * Adds a filter to be applied to this sound.
+	 * @param {Object} pFilter - The filter to add.
+	 */
+	addFilter(pFilter) {
+        const source = this.source;
+        if (source) {
+            // Add the filter to the sound's tracked array.
+            if (!this._filters.includes(pFilter)) {
+                this._filters.push(pFilter);
+                // Disconnect the audio
+                source.disconnect(Resonance.audioCtx.destination);
+                // Reconnect the audio with the filter applied.
+                source.connect(pFilter);
+                source.connect(Resonance.audioCtx.destination);
+            }
+        } else {
+            Resonance.logger.prefix('Resonance-Module').error('Invalid sound! No source found on this sound.');
+        }
+	}
+	/**
+	 * Removes a filter from being applied to this sound.
+	 * @param {Object} pFilter - The filter to remove.
+	 */
+	removeFilter(pFilter) {
+        const source = this.source;
+        if (source) {
+            // Remove the filter from being stored on the sound.
+            if (this._filters.includes(pFilter)) {
+                this._filters.splice(this._filters.indexOf(pFilter), 1);
+                // Disconnect the audio that has the filter applied.
+                source.disconnect(pFilter);
+                // Reconnect the audio with the filter removed.
+                source.connect(Resonance.audioCtx.destination);
+            }
+        } else {
+            Resonance.logger.prefix('Resonance-Module').error('Invalid sound! No source found on this sound.');
+        }
+	}
+    /**
+     * Removes all filters from this sound.
+     */
+    removeAllFilters() {
+        // Remove all filters from this sound.
+        this._filters.forEach((pElement) => {
+            this.source.disconnect(pElement);
+        });
+    }
     /**
      * Resets this sound to default state
      * @private
@@ -534,9 +593,12 @@ class Sound {
         this.stop('wipe');
         cancelAnimationFrame(this.fader.raf);
         if (this.source) {
+            this.removeAllFilters();
             this.source.disconnect();
             this.gainNode.disconnect();
         }
+        // Remove all filters. This is in the case no source is found.
+        this._filters.length = 0;
         this.soundPath = null;
         this.startTime = null;
         this.endTime = null;
