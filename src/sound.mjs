@@ -452,8 +452,8 @@ class Sound {
         const self = this;
         gainNode.gain.value = Resonance.constructor.normalize(this._volume);
         gainNode.connect(Resonance.gainNode);
-        source.connect(gainNode);
-        // Resonance.gainNode.connect(Resonance.audioCtx.destination);
+        source.connect(gainNode); 
+        Resonance.gainNode.connect(Resonance.audioCtx.destination);
         source.buffer = Resonance.loadedBuffers[this.soundPath];
         source.playbackRate.value = this._playbackRate;
         // sound.stop() calls this as well
@@ -496,6 +496,13 @@ class Sound {
         this.state = 'playing';
         this.startedTimeStamp = Resonance.audioCtx.currentTime - (this.pausedTimeStamp ? this.pausedTimeStamp : this.startTime);
         this.pausedTimeStamp = 0;
+        /**
+         * Adds a filter to this sound. This is in the case of a sound that has been looped.
+         * @todo Allow more than one filter.
+         */
+        if (this._filters.length) {
+            this.addFilter(this._filters.pop());
+        }
         if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);
         if (!pResume && typeof(this.events.start) === 'function') this.events.start();
         return this;
@@ -534,6 +541,7 @@ class Sound {
     }
 	/**
 	 * Adds a filter to be applied to this sound.
+     * @todo Allow more than one filter. Loop through the filters array and connect all filters after disconnecting.
 	 * @param {Object} pFilter - The filter to add.
 	 */
 	addFilter(pFilter) {
@@ -542,11 +550,11 @@ class Sound {
             // Add the filter to the sound's tracked array.
             if (!this._filters.includes(pFilter)) {
                 this._filters.push(pFilter);
-                // Disconnect the audio
-                source.disconnect(Resonance.audioCtx.destination);
-                // Reconnect the audio with the filter applied.
+                // Disconnect from the gain node.
+                source.disconnect();
+                // Connect the filter
                 source.connect(pFilter);
-                source.connect(Resonance.audioCtx.destination);
+                pFilter.connect(this.gainNode);
             }
         } else {
             Resonance.logger.prefix('Resonance-Module').error('Invalid sound! No source found on this sound.');
@@ -562,10 +570,12 @@ class Sound {
             // Remove the filter from being stored on the sound.
             if (this._filters.includes(pFilter)) {
                 this._filters.splice(this._filters.indexOf(pFilter), 1);
-                // Disconnect the audio that has the filter applied.
-                source.disconnect(pFilter);
-                // Reconnect the audio with the filter removed.
-                source.connect(Resonance.audioCtx.destination);
+                // Disconnect from the gain node.
+                source.disconnect();
+                // Disconnect the filter from the gain node
+                pFilter.disconnect(this.gainNode);
+                // Connect back to the gain node
+                source.connect(this.gainNode);
             }
         } else {
             Resonance.logger.prefix('Resonance-Module').error('Invalid sound! No source found on this sound.');
@@ -577,7 +587,7 @@ class Sound {
     removeAllFilters() {
         // Remove all filters from this sound.
         this._filters.forEach((pElement) => {
-            this.source.disconnect(pElement);
+            pElement.disconnect(this.gainNode);
         });
     }
     /**
