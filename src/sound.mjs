@@ -588,6 +588,7 @@ class Sound {
         // Remove all filters from this sound.
         this._filters.forEach((pElement) => {
             pElement.disconnect(this.gainNode);
+            this.source.connect(this.gainNode);
         });
     }
     /**
