@@ -23,17 +23,16 @@ const banner = [
  * @returns {Object[]} An array of output configurations.
  */
 const generateOutputConfigs = (pMinify) => {
-  const outputFormats = ['iife', 'es', 'cjs'];
+  const outputFormats = ['iife', 'es'];
 
   return outputFormats.map((pFormat) => {
     const isMinified = pMinify ? '.min' : '';
-    const isCJS = pFormat === 'cjs' ? '.cjs': '';
     const fileExtension = pFormat === 'es' ? 'mjs' : 'js';
 	// Uppercase library name for global IIFE represeting this bindle. [LibraryNameBundle].bundleInstance.foo
 	const iifeName = pFormat === 'iife' ? `${packageJson.name.slice(0, 1).toUpperCase()}${packageJson.name.slice(1, packageJson.name.length)}Bundle` : undefined;
 
     return {
-      file: `dist/${pFormat}/${fileName}${isCJS}${isMinified}.${fileExtension}`,
+      file: `dist/${pFormat}/${fileName}${isMinified}.${fileExtension}`,
       format: pFormat,
       name: pFormat === 'iife' ? iifeName : undefined,
       sourcemap: true,
