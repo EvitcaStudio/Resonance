@@ -641,26 +641,29 @@ class ResonanceSingleton {
 	 * 
 	 * @param {string} pSoundPath - The path of the sound file.
 	 * @param {number} [pVolume] - The volume of the sound.
-	 * @param {number} [pStartTime] - The start time of this sound.
-	 * @param {number} [pEndTime] - The end time of this sound.
-	 * @param {boolean} [pSave] - Whether to save this sound.
-	 * @param {boolean} [pPlayUnfocused] - If this sound is set to play unfocused.
-	 * @param {number} [pPlaybackRate] - The playback rate.
-	 * @param {boolean} [pLoop] - Whether this sound should loop.
+	 * @param {string} pSoundPath - The path of the sound file
+	 * @param {number} pVolume - The volume of the sound
+	 * @param {number} pStartTime - The start time of this sound (to play a clipped version)
+	 * @param {number} pEndTime - The end time of this sound (to play a clipped version)
+	 * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed
+	 * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused
+	 * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
+	 * @param {boolean} pLoop - Whether this sound should loop or not
 	 * @param {number} [pRefDistance] - The reference distance for the sound.
 	 * @param {number} [pRolloffFactor] - The rolloff factor for the sound.
-	 * @returns {PositionalSound} - A PositionalSound object.
+	 * @param {number} [pMaxDistance] - The maximum distance for the sound.
+	 * @returns {PositionalSound} - A positional sound object
 	 */
-	createPositionalSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance?: number, pRolloffFactor?: number): PositionalSound {
-		// If there is a reusable positional sound, use that sound rather than create a new one
+	createPositionalSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance?: number, pRolloffFactor?: number, pMaxDistance?: number): PositionalSound {
 		for (const sound of this.recycledSounds) {
 			if (sound instanceof PositionalSound) {
 				this.recycledSounds.delete(sound);
-				sound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor);
+				sound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor, pMaxDistance);
 				return sound;
 			}
 		}
-		return new PositionalSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor);
+
+		return new PositionalSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor, pMaxDistance);
 	}
 
 	// Type declarations for properties

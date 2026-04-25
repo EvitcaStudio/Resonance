@@ -16,6 +16,7 @@ class PositionalSound extends Sound {
 
     _refDistance: number = 1;
     _rolloffFactor: number = 1;
+    _maxDistance: number = 10000;
 
     /**
      * @param {string} pSoundPath - The path of the sound file
@@ -28,9 +29,10 @@ class PositionalSound extends Sound {
      * @param {boolean} pLoop - Whether this sound should loop or not
      * @param {number} [pRefDistance=1] - The reference distance for the sound
      * @param {number} [pRolloffFactor=1] - The rolloff factor for the sound
+     * @param {number} [pMaxDistance=10000] - The maximum distance for the sound
      * @returns {PositionalSound} - A positional sound object
      */
-    constructor(pSoundPath?: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance: number = 1, pRolloffFactor: number = 1) {
+    constructor(pSoundPath?: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance: number = 1, pRolloffFactor: number = 1, pMaxDistance: number = 10000) {
         super(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
         this.panner = Resonance.audioCtx.createPanner();
         
@@ -39,7 +41,7 @@ class PositionalSound extends Sound {
         this.panner.distanceModel = 'inverse';
         this.refDistance = pRefDistance;
         this.rolloffFactor = pRolloffFactor;
-        this.panner.maxDistance = 10000;
+        this.maxDistance = pMaxDistance;
     }
 
     /**
@@ -70,12 +72,14 @@ class PositionalSound extends Sound {
      * @param {boolean} pLoop - Whether this sound should loop or not
      * @param {number} [pRefDistance=1] - The reference distance for the sound
      * @param {number} [pRolloffFactor=1] - The rolloff factor for the sound
+     * @param {number} [pMaxDistance=10000] - The maximum distance for the sound
      * @returns {this} This sound instance
      */
-    build(pSoundPath?: string, pVolume: number = 100, pStartTime: number = 0, pEndTime: number = 0, pSave: boolean = false, pPlayUnfocused: boolean = false, pPlaybackRate: number = 1, pLoop: boolean = false, pRefDistance: number = 1, pRolloffFactor: number = 1): this {
+    build(pSoundPath?: string, pVolume: number = 100, pStartTime: number = 0, pEndTime: number = 0, pSave: boolean = false, pPlayUnfocused: boolean = false, pPlaybackRate: number = 1, pLoop: boolean = false, pRefDistance: number = 1, pRolloffFactor: number = 1, pMaxDistance: number = 10000): this {
         super.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
         this.refDistance = pRefDistance;
         this.rolloffFactor = pRolloffFactor;
+        this.maxDistance = pMaxDistance;
         return this;
     }
 
@@ -102,6 +106,19 @@ class PositionalSound extends Sound {
         this._rolloffFactor = val;
         if (this.panner) {
             this.panner.rolloffFactor = val;
+        }
+    }
+
+    /**
+     * The maximum distance for the sound.
+     * Beyond this distance, the sound will be silent.
+     * @type {number}
+     */
+    get maxDistance() { return this._maxDistance; }
+    set maxDistance(val: number) {
+        this._maxDistance = val;
+        if (this.panner) {
+            this.panner.maxDistance = val;
         }
     }
 
