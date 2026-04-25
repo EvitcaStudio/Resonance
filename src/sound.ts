@@ -342,10 +342,10 @@ class Sound {
         this.state = 'suspended';
         this.pausedTimeStamp = Resonance.audioCtx.currentTime - (this.startedTimeStamp || 0);
         // This sound is no longer considered to be playing, so remove it from the array
-        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);
+        Resonance.soundsPlaying.delete(this);
         // If this sound is not apart of the suspended sounds array add it
-        if (!Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.push(this);
-        if (typeof(this.events.pause) === 'function') this.events.pause();
+        Resonance.pausedSounds.add(this);
+        if (typeof (this.events.pause) === 'function') this.events.pause();
         return this;
     }
     /**
@@ -356,9 +356,9 @@ class Sound {
     resume(): Sound {
         if (!this.loaded) return this;
         // This sound is no longer considered to be suspended, so remove it from the array
-        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);
+        Resonance.pausedSounds.delete(this);
         // This sound is no longer suspended and is now playing again, add it to the playing array
-        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);
+        Resonance.soundsPlaying.add(this);
         // this will use the this.pausedTimeStamp value to resume
         this.play(true);
         this.state = this.fader.raf ? 'fading' : 'playing';
@@ -378,8 +378,9 @@ class Sound {
             return this;
         }
         const wasPlaying = (this.state === 'playing' || this.state === 'fading' || this.state === 'suspended') ? true : false;
-        // This sound is no longer considered to be playing, so remove it from the array
-        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);
+        // This sound is no longer considered to be playing, so remove it from the set
+        Resonance.soundsPlaying.delete(this);
+        Resonance.pausedSounds.delete(this);
         if (this.source) {
             if (!this.source.stop) this.source.stop = this.source.noteOff;
             this.source.stop();
@@ -413,7 +414,7 @@ class Sound {
         }
         // The game does not have focus at the moment, this sound will be automatically queued and played when the screen gets focus again if it is not already preset to play even when focus is lost
         if (!Resonance.focused && !this.canPlayUnfocused()) {
-            if (!Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.push(this);
+            Resonance.queuedSoundsToPlay.add(this);
             return this;
         }
         // if you already have a soure and a gainNode, disconnect them and let them be garbage collected.
@@ -427,14 +428,14 @@ class Sound {
             this.source = null;
             this.gainNode = null;
         }
-        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);
+        Resonance.pausedSounds.delete(this);
         const source = Resonance.audioCtx.createBufferSource();
         const gainNode = Resonance.audioCtx.createGain();
         const self = this;
         gainNode.gain.value = ResonanceSingleton.normalize(this._volume);
-        gainNode.connect(Resonance.gainNode);
-        source.connect(gainNode); 
-        Resonance.gainNode.connect(Resonance.audioCtx.destination);
+        this.source = source;
+        this.gainNode = gainNode;
+        this.connectNodes();
         source.buffer = Resonance.loadedBuffers[this.soundPath];
         source.playbackRate.value = this._playbackRate;
         // sound.stop() calls this as well
@@ -484,9 +485,19 @@ class Sound {
         if (this._filters.length) {
             this.addFilter(this._filters.pop());
         }
-        if (!Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.push(this);
-        if (!pResume && typeof(this.events.start) === 'function') this.events.start();
+        Resonance.soundsPlaying.add(this);
+        if (!pResume && typeof (this.events.start) === 'function') this.events.start();
         return this;
+    }
+    /**
+     * Connects the audio nodes. Can be overridden by subclasses to insert effects (like a PannerNode).
+     */
+    connectNodes(): void {
+        if (!this.source || !this.gainNode) return;
+        this.source.connect(this.gainNode);
+        this.gainNode.connect(Resonance.gainNode);
+        // Ensure Resonance master gain is connected to speakers (usually already connected in singleton constructor)
+        Resonance.gainNode.connect(Resonance.audioCtx.destination);
     }
     /**
      * Restarts this sound
@@ -509,8 +520,8 @@ class Sound {
      */
     kill(): void {
         this.wipe();
-        if (Resonance.recycledSounds.length < ResonanceSingleton.MAX_RECYCLED_SOUNDS)  {
-            Resonance.recycledSounds.push(this);
+        if (Resonance.recycledSounds.size < ResonanceSingleton.MAX_RECYCLED_SOUNDS) {
+            Resonance.recycledSounds.add(this);
         } else {
             // remove all properties from this sound object, since it no longer will be used.
             // any references to this should be removed so that it can be garbage collected
@@ -610,10 +621,10 @@ class Sound {
         for (const prop in this.events) {
             delete this.events[prop];
         }
-        if (Resonance.soundsPlaying.includes(this)) Resonance.soundsPlaying.splice(Resonance.soundsPlaying.indexOf(this), 1);
-        if (Resonance.pausedSounds.includes(this)) Resonance.pausedSounds.splice(Resonance.pausedSounds.indexOf(this), 1);
-        if (Resonance.queuedSoundsToPlay.includes(this)) Resonance.queuedSoundsToPlay.splice(Resonance.queuedSoundsToPlay.indexOf(this), 1);
-        if (Resonance.queuedSoundsToFade.includes(this)) Resonance.queuedSoundsToFade.splice(Resonance.queuedSoundsToFade.indexOf(this), 1);
+        Resonance.soundsPlaying.delete(this);
+        Resonance.pausedSounds.delete(this);
+        Resonance.queuedSoundsToPlay.delete(this);
+        Resonance.queuedSoundsToFade.delete(this);
     }
     /**
      * Get the current timestamp of the sound playing
@@ -646,14 +657,14 @@ class Sound {
         // The game does not have focus at the moment, this sound will be automatically queued and faded when the screen gets focus again if it is not already preset to play/fade even when the screen has no focus
         if (!Resonance.focused && !this.canPlayUnfocused()) {
             // If this sound is already queued to fade, then just exit out
-            if (Resonance.queuedSoundsToFade.includes(this)) return this;
+            if (Resonance.queuedSoundsToFade.has(this)) return this;
             this.fader.queue = {
                 'volume': pVolume,
                 'duration': pDuration,
                 'ease': pEase,
                 'callback': pCallback
             }
-            Resonance.queuedSoundsToFade.push(this);
+            Resonance.queuedSoundsToFade.add(this);
             return this;
         }
         if (!Tween[pEase]) {
@@ -713,6 +724,16 @@ class Sound {
      */
     queuedFade(): void {
         if (this.fader.queue) this.fade(this.fader.queue.volume, this.fader.queue.duration, this.fader.queue.ease, this.fader.queue.callback);
+    }
+    /**
+     * Unloads this sound's buffer data and stops it.
+     */
+    unload(): void {
+        if (this.soundPath) {
+            Resonance.unload(this.soundPath);
+        } else {
+            this.stop();
+        }
     }
 }
 

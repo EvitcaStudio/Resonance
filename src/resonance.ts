@@ -1,6 +1,7 @@
 // @ts-ignore
 import { Tween } from "./vendor/tween.min.mjs";
 import { Sound } from "./sound.js";
+import { PositionalSound } from "./positional-sound.js";
 // @ts-ignore
 import { Logger } from './vendor/logger.min.mjs';
 
@@ -75,11 +76,11 @@ class ResonanceSingleton {
 			return;
 		}
 
-        /** The logger module this module uses to log errors / logs.
-         * @type {Object}
-         */
-        this.logger = new Logger();
-        this.logger.registerType('Resonance-Module', '#ff6600');
+		/** The logger module this module uses to log errors / logs.
+		 * @type {Object}
+		 */
+		this.logger = new Logger();
+		this.logger.registerType('Resonance-Module', '#ff6600');
 
 		// For WebKit- and Blink-based browsers
 		window.AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -90,13 +91,13 @@ class ResonanceSingleton {
 		// When the window is unfocused, all sounds are paused
 		window.addEventListener('blur', () => {
 			this.focused = false;
-			if (this.soundsPlaying.length) this.pauseAllSounds(true);
+			if (this.soundsPlaying.size) this.pauseAllSounds(true);
 		});
 		// When the window is focused all sounds are resumed, and queued sounds are played
 		window.addEventListener('focus', () => {
 			this.focused = true;
-			if (this.pausedSounds.length) this.resumeAllSounds(true);
-			if (this.queuedSoundsToPlay.length || this.queuedSoundsToFade.length) this.playQueuedSounds();				
+			if (this.pausedSounds.size) this.resumeAllSounds(true);
+			if (this.queuedSoundsToPlay.size || this.queuedSoundsToFade.size) this.playQueuedSounds();
 		});
 		/**
 		 * The audio context all audio will dervie from
@@ -116,35 +117,35 @@ class ResonanceSingleton {
 		// Connect gain node to speakers
 		this.gainNode.connect(this.audioCtx.destination);
 		/**
-		 * Array of sounds that are currently playing
+		 * Set of sounds that are currently playing
 		 * 
-		 * @type {Array}
+		 * @type {Set<Sound>}
 		 */
-		this.soundsPlaying = [];
+		this.soundsPlaying = new Set();
 		/**
-		 * Array of sounds that are currently paused
+		 * Set of sounds that are currently paused
 		 * 
-		 * @type {Array}
+		 * @type {Set<Sound>}
 		 */
-		this.pausedSounds = [];
+		this.pausedSounds = new Set();
 		/**
-		 * Array of sounds that can be resused
+		 * Set of sounds that can be reused
 		 * 
-		 * @type {Array}
+		 * @type {Set<Sound>}
 		 */
-		this.recycledSounds = [];
+		this.recycledSounds = new Set();
 		/**
-		 * Array of sounds that are queued for playing
+		 * Set of sounds that are queued for playing
 		 * 
-		 * @type {Array}
+		 * @type {Set<Sound>}
 		 */
-		this.queuedSoundsToPlay = [];
+		this.queuedSoundsToPlay = new Set();
 		/**
-		 * Array of sounds that are queued for fading
+		 * Set of sounds that are queued for fading
 		 * 
-		 * @type {Array}
+		 * @type {Set<Sound>}
 		 */
-		this.queuedSoundsToFade = [];
+		this.queuedSoundsToFade = new Set();
 		/**
 		 * An object that stores the buffer data of a sound so it does not have to be loaded each time
 		 * 
@@ -209,7 +210,7 @@ class ResonanceSingleton {
 	 * @returns {ResonanceSingleton} This instance
 	 */
 	enableChecker(pCheckerFunction: () => boolean): ResonanceSingleton {
-		if (typeof(pCheckerFunction) === 'function') {
+		if (typeof (pCheckerFunction) === 'function') {
 			this.abilityToPlaySound = pCheckerFunction;
 		}
 		return this;
@@ -283,7 +284,7 @@ class ResonanceSingleton {
 		this.fader.durationOffScreen = [0, 0];
 
 		const self = this;
-		const fadeInterval = function(pTimeStamp: number) {
+		const fadeInterval = function (pTimeStamp: number) {
 			if (!self.focused) {
 				self.fader.raf = requestAnimationFrame(fadeInterval);
 				self.fader.durationOffScreen[1] = pTimeStamp - self.fader.previousTimeStamp;
@@ -294,7 +295,7 @@ class ResonanceSingleton {
 			if (self.fader.durationOffScreen[1]) {
 				self.fader.durationOffScreen[0] += self.fader.durationOffScreen[1];
 				self.fader.durationOffScreen[1] = 0;
-			}			
+			}
 			const elapsed = (pTimeStamp - self.fader.durationOffScreen[0]) - self.fader.startStamp;
 			if (self.fader.currentIteration < self.fader.totalIterations) self.fader.currentIteration++;
 			if (elapsed < self.fader.duration) {
@@ -304,7 +305,7 @@ class ResonanceSingleton {
 				self.fader.duration = self.fader.currentIteration = self.fader.initialValue = self.fader.changeInValue = self.fader.totalIterations = self.fader.startStamp = self.fader.previousTimeStamp = self.fader.durationOffScreen = self.fader.raf = null;
 				self.state = null;
 				self.adjustVolume(pVolume);
-				if (typeof(pCallback) === 'function') pCallback();
+				if (typeof (pCallback) === 'function') pCallback();
 				return;
 			}
 			self.fader.raf = requestAnimationFrame(fadeInterval);
@@ -358,17 +359,17 @@ class ResonanceSingleton {
 		const self = this;
 		const source = self.audioCtx.createBufferSource() as any;
 		// Create a function to kill this sound
-		source.kill = function() {
+		source.kill = function () {
 			if (!this.buffer) {
 				this.queuedToStop = true;
 			} else {
 				this.stop();
 			}
 		}
-		if (typeof(pCallback) === 'function') {
+		if (typeof (pCallback) === 'function') {
 			source.addEventListener('ended', pCallback);
 		}
-		const emitSound = function() {
+		const emitSound = function () {
 			const gainNode = self.audioCtx.createGain();
 			gainNode.gain.value = ResonanceSingleton.normalize(ResonanceSingleton.clamp(pVolume, ResonanceSingleton.MIN_VOLUME, ResonanceSingleton.MAX_VOLUME));
 			gainNode.connect(self.gainNode);
@@ -376,17 +377,17 @@ class ResonanceSingleton {
 			source.buffer = self.loadedBuffers[pSoundPath];
 			source.playbackRate.value = pPlaybackRate;
 			if (!source.start) source.start = (source as any).noteOn;
-			source.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));		
+			source.start(0, pStartTime, (pEndTime ? pEndTime : source.buffer.duration));
 		}
 		// Check if the loaded buffers already contain the loaded sound data for this sound
 		if (this.loadedBuffers[pSoundPath]) {
 			emitSound();
-		// Otherwise load it
+			// Otherwise load it
 		} else {
 			const request = new XMLHttpRequest();
 			request.open('GET', pSoundPath);
 			request.responseType = 'arraybuffer';
-			request.onload = function() {
+			request.onload = function () {
 				const audioData = request.response;
 				const success = (pDecodedData: any) => {
 					self.loadedBuffers[pSoundPath] = pDecodedData;
@@ -417,8 +418,9 @@ class ResonanceSingleton {
 	 */
 	createSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean): Sound {
 		// If there is a reusable sound, use that sound rather than create a new one
-		if (this.recycledSounds.length) {
-			const sound = this.recycledSounds.pop()!;
+		if (this.recycledSounds.size) {
+			const sound = this.recycledSounds.values().next().value!;
+			this.recycledSounds.delete(sound);
 			sound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
 			return sound;
 		}
@@ -431,8 +433,7 @@ class ResonanceSingleton {
 	 * @returns {ResonanceSingleton} This instance
 	 */
 	stopAllSounds(pException?: Sound[]): ResonanceSingleton {
-		for (let i = this.soundsPlaying.length - 1; i >= 0; i--) {
-			const sound = this.soundsPlaying[i];
+		for (const sound of Array.from(this.soundsPlaying)) {
 			// If the sound is not set to be saved it will be killed
 			if (Array.isArray(pException) && pException.includes(sound)) {
 				continue;
@@ -448,8 +449,7 @@ class ResonanceSingleton {
 	 */
 	killAllSounds(): ResonanceSingleton {
 		// this effectively kills all sounds in the game, and subjects them to be recycled
-		for (let i = this.soundsPlaying.length - 1; i >= 0; i--) {
-			const sound = this.soundsPlaying[i];
+		for (const sound of Array.from(this.soundsPlaying)) {
 			sound.kill();
 		}
 		return this;
@@ -461,8 +461,7 @@ class ResonanceSingleton {
 	 * @returns {ResonanceSingleton} This instance
 	 */
 	pauseAllSounds(pFocus?: boolean): ResonanceSingleton {
-		for (let i = this.soundsPlaying.length - 1; i >= 0; i--) {
-			const sound = this.soundsPlaying[i];
+		for (const sound of Array.from(this.soundsPlaying)) {
 			// If this sound is set to playUnfocused then it will not be suspended automatically when the game screen is not focused
 			if (pFocus && sound.canPlayUnfocused()) continue;
 			sound.pause();
@@ -476,8 +475,7 @@ class ResonanceSingleton {
 	 * @returns {ResonanceSingleton} This instance
 	 */
 	resumeAllSounds(pFocus?: boolean): ResonanceSingleton {
-		for (let i = this.pausedSounds.length - 1; i >= 0; i--) {
-			const sound = this.pausedSounds[i];
+		for (const sound of this.pausedSounds) {
 			sound.resume();
 		}
 		return this;
@@ -486,17 +484,15 @@ class ResonanceSingleton {
 	 * Finds all queued sounds (sounds that were played when the game was minimized or out of focus and plays them)
 	 */
 	playQueuedSounds(): void {
-		for (let i = this.queuedSoundsToPlay.length - 1; i >= 0; i--) {
-			const sound = this.queuedSoundsToPlay[i];
-			this.queuedSoundsToPlay.splice(i, 1);
+		for (const sound of this.queuedSoundsToPlay) {
 			sound.play();
 		}
+		this.queuedSoundsToPlay.clear();
 
-		for (let i = this.queuedSoundsToFade.length - 1; i >= 0; i--) {
-			const sound = this.queuedSoundsToFade[i];
-			this.queuedSoundsToFade.splice(i, 1);
+		for (const sound of this.queuedSoundsToFade) {
 			sound.queuedFade();
 		}
+		this.queuedSoundsToFade.clear();
 	}
 	/**
 	 * Removes the loaded audio buffer data for this sound
@@ -528,22 +524,119 @@ class ResonanceSingleton {
 			this.audioCtx.resume().then(() => {
 				// this.logger.prefix('Resonance-Module').log('Resonance: autostart attempt of audio context worked.');
 			},
-			() => {
-				// this.logger.prefix('Resonance-Module').warn('Resonance: autostart attempt of audio context failed.');
-			});
+				() => {
+					// this.logger.prefix('Resonance-Module').warn('Resonance: autostart attempt of audio context failed.');
+				});
 		}
 		this.ready = true;
+	}
+
+	/**
+	 * Preloads sound files into the audio context's buffer cache.
+	 * 
+	 * @param {string | string[]} pSoundPaths - The path(s) to the sound file(s).
+	 * @returns {Promise<void>} A promise that resolves when all sounds are loaded.
+	 */
+	async preload(pSoundPaths: string | string[]): Promise<void> {
+		const paths = Array.isArray(pSoundPaths) ? pSoundPaths : [pSoundPaths];
+		const promises = paths.map(path => {
+			if (this.loadedBuffers[path]) return Promise.resolve();
+			return new Promise<void>((resolve, reject) => {
+				const request = new XMLHttpRequest();
+				request.open('GET', path);
+				request.responseType = 'arraybuffer';
+				request.onload = () => {
+					this.audioCtx.decodeAudioData(request.response, (buffer) => {
+						this.loadedBuffers[path] = buffer;
+						resolve();
+					}, (err) => {
+						this.logger.prefix('Resonance-Module').error(`Error decoding: ${path}`);
+						reject(err);
+					});
+				};
+				request.onerror = () => reject(new Error(`Network error: ${path}`));
+				request.send();
+			});
+		});
+		await Promise.all(promises);
+	}
+
+	/**
+	 * Unloads sound(s) and stops all associated instances.
+	 * 
+	 * @param {string | string[]} [pSoundPaths] - The path(s) to the sound file(s) to unload. If omitted, all sounds are unloaded.
+	 * @returns {ResonanceSingleton} This instance
+	 */
+	unload(pSoundPaths?: string | string[]): ResonanceSingleton {
+		if (pSoundPaths) {
+			const paths = Array.isArray(pSoundPaths) ? pSoundPaths : [pSoundPaths];
+			paths.forEach(path => {
+				// Stop all instances of this sound
+				const stopInstances = (collection: Set<Sound> | Sound[]) => {
+					for (const sound of Array.from(collection)) {
+						if (sound.soundPath === path) {
+							sound.stop();
+						}
+					}
+				};
+
+				stopInstances(this.soundsPlaying);
+				stopInstances(this.pausedSounds);
+				stopInstances(this.queuedSoundsToPlay);
+				stopInstances(this.queuedSoundsToFade);
+
+				// Remove from buffer cache
+				if (this.loadedBuffers[path]) delete this.loadedBuffers[path];
+			});
+		} else {
+			// Unload EVERYTHING
+			this.stopAllSounds();
+			this.loadedBuffers = {};
+		}
+		return this;
+	}
+
+	/**
+	 * Updates the global audio listener's position.
+	 * 
+	 * @param {number} x - The x position
+	 * @param {number} y - The y position
+	 * @param {number} [z=0] - The z position
+	 * @returns {ResonanceSingleton} This instance
+	 */
+	updateListener(x: number, y: number, z: number = 0): ResonanceSingleton {
+		const listener = this.audioCtx.listener;
+		if (listener.positionX) {
+			const now = this.audioCtx.currentTime;
+			listener.positionX.setTargetAtTime(x, now, 0.1);
+			listener.positionY.setTargetAtTime(y, now, 0.1);
+			listener.positionZ.setTargetAtTime(z, now, 0.1);
+		} else {
+			// Support for older browsers
+			(listener as any).setPosition(x, y, z);
+		}
+		return this;
+	}
+
+	/**
+	 * Creates a positional sound object.
+	 * 
+	 * @param {string} pSoundPath - The path of the sound file.
+	 * @returns {PositionalSound} - A PositionalSound object.
+	 */
+	createPositionalSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean): PositionalSound {
+		return new PositionalSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
 	}
 
 	// Type declarations for properties
 	logger!: any;
 	audioCtx!: AudioContext;
 	gainNode!: GainNode;
-	soundsPlaying!: Sound[];
-	pausedSounds!: Sound[];
-	recycledSounds!: Sound[];
-	queuedSoundsToPlay!: Sound[];
-	queuedSoundsToFade!: Sound[];
+	soundsPlaying!: Set<Sound>;
+	pausedSounds!: Set<Sound>;
+	recycledSounds!: Set<Sound>;
+	queuedSoundsToPlay!: Set<Sound>;
+	queuedSoundsToFade!: Set<Sound>;
 	loadedBuffers!: { [key: string]: AudioBuffer };
 	fader!: any;
 	volume!: number;
