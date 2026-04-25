@@ -597,23 +597,41 @@ class ResonanceSingleton {
 	}
 
 	/**
-	 * Updates the global audio listener's position.
+	 * Updates the global audio listener's position and orientation.
 	 * 
 	 * @param {number} x - The x position
 	 * @param {number} y - The y position
 	 * @param {number} [z=0] - The z position
+	 * @param {number} [fX=0] - The forward x vector
+	 * @param {number} [fY=0] - The forward y vector
+	 * @param {number} [fZ=-1] - The forward z vector
+	 * @param {number} [uX=0] - The up x vector
+	 * @param {number} [uY=1] - The up y vector
+	 * @param {number} [uZ=0] - The up z vector
 	 * @returns {ResonanceSingleton} This instance
 	 */
-	updateListener(x: number, y: number, z: number = 0): ResonanceSingleton {
+	updateListener(x: number, y: number, z: number = 0, fX: number = 0, fY: number = 0, fZ: number = -1, uX: number = 0, uY: number = 1, uZ: number = 0): ResonanceSingleton {
 		const listener = this.audioCtx.listener;
+		const now = this.audioCtx.currentTime;
 		if (listener.positionX) {
-			const now = this.audioCtx.currentTime;
 			listener.positionX.setTargetAtTime(x, now, 0.1);
 			listener.positionY.setTargetAtTime(y, now, 0.1);
 			listener.positionZ.setTargetAtTime(z, now, 0.1);
+			
+			if (listener.forwardX) {
+				listener.forwardX.setTargetAtTime(fX, now, 0.1);
+				listener.forwardY.setTargetAtTime(fY, now, 0.1);
+				listener.forwardZ.setTargetAtTime(fZ, now, 0.1);
+				listener.upX.setTargetAtTime(uX, now, 0.1);
+				listener.upY.setTargetAtTime(uY, now, 0.1);
+				listener.upZ.setTargetAtTime(uZ, now, 0.1);
+			}
 		} else {
 			// Support for older browsers
 			(listener as any).setPosition(x, y, z);
+			if ((listener as any).setOrientation) {
+				(listener as any).setOrientation(fX, fY, fZ, uX, uY, uZ);
+			}
 		}
 		return this;
 	}
@@ -622,10 +640,27 @@ class ResonanceSingleton {
 	 * Creates a positional sound object.
 	 * 
 	 * @param {string} pSoundPath - The path of the sound file.
+	 * @param {number} [pVolume] - The volume of the sound.
+	 * @param {number} [pStartTime] - The start time of this sound.
+	 * @param {number} [pEndTime] - The end time of this sound.
+	 * @param {boolean} [pSave] - Whether to save this sound.
+	 * @param {boolean} [pPlayUnfocused] - If this sound is set to play unfocused.
+	 * @param {number} [pPlaybackRate] - The playback rate.
+	 * @param {boolean} [pLoop] - Whether this sound should loop.
+	 * @param {number} [pRefDistance] - The reference distance for the sound.
+	 * @param {number} [pRolloffFactor] - The rolloff factor for the sound.
 	 * @returns {PositionalSound} - A PositionalSound object.
 	 */
-	createPositionalSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean): PositionalSound {
-		return new PositionalSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
+	createPositionalSound(pSoundPath: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance?: number, pRolloffFactor?: number): PositionalSound {
+		// If there is a reusable positional sound, use that sound rather than create a new one
+		for (const sound of this.recycledSounds) {
+			if (sound instanceof PositionalSound) {
+				this.recycledSounds.delete(sound);
+				sound.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor);
+				return sound;
+			}
+		}
+		return new PositionalSound(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop, pRefDistance, pRolloffFactor);
 	}
 
 	// Type declarations for properties

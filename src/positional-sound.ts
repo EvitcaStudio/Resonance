@@ -14,16 +14,32 @@ class PositionalSound extends Sound {
     _y: number = 0;
     _z: number = 0;
 
-    constructor(pSoundPath?: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean) {
+    _refDistance: number = 1;
+    _rolloffFactor: number = 1;
+
+    /**
+     * @param {string} pSoundPath - The path of the sound file
+     * @param {number} pVolume - The volume of the sound
+     * @param {number} pStartTime - The start time of this sound (to play a clipped version)
+     * @param {number} pEndTime - The end time of this sound (to play a clipped version)
+     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed
+     * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused
+     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
+     * @param {boolean} pLoop - Whether this sound should loop or not
+     * @param {number} [pRefDistance=1] - The reference distance for the sound
+     * @param {number} [pRolloffFactor=1] - The rolloff factor for the sound
+     * @returns {PositionalSound} - A positional sound object
+     */
+    constructor(pSoundPath?: string, pVolume?: number, pStartTime?: number, pEndTime?: number, pSave?: boolean, pPlayUnfocused?: boolean, pPlaybackRate?: number, pLoop?: boolean, pRefDistance: number = 1, pRolloffFactor: number = 1) {
         super(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
         this.panner = Resonance.audioCtx.createPanner();
         
         // Default settings for 2D/3D spatialization
         this.panner.panningModel = 'HRTF';
         this.panner.distanceModel = 'inverse';
-        this.panner.refDistance = 1;
+        this.refDistance = pRefDistance;
+        this.rolloffFactor = pRolloffFactor;
         this.panner.maxDistance = 10000;
-        this.panner.rolloffFactor = 1;
     }
 
     /**
@@ -41,18 +57,101 @@ class PositionalSound extends Sound {
         return this;
     }
 
+    /**
+     * Resets this sound to default state or builds it with new parameters.
+     * 
+     * @param {string} pSoundPath - The path of the sound file
+     * @param {number} pVolume - The volume of the sound
+     * @param {number} pStartTime - The start time of this sound (to play a clipped version)
+     * @param {number} pEndTime - The end time of this sound (to play a clipped version)
+     * @param {boolean} pSave - Whether to save this sound, or recycle it when it's completed
+     * @param {boolean} pPlayUnfocused - If this sound is set to true then it will not be paused automatically when the game screen is not focused
+     * @param {number} pPlaybackRate - The rate at which the sound is played, Higher numbers for faster playback (MAX 10)
+     * @param {boolean} pLoop - Whether this sound should loop or not
+     * @param {number} [pRefDistance=1] - The reference distance for the sound
+     * @param {number} [pRolloffFactor=1] - The rolloff factor for the sound
+     * @returns {this} This sound instance
+     */
+    build(pSoundPath?: string, pVolume: number = 100, pStartTime: number = 0, pEndTime: number = 0, pSave: boolean = false, pPlayUnfocused: boolean = false, pPlaybackRate: number = 1, pLoop: boolean = false, pRefDistance: number = 1, pRolloffFactor: number = 1): this {
+        super.build(pSoundPath, pVolume, pStartTime, pEndTime, pSave, pPlayUnfocused, pPlaybackRate, pLoop);
+        this.refDistance = pRefDistance;
+        this.rolloffFactor = pRolloffFactor;
+        return this;
+    }
+
+    /**
+     * The reference distance for the sound.
+     * Within this distance, the sound is at its maximum volume.
+     * @type {number}
+     */
+    get refDistance() { return this._refDistance; }
+    set refDistance(val: number) {
+        this._refDistance = val;
+        if (this.panner) {
+            this.panner.refDistance = val;
+        }
+    }
+
+    /**
+     * The rolloff factor for the sound.
+     * Higher values cause the volume to drop off more rapidly with distance.
+     * @type {number}
+     */
+    get rolloffFactor() { return this._rolloffFactor; }
+    set rolloffFactor(val: number) {
+        this._rolloffFactor = val;
+        if (this.panner) {
+            this.panner.rolloffFactor = val;
+        }
+    }
+
+    /**
+     * Stops the sound and disconnects the panner.
+     * @param {string} [pState] - Current state of the sound
+     * @returns {this} This sound instance
+     */
+    stop(pState?: string): this {
+        super.stop(pState);
+        if (this.panner) {
+            this.panner.disconnect();
+        }
+        return this;
+    }
+
+    /**
+     * Resets the sound and disconnects the panner.
+     */
+    wipe(): void {
+        super.wipe();
+        if (this.panner) {
+            this.panner.disconnect();
+        }
+    }
+
+    /**
+     * The x position of the sound.
+     * @type {number}
+     */
     get x() { return this._x; }
     set x(val: number) {
         this._x = val;
         this.updatePanner();
     }
 
+    /**
+     * The y position of the sound.
+     * @type {number}
+     */
     get y() { return this._y; }
     set y(val: number) {
         this._y = val;
         this.updatePanner();
     }
 
+    /**
+     * The z position of the sound.
+     * @type {number}
+     */
     get z() { return this._z; }
     set z(val: number) {
         this._z = val;
