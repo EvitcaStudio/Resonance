@@ -2,6 +2,7 @@
 import { Tween } from "./vendor/tween.min.mjs";
 import { Sound } from "./sound.js";
 import { PositionalSound } from "./positional-sound.js";
+import { crossfade, type CrossfadeHandle, type CrossfadeOptions } from './crossfade.js';
 // @ts-ignore
 import { Logger } from './vendor/logger.min.mjs';
 
@@ -15,6 +16,11 @@ Safari does not support .ogg files, so if you are using safari, do not use .ogg 
 Otherwise, you can use .ogg on any other platform. Cordova included. This supports mp3, wav, ogg, etc.
 */
 class ResonanceSingleton {
+	/** Crossfade two gains; the caller retains control of track selection and sources. */
+	crossfade(from: GainNode | null, to: GainNode | null, options?: CrossfadeOptions): CrossfadeHandle {
+		return crossfade(this.audioCtx, from, to, options);
+	}
+
 	/**
 	 * The max volume to be used
 	 * 
